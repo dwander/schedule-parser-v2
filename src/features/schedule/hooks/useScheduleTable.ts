@@ -68,6 +68,14 @@ export function useScheduleTable(data: Schedule[] = []) {
         header: '담당자',
         size: 100,
       },
+      {
+        id: 'spacer',
+        header: '',
+        size: 0, // 동적으로 계산됨
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: () => null,
+      },
     ],
     []
   )

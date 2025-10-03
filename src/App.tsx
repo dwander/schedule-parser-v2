@@ -32,9 +32,9 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="container max-w-screen-2xl px-8 py-6">
+        <main className="py-6">
           {/* 파서 입력창 */}
-          <section className="mb-6">
+          <section className="mb-6 container max-w-screen-2xl px-8">
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-card-foreground">
                 카카오톡 메시지 파싱
@@ -44,8 +44,8 @@ function App() {
             </div>
           </section>
 
-          {/* 스케줄 테이블 */}
-          <section>
+          {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
+          <section className="px-4">
             <ScheduleTable />
           </section>
         </main>
