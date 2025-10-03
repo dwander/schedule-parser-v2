@@ -16,7 +16,7 @@ export function AppLayout({ children, stats }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="relative h-screen overflow-y-auto bg-background">
+    <div className="relative min-h-screen bg-background">
       {/* Floating Header */}
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
@@ -24,7 +24,7 @@ export function AppLayout({ children, stats }: AppLayoutProps) {
       <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <main className="min-h-screen">
+      <main>
         {children}
 
         {/* Footer as part of content */}

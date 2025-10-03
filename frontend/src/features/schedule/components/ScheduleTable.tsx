@@ -81,7 +81,7 @@ export function ScheduleTable() {
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-md" style={{ width: tableWidth }}>
+      <div className="border border-border rounded-md overflow-hidden" style={{ width: tableWidth }}>
         <div ref={tableRef}>
           <div
             style={{
@@ -90,7 +90,7 @@ export function ScheduleTable() {
               position: 'relative',
             }}
           >
-            <table style={{ tableLayout: 'fixed' }}>
+            <table style={{ tableLayout: 'fixed', width: '100%' }}>
               <thead className="bg-muted">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
