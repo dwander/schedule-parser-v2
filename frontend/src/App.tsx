@@ -7,6 +7,7 @@ import { ParsedDataPreview } from './features/parser/components/ParsedDataPrevie
 import { Toaster } from '@/components/ui/sonner'
 import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { AppLayout } from '@/components/layout/AppLayout'
 import { useState } from 'react'
 
 function App() {
@@ -25,11 +26,9 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <div className="min-h-screen bg-background">
-        {/* Main Content */}
-        <main className="py-6">
+        <AppLayout>
           {/* 파서 입력창 */}
-          <section className="mb-6 container max-w-screen-2xl px-8">
+          <section className="mb-6 container max-w-screen-2xl px-8 pt-6">
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold text-card-foreground">
                 카카오톡 메시지 파싱
@@ -40,11 +39,11 @@ function App() {
           </section>
 
           {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
-          <section className="px-4">
+          <section className="px-4 pb-6">
             <ScheduleTable />
           </section>
-        </main>
-      </div>
+        </AppLayout>
+
         <Toaster position="top-right" />
         <DialogTestPanel />
         <ReactQueryDevtools initialIsOpen={false} />
