@@ -5,19 +5,46 @@ import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { FormDialog } from '@/components/common/FormDialog'
+import { Spinner } from '@/components/common/Spinner'
+import { LoadingOverlay } from '@/components/common/LoadingOverlay'
+import { ErrorMessage } from '@/components/common/ErrorMessage'
+import { EmptyState } from '@/components/common/EmptyState'
+import { SunIcon, MoonIcon } from '@radix-ui/react-icons'
+import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
 export function DialogTestPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [loadingOpen, setLoadingOpen] = useState(false)
+  const [errorOpen, setErrorOpen] = useState(false)
+  const [emptyOpen, setEmptyOpen] = useState(false)
   const [name, setName] = useState('')
+  const { theme, setTheme } = useTheme()
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
 
   return (
-    <div className="fixed bottom-4 right-4 p-4 bg-card border border-border rounded-lg shadow-lg space-y-2">
+    <div className="fixed bottom-4 right-4 p-4 bg-card border border-border rounded-lg shadow-lg space-y-2 max-h-[90vh] overflow-y-auto">
       <div className="text-sm font-semibold text-muted-foreground mb-2">
         UI 테스트 패널
       </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={toggleTheme}
+      >
+        <SunIcon className="h-[1rem] w-[1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <MoonIcon className="absolute h-[1rem] w-[1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <span className="ml-6">테마 전환</span>
+      </Button>
+
+      <div className="border-t border-border my-2" />
 
       <Button
         variant="outline"
@@ -53,6 +80,35 @@ export function DialogTestPanel() {
         onClick={() => setFormOpen(true)}
       >
         폼 모달
+      </Button>
+
+      <div className="border-t border-border my-2" />
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setLoadingOpen(true)}
+      >
+        로딩 상태
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setErrorOpen(true)}
+      >
+        에러 상태
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setEmptyOpen(true)}
+      >
+        빈 상태
       </Button>
 
       {/* Alert Dialog */}
@@ -103,6 +159,56 @@ export function DialogTestPanel() {
           />
         </div>
       </FormDialog>
+
+      {/* Loading State Dialog */}
+      <AlertDialog
+        open={loadingOpen}
+        onOpenChange={setLoadingOpen}
+        title="로딩 상태 예시"
+        confirmText="닫기"
+        onConfirm={() => setLoadingOpen(false)}
+      >
+        <LoadingOverlay message="데이터를 불러오는 중입니다..." />
+      </AlertDialog>
+
+      {/* Error State Dialog */}
+      <AlertDialog
+        open={errorOpen}
+        onOpenChange={setErrorOpen}
+        title="에러 상태 예시"
+        confirmText="닫기"
+        onConfirm={() => setErrorOpen(false)}
+      >
+        <ErrorMessage
+          title="데이터 로드 실패"
+          message="서버와의 연결에 실패했습니다."
+          onRetry={() => {
+            toast.info('재시도 중...')
+            setErrorOpen(false)
+          }}
+        />
+      </AlertDialog>
+
+      {/* Empty State Dialog */}
+      <AlertDialog
+        open={emptyOpen}
+        onOpenChange={setEmptyOpen}
+        title="빈 상태 예시"
+        confirmText="닫기"
+        onConfirm={() => setEmptyOpen(false)}
+      >
+        <EmptyState
+          title="스케줄이 없습니다"
+          description="새로운 스케줄을 추가해보세요."
+          action={{
+            label: '스케줄 추가',
+            onClick: () => {
+              toast.success('스케줄 추가 화면으로 이동!')
+              setEmptyOpen(false)
+            },
+          }}
+        />
+      </AlertDialog>
     </div>
   )
 }

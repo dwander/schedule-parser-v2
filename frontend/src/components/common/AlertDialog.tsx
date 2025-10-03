@@ -7,7 +7,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useEffect } from 'react'
+import { useEffect, ReactNode } from 'react'
 
 interface AlertDialogProps {
   open: boolean
@@ -16,6 +16,7 @@ interface AlertDialogProps {
   description?: string
   confirmText?: string
   onConfirm?: () => void
+  children?: ReactNode
 }
 
 export function AlertDialog({
@@ -25,6 +26,7 @@ export function AlertDialog({
   description,
   confirmText = '확인',
   onConfirm,
+  children,
 }: AlertDialogProps) {
   const handleConfirm = () => {
     onConfirm?.()
@@ -53,10 +55,11 @@ export function AlertDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description && (
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          )}
+          <AlertDialogDescription>
+            {description || <span className="sr-only">알림 내용</span>}
+          </AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleConfirm}>
             {confirmText}
