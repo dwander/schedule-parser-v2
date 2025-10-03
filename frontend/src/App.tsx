@@ -4,6 +4,7 @@ import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserInput } from './features/parser/components/ParserInput'
 import { ParsedDataPreview } from './features/parser/components/ParsedDataPreview'
+import { Toaster } from '@/components/ui/sonner'
 import { useState } from 'react'
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           </section>
         </main>
       </div>
+      <Toaster position="top-right" />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )
