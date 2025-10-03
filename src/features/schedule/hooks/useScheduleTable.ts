@@ -32,8 +32,9 @@ export function useScheduleTable(data: Schedule[] = []) {
       },
       {
         accessorKey: 'couple',
-        header: '신랑 ♥ 신부',
+        header: '신랑신부',
         size: 180,
+        cell: (info) => info.row.original.groom,
       },
       {
         accessorKey: 'location',
