@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+gunicorn
+python-multipart
+google-auth
+google-auth-oauthlib
+google-api-python-client
+requests
+psycopg2-binary
+sqlalchemy
+alembic
+python-dotenv
+spacy>=3.8.0
+https://github.com/explosion/spacy-models/releases/download/ko_core_news_sm-3.8.0/ko_core_news_sm-3.8.0-py3-none-any.whl

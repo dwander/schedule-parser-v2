@@ -7,7 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Production builds
 dist
 dist-ssr
 *.local
@@ -23,8 +26,22 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables
 .env
-docs/
+*.env.local
+
+# Claude Code
 .claude/
 
+# Documentation (generated)
+docs/
+
+# Project-specific
 CLAUDE.md
+
+# Backend
+backend/venv
+backend/__pycache__
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal

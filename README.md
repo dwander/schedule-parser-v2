@@ -1,73 +1,98 @@
-# React + TypeScript + Vite
+# Schedule Parser v2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+웨딩 촬영 스케줄 관리 시스템 (React + TypeScript + FastAPI)
 
-Currently, two official plugins are available:
+## 📁 프로젝트 구조 (Monorepo)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+schedule-parser-v2/
+├── frontend/          # React + TypeScript 프론트엔드
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/           # FastAPI 백엔드
+│   ├── main.py
+│   ├── parser.py
+│   ├── database.py
+│   └── requirements.txt
+├── package.json       # 루트 워크스페이스 설정
+└── README.md
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 시작하기
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Frontend
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행 (루트에서)
+npm run dev
+
+# 또는 frontend 디렉토리에서 직접
+cd frontend
+npm run dev
 ```
+
+Frontend는 `http://localhost:5173`에서 실행됩니다.
+
+### Backend
+
+```bash
+cd backend
+
+# 가상환경 생성 및 활성화
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 의존성 설치
+pip install -r requirements.txt
+
+# 개발 서버 실행
+uvicorn main:app --reload
+```
+
+Backend API는 `http://localhost:8000`에서 실행됩니다.
+
+## 🛠 기술 스택
+
+### Frontend
+- **React 19** - UI 라이브러리
+- **TypeScript** - 타입 안정성
+- **Vite** - 빌드 도구
+- **TanStack Query** - 서버 상태 관리
+- **TanStack Table** - 테이블 컴포넌트
+- **TanStack Virtual** - 가상화
+- **Tailwind CSS** - 스타일링
+- **Zustand** - 클라이언트 상태 관리
+
+### Backend
+- **FastAPI** - 웹 프레임워크
+- **SQLite** - 데이터베이스
+- **spaCy** - 자연어 처리 (스케줄 파싱)
+
+## 📝 주요 기능
+
+- ✅ 스케줄 텍스트 자동 파싱 (spaCy NLP)
+- ✅ 가상화된 테이블 뷰 (대용량 데이터 지원)
+- 🚧 스케줄 편집 및 관리
+- 🚧 구글 캘린더 동기화
+- 🚧 데이터 백업/복원
+- 🚧 다크/라이트 테마
+
+## 📚 개발 문서
+
+자세한 개발 가이드는 [CLAUDE.md](./CLAUDE.md)를 참고하세요.
+
+마이그레이션 작업 진행 상황은 [docs/MIGRATION_TASKS.md](./docs/MIGRATION_TASKS.md)를 참고하세요.
+
+## 🚢 배포
+
+Railway를 통해 배포 예정 (v2 서브도메인)
+
+---
+
+**Version**: 2.0.0
+**License**: Private
