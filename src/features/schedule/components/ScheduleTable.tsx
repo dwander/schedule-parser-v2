@@ -99,7 +99,7 @@ export function ScheduleTable() {
                             minWidth: `${width}px`,
                             maxWidth: `${width}px`
                           }}
-                          className="px-3 py-2 text-left text-sm font-semibold text-foreground border-b border-border overflow-hidden"
+                          className="px-3 py-2 text-left text-sm font-semibold text-foreground border-b border-border overflow-hidden whitespace-nowrap"
                         >
                           {header.isPlaceholder ? null : (
                             <div

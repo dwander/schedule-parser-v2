@@ -7,11 +7,14 @@ export interface Schedule {
   location: string
   groom: string
   bride: string
+  contact?: string
   cuts: number
   price: number
   fee: number
   manager: string
   brand: Brand
+  album?: string
+  photographer?: string
   memo?: string
   isDuplicate: boolean
   createdAt: string
