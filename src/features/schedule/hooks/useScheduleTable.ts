@@ -22,42 +22,51 @@ export function useScheduleTable(data: Schedule[] = []) {
       {
         accessorKey: 'date',
         header: '날짜',
+        size: 100,
         cell: (info) => info.getValue(),
       },
       {
         accessorKey: 'time',
         header: '시간',
+        size: 80,
       },
       {
-        accessorKey: 'groom',
-        header: '신랑',
-      },
-      {
-        accessorKey: 'bride',
-        header: '신부',
+        accessorKey: 'couple',
+        header: '신랑 ♥ 신부',
+        size: 180,
       },
       {
         accessorKey: 'location',
         header: '장소',
+        size: 220,
       },
       {
         accessorKey: 'brand',
         header: '브랜드',
+        size: 80,
       },
       {
         accessorKey: 'cuts',
         header: '컷수',
-        cell: (info) => `${info.getValue()} 컷`,
+        size: 70,
+        cell: (info) => `${info.getValue()}컷`,
       },
       {
         accessorKey: 'price',
         header: '촬영비',
+        size: 100,
         cell: (info) => `₩${(info.getValue() as number).toLocaleString()}`,
       },
       {
         accessorKey: 'fee',
         header: 'Fee',
+        size: 100,
         cell: (info) => `₩${(info.getValue() as number).toLocaleString()}`,
+      },
+      {
+        accessorKey: 'manager',
+        header: '담당자',
+        size: 100,
       },
     ],
     []

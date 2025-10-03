@@ -21,22 +21,34 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <h1 className="text-3xl font-bold text-foreground">
-            본식스냅러
-          </h1>
-
-          {/* 파서 입력창 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">카카오톡 메시지 파싱</h2>
-            <ParserInput onParsed={handleParsed} />
-            <ParsedDataPreview parsedData={parsedData} onSaved={handleSaved} />
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-14 max-w-screen-2xl items-center px-8">
+            <h1 className="text-xl font-bold text-foreground">
+              본식스냅러
+            </h1>
           </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="container max-w-screen-2xl px-8 py-6">
+          {/* 파서 입력창 */}
+          <section className="mb-6">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-card-foreground">
+                카카오톡 메시지 파싱
+              </h2>
+              <ParserInput onParsed={handleParsed} />
+              <ParsedDataPreview parsedData={parsedData} onSaved={handleSaved} />
+            </div>
+          </section>
 
           {/* 스케줄 테이블 */}
-          <ScheduleTable />
-        </div>
+          <section>
+            <ScheduleTable />
+          </section>
+        </main>
       </div>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
