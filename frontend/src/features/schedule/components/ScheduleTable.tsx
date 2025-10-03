@@ -85,7 +85,7 @@ export function ScheduleTable() {
         <div ref={tableRef}>
           <div
             style={{
-              height: `${virtualizer.getTotalSize()}px`,
+              height: `${virtualizer.getTotalSize() + 48}px`,
               width: '100%',
               position: 'relative',
             }}
