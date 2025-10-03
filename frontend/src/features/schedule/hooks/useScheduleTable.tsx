@@ -18,6 +18,27 @@ export function useScheduleTable(data: Schedule[] = []) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
 
+  // 컬럼 가시성 설정 (나중에 settings store로 이동 예정)
+  const [columnVisibility, setColumnVisibility] = useState({
+    select: true,
+    date: true,
+    location: true,
+    time: true,
+    couple: true,
+    contact: true,
+    brand: true,
+    album: true,
+    photographer: true,
+    cuts: true,
+    price: true,
+    manager: true,
+    memo: true,
+    folderName: true,
+  })
+
+  // 가변폭 컬럼 ID (memo가 숨겨지면 spacer가 대신 사용됨)
+  const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
+
   const columns = useMemo<ColumnDef<Schedule>[]>(
     () => [
       {
@@ -108,7 +129,7 @@ export function useScheduleTable(data: Schedule[] = []) {
       {
         accessorKey: 'memo',
         header: '전달사항',
-        size: 150,
+        size: 0, // 가변폭 (동적 계산)
       },
       {
         id: 'folderName',
@@ -120,7 +141,7 @@ export function useScheduleTable(data: Schedule[] = []) {
       {
         id: 'spacer',
         header: '',
-        size: 0, // 동적으로 계산됨
+        size: 0, // 숨겨진 컬럼 대비 예비 공간 (나중에 컬럼 ON/OFF 기능 구현 시 사용)
         enableSorting: false,
         enableColumnFilter: false,
         cell: () => null,
@@ -153,5 +174,8 @@ export function useScheduleTable(data: Schedule[] = []) {
     globalFilter,
     setGlobalFilter,
     rowSelection,
+    flexColumnId, // 가변폭 컬럼 ID 반환
+    columnVisibility,
+    setColumnVisibility,
   }
 }

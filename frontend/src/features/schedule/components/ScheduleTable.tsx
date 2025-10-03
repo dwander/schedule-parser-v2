@@ -7,37 +7,37 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter } = useScheduleTable(data)
+  const { table, globalFilter, setGlobalFilter, flexColumnId } = useScheduleTable(data)
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [spacerWidth, setSpacerWidth] = useState(0)
+  const [flexWidth, setFlexWidth] = useState(0)
 
-  // 스페이서 컬럼 폭 계산
+  // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
-    const calculateSpacerWidth = () => {
+    const calculateFlexWidth = () => {
       if (!containerRef.current) return
 
       const containerWidth = containerRef.current.offsetWidth
       const fixedColumnsWidth = table
         .getAllColumns()
-        .filter((col) => col.id !== 'spacer')
+        .filter((col) => col.id !== 'memo' && col.id !== 'spacer')
         .reduce((sum, col) => sum + col.getSize(), 0)
 
-      const spacer = Math.max(0, containerWidth - fixedColumnsWidth)
-      setSpacerWidth(spacer)
+      const availableWidth = Math.max(150, containerWidth - fixedColumnsWidth)
+      setFlexWidth(availableWidth)
 
-      // 스페이서 컬럼 크기 업데이트
-      const spacerColumn = table.getAllColumns().find((col) => col.id === 'spacer')
-      if (spacerColumn) {
-        spacerColumn.columnDef.size = spacer
+      // 가변폭 컬럼 크기 업데이트
+      const flexColumn = table.getAllColumns().find((col) => col.id === flexColumnId)
+      if (flexColumn) {
+        flexColumn.columnDef.size = availableWidth
       }
     }
 
     // 초기 계산 및 리사이즈 이벤트 등록
-    calculateSpacerWidth()
-    window.addEventListener('resize', calculateSpacerWidth)
-    return () => window.removeEventListener('resize', calculateSpacerWidth)
-  }, [table, data])
+    calculateFlexWidth()
+    window.addEventListener('resize', calculateFlexWidth)
+    return () => window.removeEventListener('resize', calculateFlexWidth)
+  }, [table, data, flexColumnId])
 
   if (isLoading) {
     return (
@@ -89,8 +89,8 @@ export function ScheduleTable() {
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
-                      // 스페이서 컬럼은 동적 폭 사용
-                      const width = header.column.id === 'spacer' ? spacerWidth : header.getSize()
+                      // 가변폭 컬럼 (memo 또는 spacer)
+                      const width = header.column.id === flexColumnId ? flexWidth : header.getSize()
                       return (
                         <th
                           key={header.id}
@@ -145,8 +145,8 @@ export function ScheduleTable() {
                       className="border-b border-border hover:bg-accent/50 transition-colors"
                     >
                       {row.getVisibleCells().map((cell) => {
-                        // 스페이서 컬럼은 동적 폭 사용
-                        const width = cell.column.id === 'spacer' ? spacerWidth : cell.column.getSize()
+                        // 가변폭 컬럼 (memo 또는 spacer)
+                        const width = cell.column.id === flexColumnId ? flexWidth : cell.column.getSize()
                         return (
                           <td
                             key={cell.id}
