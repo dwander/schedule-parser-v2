@@ -11,6 +11,7 @@ export function ScheduleTable() {
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const containerRef = useRef<HTMLDivElement>(null)
   const [flexWidth, setFlexWidth] = useState(0)
+  const [tableWidth, setTableWidth] = useState('100%')
 
   // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
@@ -23,8 +24,13 @@ export function ScheduleTable() {
         .filter((col) => col.id !== 'memo' && col.id !== 'spacer')
         .reduce((sum, col) => sum + col.getSize(), 0)
 
-      const availableWidth = Math.max(150, containerWidth - fixedColumnsWidth)
+      // 가변폭 계산 시 24px 패딩 고려
+      const availableWidth = Math.max(150, containerWidth - fixedColumnsWidth - 24)
       setFlexWidth(availableWidth)
+
+      // 실제 필요한 테이블 폭 계산 (고정 + 가변 + 24px 보정)
+      const calculatedTableWidth = fixedColumnsWidth + availableWidth + 24
+      setTableWidth(`${calculatedTableWidth}px`)
 
       // 가변폭 컬럼 크기 업데이트
       const flexColumn = table.getAllColumns().find((col) => col.id === flexColumnId)
@@ -60,7 +66,7 @@ export function ScheduleTable() {
   const rows = table.getRowModel().rows
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
       {/* Search */}
       <div className="flex items-center gap-4">
         <input
@@ -75,7 +81,7 @@ export function ScheduleTable() {
       </div>
 
       {/* Table */}
-      <div ref={containerRef} className="border border-border rounded-md">
+      <div className="border border-border rounded-md" style={{ width: tableWidth }}>
         <div ref={tableRef}>
           <div
             style={{
