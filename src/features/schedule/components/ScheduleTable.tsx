@@ -3,7 +3,7 @@ import { useSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { Button } from '@/components/ui/button'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
@@ -13,7 +13,7 @@ export function ScheduleTable() {
   const [spacerWidth, setSpacerWidth] = useState(0)
 
   // 스페이서 컬럼 폭 계산
-  useEffect(() => {
+  useLayoutEffect(() => {
     const calculateSpacerWidth = () => {
       if (!containerRef.current) return
 
@@ -33,10 +33,11 @@ export function ScheduleTable() {
       }
     }
 
+    // 초기 계산 및 리사이즈 이벤트 등록
     calculateSpacerWidth()
     window.addEventListener('resize', calculateSpacerWidth)
     return () => window.removeEventListener('resize', calculateSpacerWidth)
-  }, [table])
+  }, [table, data])
 
   if (isLoading) {
     return (
