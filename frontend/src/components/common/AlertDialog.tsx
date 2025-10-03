@@ -7,6 +7,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useEffect } from 'react'
 
 interface AlertDialogProps {
   open: boolean
@@ -29,6 +30,23 @@ export function AlertDialog({
     onConfirm?.()
     onOpenChange(false)
   }
+
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        handleConfirm()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onOpenChange(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open])
 
   return (
     <ShadcnAlertDialog open={open} onOpenChange={onOpenChange}>

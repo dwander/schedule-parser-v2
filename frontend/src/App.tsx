@@ -5,6 +5,7 @@ import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserInput } from './features/parser/components/ParserInput'
 import { ParsedDataPreview } from './features/parser/components/ParsedDataPreview'
 import { Toaster } from '@/components/ui/sonner'
+import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { useState } from 'react'
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
         </main>
       </div>
       <Toaster position="top-right" />
+      <DialogTestPanel />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )
