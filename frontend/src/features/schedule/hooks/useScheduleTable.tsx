@@ -74,14 +74,14 @@ export function useScheduleTable(data: Schedule[] = []) {
         size: 100,
       },
       {
-        accessorKey: 'location',
-        header: '장소',
-        size: 200,
-      },
-      {
         accessorKey: 'time',
         header: '시간',
         size: 80,
+      },
+      {
+        accessorKey: 'location',
+        header: '장소',
+        size: 200,
       },
       {
         accessorKey: 'couple',
