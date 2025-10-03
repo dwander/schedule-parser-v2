@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useRef } from 'react'
-import { Row } from '@tanstack/react-table'
-import { Schedule } from '../types/schedule'
+import type { Row } from '@tanstack/react-table'
+import type { Schedule } from '../types/schedule'
 
 export function useScheduleVirtual(rows: Row<Schedule>[]) {
   const parentRef = useRef<HTMLDivElement>(null)

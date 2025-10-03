@@ -3,12 +3,14 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+} from '@tanstack/react-table'
+import type {
   ColumnDef,
   SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table'
 import { useState, useMemo } from 'react'
-import { Schedule } from '../types/schedule'
+import type { Schedule } from '../types/schedule'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const [sorting, setSorting] = useState<SortingState>([])

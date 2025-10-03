@@ -6,7 +6,7 @@ import {
   deleteSchedule,
   deleteSchedules,
 } from '../api/scheduleApi'
-import { NewSchedule, UpdateSchedule } from '../types/schedule'
+import type { NewSchedule, UpdateSchedule } from '../types/schedule'
 
 export function useSchedules() {
   return useQuery({
