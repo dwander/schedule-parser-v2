@@ -83,7 +83,7 @@ export function ScheduleTable() {
               position: 'relative',
             }}
           >
-            <table className="w-full">
+            <table style={{ tableLayout: 'fixed' }}>
               <thead className="bg-muted">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>

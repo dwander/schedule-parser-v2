@@ -25,4 +25,6 @@ dist-ssr
 
 .env
 docs/
+.claude/
+
 CLAUDE.md
