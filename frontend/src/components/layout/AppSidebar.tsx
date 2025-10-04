@@ -9,9 +9,10 @@ interface AppSidebarProps {
   onClose: () => void
   testPanelVisible: boolean
   onTestPanelToggle: (visible: boolean) => void
+  onSettingsClick?: () => void
 }
 
-export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle }: AppSidebarProps) {
+export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle, onSettingsClick }: AppSidebarProps) {
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return
@@ -69,15 +70,15 @@ export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle 
 
         {/* Menu Items */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* 섹션 1 */}
+          {/* 설정 */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">섹션 1</h3>
-            <div className="space-y-1">
-              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                메뉴 1-1
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                메뉴 1-2
+            <h3 className="text-sm font-semibold text-foreground">설정</h3>
+            <div className="space-y-2">
+              <button
+                onClick={onSettingsClick}
+                className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                앱 설정
               </button>
             </div>
           </div>
@@ -85,7 +86,7 @@ export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle 
           {/* 섹션 2 */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-foreground">섹션 2</h3>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
                 메뉴 2-1
               </button>
@@ -98,7 +99,7 @@ export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle 
           {/* 섹션 3 */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-foreground">섹션 3</h3>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
                 메뉴 3-1
               </button>

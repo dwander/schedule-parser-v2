@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react'
 import { AppHeader } from './AppHeader'
 import { AppSidebar } from './AppSidebar'
 import { AppFooter } from './AppFooter'
+import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -16,6 +17,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, stats, testPanelVisible = true, onTestPanelVisibleChange }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -28,7 +30,14 @@ export function AppLayout({ children, stats, testPanelVisible = true, onTestPane
         onClose={() => setSidebarOpen(false)}
         testPanelVisible={testPanelVisible}
         onTestPanelToggle={(visible) => onTestPanelVisibleChange?.(visible)}
+        onSettingsClick={() => {
+          setSettingsOpen(true)
+          setSidebarOpen(false)
+        }}
       />
+
+      {/* Settings Dialog */}
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Main Content */}
       <main>
