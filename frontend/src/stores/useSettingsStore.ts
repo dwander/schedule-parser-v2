@@ -65,6 +65,10 @@ interface SettingsState {
   columnLabels: ColumnLabels
   setColumnLabel: (columnId: keyof ColumnLabels, label: string) => void
 
+  // 날짜 범위 필터
+  dateRangeFilter: { from: Date | null; to: Date | null }
+  setDateRangeFilter: (range: { from: Date | null; to: Date | null }) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -111,6 +115,7 @@ export const useSettingsStore = create<SettingsState>()(
         memo: '전달사항',
         folderName: '폴더',
       },
+      dateRangeFilter: { from: null, to: null },
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -126,6 +131,7 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           columnLabels: { ...state.columnLabels, [columnId]: label }
         })),
+      setDateRangeFilter: (range) => set({ dateRangeFilter: range }),
     }),
     {
       name: 'app-settings', // localStorage key

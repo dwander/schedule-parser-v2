@@ -31,7 +31,7 @@ export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
-  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
+  const { dateRangeFilter: dateRange, setDateRangeFilter: setDateRange } = useSettingsStore()
 
   const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
