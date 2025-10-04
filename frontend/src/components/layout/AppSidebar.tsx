@@ -1,4 +1,4 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
+import { PanelLeftClose } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -61,8 +61,9 @@ export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle 
             size="icon"
             onClick={onClose}
             aria-label="뒤로가기"
+            className="-ml-[0.625rem]"
           >
-            <ArrowLeftIcon className="h-[1.25rem] w-[1.25rem]" />
+            <PanelLeftClose className="h-[1.25rem] w-[1.25rem]" />
           </Button>
         </div>
 

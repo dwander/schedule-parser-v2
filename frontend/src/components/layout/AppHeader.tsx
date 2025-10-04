@@ -1,4 +1,4 @@
-import { Component1Icon, PlusIcon } from '@radix-ui/react-icons'
+import { PanelLeft, ListPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface AppHeaderProps {
@@ -21,7 +21,7 @@ export function AppHeader({ onMenuClick, onAddClick }: AppHeaderProps) {
           aria-label="사이드패널 열기"
           className="-ml-[0.9375rem] bg-background/50 backdrop-blur-sm"
         >
-          <Component1Icon className="h-[1.25rem] w-[1.25rem]" />
+          <PanelLeft className="h-[1.25rem] w-[1.25rem]" />
         </Button>
 
         {/* Right: Add Schedule Button (Floating style) */}
@@ -32,7 +32,7 @@ export function AppHeader({ onMenuClick, onAddClick }: AppHeaderProps) {
           aria-label="새 스케줄 추가"
           className="bg-background/50 backdrop-blur-sm"
         >
-          <PlusIcon className="h-[1.25rem] w-[1.25rem]" />
+          <ListPlus className="h-[1.25rem] w-[1.25rem]" />
           <span>새 스케줄</span>
         </Button>
       </div>
