@@ -20,6 +20,22 @@ export interface ColumnVisibility {
   folderName: boolean
 }
 
+export interface ColumnLabels {
+  date: string
+  location: string
+  time: string
+  couple: string
+  contact: string
+  brand: string
+  album: string
+  photographer: string
+  cuts: string
+  price: string
+  manager: string
+  memo: string
+  folderName: string
+}
+
 interface SettingsState {
   // 테마
   theme: Theme
@@ -36,6 +52,10 @@ interface SettingsState {
   // 테이블 컬럼 가시성
   columnVisibility: ColumnVisibility
   setColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
+
+  // 테이블 컬럼 라벨
+  columnLabels: ColumnLabels
+  setColumnLabel: (columnId: keyof ColumnLabels, label: string) => void
 
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
@@ -66,6 +86,21 @@ export const useSettingsStore = create<SettingsState>()(
         memo: true,
         folderName: true,
       },
+      columnLabels: {
+        date: '날짜',
+        location: '장소',
+        time: '시간',
+        couple: '신랑신부',
+        contact: '연락처',
+        brand: '브랜드',
+        album: '앨범',
+        photographer: '작가',
+        cuts: '컷수',
+        price: '촬영비',
+        manager: '담당자',
+        memo: '전달사항',
+        folderName: '폴더',
+      },
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -74,6 +109,10 @@ export const useSettingsStore = create<SettingsState>()(
       setColumnVisibility: (visibility) =>
         set((state) => ({
           columnVisibility: { ...state.columnVisibility, ...visibility }
+        })),
+      setColumnLabel: (columnId, label) =>
+        set((state) => ({
+          columnLabels: { ...state.columnLabels, [columnId]: label }
         })),
     }),
     {

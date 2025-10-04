@@ -216,10 +216,6 @@ export function ScheduleTable() {
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
-                              {{
-                                asc: ' ↑',
-                                desc: ' ↓',
-                              }[header.column.getIsSorted() as string] ?? null}
                             </div>
                           )}
                         </th>
