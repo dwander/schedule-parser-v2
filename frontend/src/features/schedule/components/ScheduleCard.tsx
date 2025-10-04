@@ -6,6 +6,7 @@ import { TimePickerCell } from './TimePickerCell'
 import { TagSelectCell } from './TagSelectCell'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog } from 'lucide-react'
 
 interface ScheduleCardProps {
@@ -18,26 +19,44 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
+  const { columnVisibility } = useSettingsStore()
 
   return (
     <div
       className={`
-        rounded-lg border border-border bg-card p-4 shadow-sm
+        rounded-lg border border-border bg-card shadow-sm
         transition-all hover:shadow-md w-full max-w-full overflow-hidden
         ${isSelected ? 'ring-2 ring-primary' : ''}
       `}
     >
-      {/* Header with checkbox */}
-      <div className="flex items-start justify-between mb-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onToggleSelect}
-          className="mt-1 cursor-pointer"
-        />
-        <div className="flex-1 ml-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
+      {/* Header */}
+      <div className="flex items-start gap-3 p-4 pb-3">
+        {/* Left: Checkbox */}
+        {columnVisibility.select && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
+            className="mt-1 cursor-pointer flex-shrink-0"
+          />
+        )}
+
+        {/* Center: Location + Date/Time */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-1">
+            <EditableCell
+              value={schedule.location}
+              onSave={(value) => {
+                updateSchedule.mutate({
+                  id: schedule.id,
+                  location: value
+                })
+              }}
+              placeholder="장소"
+              className="font-medium text-base"
+            />
+          </div>
+          <div className="flex items-center text-xs text-muted-foreground -space-x-3">
             <DatePickerCell
               value={schedule.date}
               onSave={(value) => {
@@ -47,7 +66,6 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 })
               }}
             />
-            <Clock className="h-4 w-4 ml-2" />
             <TimePickerCell
               value={schedule.time}
               onSave={(value) => {
@@ -59,27 +77,43 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
             />
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="space-y-3">
-        {/* Location */}
-        <div className="flex items-start gap-2">
-          <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <EditableCell
-              value={schedule.location}
+        {/* Right: Brand + Album */}
+        <div className="flex-shrink-0 space-y-1 text-right">
+          <TagSelectCell
+            value={schedule.brand}
+            options={brandOptions}
+            onSave={(value) => {
+              updateSchedule.mutate({
+                id: schedule.id,
+                brand: value
+              })
+            }}
+            onDelete={(tag) => onDeleteTag(tag, 'brand')}
+            placeholder="브랜드"
+          />
+          <div className="text-xs text-muted-foreground">
+            <TagSelectCell
+              value={schedule.album}
+              options={albumOptions}
               onSave={(value) => {
                 updateSchedule.mutate({
                   id: schedule.id,
-                  location: value
+                  album: value
                 })
               }}
-              placeholder="장소"
+              onDelete={(tag) => onDeleteTag(tag, 'album')}
+              placeholder="앨범"
             />
           </div>
         </div>
+      </div>
 
+      {/* Separator */}
+      <div className="border-t border-border" />
+
+      {/* Content */}
+      <div className="space-y-3 p-4 pt-3">
         {/* Couple */}
         <div className="flex items-start gap-2">
           <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
@@ -136,44 +170,6 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 return str
               }}
               placeholder="연락처"
-            />
-          </div>
-        </div>
-
-        {/* Brand */}
-        <div className="flex items-start gap-2">
-          <Camera className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <TagSelectCell
-              value={schedule.brand}
-              options={brandOptions}
-              onSave={(value) => {
-                updateSchedule.mutate({
-                  id: schedule.id,
-                  brand: value
-                })
-              }}
-              onDelete={(tag) => onDeleteTag(tag, 'brand')}
-              placeholder="브랜드"
-            />
-          </div>
-        </div>
-
-        {/* Album */}
-        <div className="flex items-start gap-2">
-          <Image className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <TagSelectCell
-              value={schedule.album}
-              options={albumOptions}
-              onSave={(value) => {
-                updateSchedule.mutate({
-                  id: schedule.id,
-                  album: value
-                })
-              }}
-              onDelete={(tag) => onDeleteTag(tag, 'album')}
-              placeholder="앨범"
             />
           </div>
         </div>
