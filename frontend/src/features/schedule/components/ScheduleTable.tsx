@@ -18,7 +18,8 @@ export function ScheduleTable() {
     const calculateFlexWidth = () => {
       if (!containerRef.current) return
 
-      const containerWidth = containerRef.current.offsetWidth
+      // clientWidth는 border를 제외한 내부 너비 (offsetWidth - border)
+      const containerWidth = containerRef.current.clientWidth
       const fixedColumnsWidth = table
         .getAllColumns()
         .filter((col) => col.id !== 'memo' && col.id !== 'spacer')
@@ -66,7 +67,7 @@ export function ScheduleTable() {
   const rows = table.getRowModel().rows
 
   return (
-    <div ref={containerRef} className="space-y-4 w-full">
+    <div className="space-y-4 w-full">
       {/* Search */}
       <div className="flex items-center gap-2 sm:gap-4">
         <input
@@ -81,8 +82,8 @@ export function ScheduleTable() {
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-md overflow-hidden" style={{ width: tableWidth }}>
-        <div ref={tableRef}>
+      <div ref={containerRef} className="border border-border rounded-md overflow-x-auto overflow-y-hidden w-full">
+        <div ref={tableRef} style={{ minWidth: tableWidth }}>
           <div
             style={{
               height: `${virtualizer.getTotalSize() + 48}px`,
