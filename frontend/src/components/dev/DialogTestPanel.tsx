@@ -9,6 +9,7 @@ import { Spinner } from '@/components/common/Spinner'
 import { LoadingOverlay } from '@/components/common/LoadingOverlay'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
+import { FolderSyncModal } from '@/features/sync/components/FolderSyncModal'
 import { toast } from 'sonner'
 
 export function DialogTestPanel() {
@@ -18,6 +19,7 @@ export function DialogTestPanel() {
   const [loadingOpen, setLoadingOpen] = useState(false)
   const [errorOpen, setErrorOpen] = useState(false)
   const [emptyOpen, setEmptyOpen] = useState(false)
+  const [syncOpen, setSyncOpen] = useState(false)
   const [name, setName] = useState('')
 
   return (
@@ -89,6 +91,17 @@ export function DialogTestPanel() {
         onClick={() => setEmptyOpen(true)}
       >
         빈 상태
+      </Button>
+
+      <div className="border-t border-border my-2" />
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setSyncOpen(true)}
+      >
+        폴더 동기화
       </Button>
 
       {/* Alert Dialog */}
@@ -189,6 +202,9 @@ export function DialogTestPanel() {
           }}
         />
       </AlertDialog>
+
+      {/* Folder Sync Modal */}
+      <FolderSyncModal open={syncOpen} onOpenChange={setSyncOpen} />
     </div>
   )
 }
