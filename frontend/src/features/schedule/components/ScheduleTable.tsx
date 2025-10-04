@@ -36,7 +36,6 @@ export function ScheduleTable() {
 
   // Grid virtualizer (card 모드일 때만)
   const gridContainerRef = useRef<HTMLDivElement>(null)
-  const measureCardRef = useRef<HTMLDivElement>(null)
   const cardWidth = 320
   const gap = 16
   const [gridColumns, setGridColumns] = useState(() => {
@@ -46,7 +45,6 @@ export function ScheduleTable() {
     }
     return 1 // SSR fallback
   })
-  const [measuredCardHeight, setMeasuredCardHeight] = useState(400)
 
   useLayoutEffect(() => {
     if (viewMode !== 'card') return
@@ -63,22 +61,12 @@ export function ScheduleTable() {
     return () => window.removeEventListener('resize', updateColumns)
   }, [viewMode])
 
-  // 카드 높이 측정
-  useLayoutEffect(() => {
-    if (viewMode !== 'card' || !measureCardRef.current) return
-
-    const height = measureCardRef.current.getBoundingClientRect().height
-    if (height > 0 && height !== measuredCardHeight) {
-      setMeasuredCardHeight(height)
-    }
-  }, [viewMode, table.getRowModel().rows.length, measuredCardHeight])
-
   const rowCount = Math.ceil(table.getRowModel().rows.length / gridColumns)
 
   const gridVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => window as any,
-    estimateSize: () => measuredCardHeight + gap,
+    estimateSize: () => 400,
     overscan: 3,
     scrollMargin: gridContainerRef.current?.offsetTop ?? 0,
     observeElementRect: (instance, cb) => {
@@ -102,6 +90,7 @@ export function ScheduleTable() {
       window.addEventListener('scroll', handler)
       return () => window.removeEventListener('scroll', handler)
     },
+    measureElement: (el) => el.getBoundingClientRect().height + gap,
   })
 
   // 태그 삭제 핸들러 (useScheduleTable의 deleteConfirmDialog와 통합)
@@ -404,6 +393,8 @@ export function ScheduleTable() {
               return (
                 <div
                   key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={gridVirtualizer.measureElement}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -416,13 +407,11 @@ export function ScheduleTable() {
                     className="grid gap-4"
                     style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
                   >
-                    {rowSchedules.map((row, idx) => {
+                    {rowSchedules.map((row) => {
                       const schedule = row.original
                       const isSelected = rowSelection[schedule.id] || false
-                      // 첫 번째 카드만 측정용으로 ref 부여
-                      const cardRef = virtualRow.index === 0 && idx === 0 ? measureCardRef : undefined
                       return (
-                        <div key={schedule.id} ref={cardRef}>
+                        <div key={schedule.id} className="min-w-0 overflow-hidden">
                           <ScheduleCard
                             schedule={schedule}
                             isSelected={isSelected}
