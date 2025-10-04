@@ -32,8 +32,8 @@ export function AppFooter({ stats }: AppFooterProps) {
     {
       label: '촬영비',
       value: priceMode === 'total'
-        ? `${totalPrice.toLocaleString()}원`
-        : `${netPrice.toLocaleString()}원`
+        ? `₩${totalPrice.toLocaleString()}`
+        : `₩${netPrice.toLocaleString()}`
     },
   ]
 
@@ -49,12 +49,12 @@ export function AppFooter({ stats }: AppFooterProps) {
                   <Select value={priceMode} onValueChange={(value: 'total' | 'net') => setPriceMode(value)}>
                     <SelectTrigger className="h-7 w-auto border-none shadow-none px-1 hover:bg-accent focus:ring-0 focus:ring-offset-0 focus:outline-none">
                       <SelectValue className="font-semibold text-foreground whitespace-nowrap">
-                        {item.value}
+                        <span className="text-muted-foreground">₩</span>{(item.value as string).slice(1)}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="total">총액: {totalPrice.toLocaleString()}원</SelectItem>
-                      <SelectItem value="net">실수령: {netPrice.toLocaleString()}원</SelectItem>
+                      <SelectItem value="total">총액: ₩{totalPrice.toLocaleString()}</SelectItem>
+                      <SelectItem value="net">실수령: ₩{netPrice.toLocaleString()}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
