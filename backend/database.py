@@ -51,6 +51,40 @@ class User(Base):
             'last_login': self.last_login.isoformat() if self.last_login else None,
         }
 
+class Tag(Base):
+    __tablename__ = "tags"
+
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    # User identification
+    user_id = Column(String(255), nullable=False, index=True)
+
+    # Tag fields
+    tag_type = Column(String(20), nullable=False)  # 'brand' or 'album'
+    tag_value = Column(String(100), nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Unique constraint
+    __table_args__ = (
+        Index('idx_user_tag_type', 'user_id', 'tag_type'),
+        Index('idx_unique_user_tag', 'user_id', 'tag_type', 'tag_value', unique=True),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert Tag model to dictionary"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'tag_type': self.tag_type,
+            'tag_value': self.tag_value,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
 class Schedule(Base):
     __tablename__ = "schedules"
 

@@ -10,15 +10,24 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules } from '@/features/schedule/hooks/useSchedules'
-import { useState, useMemo } from 'react'
+import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
+import { useState, useMemo, useEffect } from 'react'
 
 function AppContent() {
   const [parsedData, setParsedData] = useState<any[]>([])
   const { testPanelVisible } = useSettingsStore()
   const { data: schedules } = useSchedules()
+  const { data: tags = [] } = useTags()
+  const syncTags = useSyncTags()
+
+  // 초기 로드 시 태그가 없으면 스케줄에서 동기화
+  useEffect(() => {
+    if (schedules && schedules.length > 0 && tags.length === 0) {
+      syncTags.mutate()
+    }
+  }, [schedules, tags])
 
   const handleParsed = (data: any[]) => {
-    console.log('파싱된 데이터:', data)
     setParsedData(data)
   }
 

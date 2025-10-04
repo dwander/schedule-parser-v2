@@ -294,8 +294,15 @@ def parse_brand_album(line: str) -> (str, str):
     album_pattern = '|'.join([f'({pattern})' for pattern in ALBUM_PATTERNS])
     album_match = re.search(album_pattern, line, re.IGNORECASE)
 
+    # 브랜드: 대괄호 제거, trim, 연속 공백 정규화
     brand = brand_match.group(0).replace('[', '').replace(']', '').strip() if brand_match else ""
-    album = album_match.group(0).upper() if album_match else ""  # Convert to uppercase
+    if brand:
+        brand = re.sub(r'\s+', ' ', brand)  # 연속된 공백을 하나로
+
+    # 앨범: 대문자 변환, 연속 공백 정규화
+    album = album_match.group(0).upper() if album_match else ""
+    if album:
+        album = re.sub(r'\s+', ' ', album)  # 연속된 공백을 하나로
 
     # "기본 30P" 형태에서 공백 제거하여 "기본30P"로 정규화
     if album and '기본' in album:

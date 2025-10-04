@@ -1493,6 +1493,15 @@ async def save_to_database(request: PersistentSaveRequest, db: Session = Depends
         service = ScheduleService(db)
         saved_schedules = service.save_schedules(user_id, schedules)
 
+        # Auto-create tags from saved schedules
+        for schedule in schedules:
+            brand = schedule.get('brand', '')
+            album = schedule.get('album', '')
+            if brand or album:
+                auto_create_tags_from_schedule(db, user_id, brand, album)
+
+        db.commit()
+
         return {
             "success": True,
             "message": f"Successfully saved {schedules_count} schedules to database",
@@ -1582,6 +1591,14 @@ async def update_schedule_field(
 
         if not updated_schedule:
             raise HTTPException(status_code=404, detail="Schedule not found")
+
+        # Auto-create tag when brand or album field is updated
+        if field in ['brand', 'album']:
+            brand = updated_schedule.brand if field == 'brand' else ''
+            album = updated_schedule.album if field == 'album' else ''
+            if brand or album:
+                auto_create_tags_from_schedule(db, user_id, brand, album)
+                db.commit()
 
         return {
             "success": True,
@@ -2073,7 +2090,11 @@ def update_schedule(
             existing.comments = schedule['memo']
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
-        
+
+        # Auto-create tags if brand or album was updated
+        if 'brand' in schedule or 'album' in schedule:
+            auto_create_tags_from_schedule(db, user_id, existing.brand, existing.album)
+
         db.commit()
         db.refresh(existing)
         
@@ -2146,21 +2167,229 @@ def batch_delete_schedules(
 ):
     """Batch delete schedules"""
     try:
-        
+
         for schedule_id in ids:
             existing = db.query(Schedule).filter(
                 Schedule.id == int(schedule_id),
                 Schedule.user_id == user_id
             ).first()
-            
+
             if existing:
                 db.delete(existing)
-        
+
         db.commit()
-        
+
         return {"success": True, "message": f"Deleted {len(ids)} schedules"}
-        
+
     except Exception as e:
         logger.error(f"Failed to batch delete schedules: {e}")
         db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== Tag Helper Functions ====================
+
+def auto_create_tags_from_schedule(db_session, user_id: str, brand: str, album: str):
+    """스케줄 저장/업데이트 시 자동으로 태그 생성"""
+    from database import Tag
+    import re
+
+    created_tags = []
+
+    # 브랜드 태그 생성
+    if brand and brand.strip():
+        brand_value = re.sub(r'\s+', ' ', brand.strip())
+
+        existing = db_session.query(Tag).filter(
+            Tag.user_id == user_id,
+            Tag.tag_type == 'brand',
+            Tag.tag_value == brand_value
+        ).first()
+
+        if not existing:
+            new_tag = Tag(user_id=user_id, tag_type='brand', tag_value=brand_value)
+            db_session.add(new_tag)
+            created_tags.append(('brand', brand_value))
+
+    # 앨범 태그 생성
+    if album and album.strip():
+        album_value = re.sub(r'\s+', ' ', album.strip())
+
+        existing = db_session.query(Tag).filter(
+            Tag.user_id == user_id,
+            Tag.tag_type == 'album',
+            Tag.tag_value == album_value
+        ).first()
+
+        if not existing:
+            new_tag = Tag(user_id=user_id, tag_type='album', tag_value=album_value)
+            db_session.add(new_tag)
+            created_tags.append(('album', album_value))
+
+    return created_tags
+
+# ==================== Tag API ====================
+
+@app.get("/api/tags/{user_id}")
+async def get_tags(user_id: str, tag_type: Optional[str] = None):
+    """사용자의 태그 목록 조회"""
+    try:
+        db_session = next(get_database())
+        from database import Tag
+
+        query = db_session.query(Tag).filter(Tag.user_id == user_id)
+
+        if tag_type:
+            query = query.filter(Tag.tag_type == tag_type)
+
+        tags = query.order_by(Tag.tag_value).all()
+
+        return {
+            "success": True,
+            "tags": [tag.to_dict() for tag in tags]
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Get tags error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/tags/{user_id}")
+async def create_tag(user_id: str, tag_data: dict):
+    """새 태그 생성"""
+    try:
+        db_session = next(get_database())
+        from database import Tag
+
+        tag_type = tag_data.get('tag_type')
+        tag_value = tag_data.get('tag_value', '').strip()
+
+        if not tag_type or not tag_value:
+            raise HTTPException(status_code=400, detail="tag_type and tag_value are required")
+
+        if tag_type not in ['brand', 'album']:
+            raise HTTPException(status_code=400, detail="tag_type must be 'brand' or 'album'")
+
+        # 공백 정규화
+        import re
+        tag_value = re.sub(r'\s+', ' ', tag_value)
+
+        # 중복 체크
+        existing = db_session.query(Tag).filter(
+            Tag.user_id == user_id,
+            Tag.tag_type == tag_type,
+            Tag.tag_value == tag_value
+        ).first()
+
+        if existing:
+            return {"success": True, "tag": existing.to_dict(), "created": False}
+
+        # 새 태그 생성
+        new_tag = Tag(
+            user_id=user_id,
+            tag_type=tag_type,
+            tag_value=tag_value
+        )
+
+        db_session.add(new_tag)
+        db_session.commit()
+        db_session.refresh(new_tag)
+
+        return {"success": True, "tag": new_tag.to_dict(), "created": True}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db_session.rollback()
+        logger.error(f"❌ Create tag error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/tags/{user_id}/{tag_id}")
+async def delete_tag(user_id: str, tag_id: int):
+    """태그 삭제 및 관련 스케줄 업데이트"""
+    try:
+        db_session = next(get_database())
+        from database import Tag, Schedule
+
+        # 태그 조회
+        tag = db_session.query(Tag).filter(
+            Tag.id == tag_id,
+            Tag.user_id == user_id
+        ).first()
+
+        if not tag:
+            raise HTTPException(status_code=404, detail="Tag not found")
+
+        # 관련 스케줄 업데이트 (해당 태그를 사용하는 스케줄의 필드를 빈 문자열로)
+        field_name = tag.tag_type  # 'brand' or 'album'
+        affected_schedules = db_session.query(Schedule).filter(
+            Schedule.user_id == user_id,
+            getattr(Schedule, field_name) == tag.tag_value
+        ).all()
+
+        for schedule in affected_schedules:
+            setattr(schedule, field_name, '')
+
+        # 태그 삭제
+        db_session.delete(tag)
+        db_session.commit()
+
+        return {
+            "success": True,
+            "deleted_tag": tag.to_dict(),
+            "affected_schedules": len(affected_schedules)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db_session.rollback()
+        logger.error(f"❌ Delete tag error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/tags/{user_id}/sync")
+async def sync_tags_from_schedules(user_id: str):
+    """기존 스케줄 데이터에서 태그 추출 및 동기화 (배치 최적화)"""
+    try:
+        db_session = next(get_database())
+        from database import Tag, Schedule
+        import re
+
+        # 1. 기존 태그를 한 번에 모두 가져오기 (메모리에 캐싱)
+        existing_tags = db_session.query(Tag).filter(Tag.user_id == user_id).all()
+        existing_tag_set = {(tag.tag_type, tag.tag_value) for tag in existing_tags}
+
+        # 2. 모든 스케줄에서 고유한 태그 추출
+        schedules = db_session.query(Schedule).filter(Schedule.user_id == user_id).all()
+        unique_tags = set()
+
+        for schedule in schedules:
+            # 브랜드 태그
+            if schedule.brand and schedule.brand.strip():
+                brand_value = re.sub(r'\s+', ' ', schedule.brand.strip())
+                unique_tags.add(('brand', brand_value))
+
+            # 앨범 태그
+            if schedule.album and schedule.album.strip():
+                album_value = re.sub(r'\s+', ' ', schedule.album.strip())
+                unique_tags.add(('album', album_value))
+
+        # 3. DB에 없는 새 태그만 추가 (메모리 비교)
+        new_tags = unique_tags - existing_tag_set
+        created_tags = []
+
+        for tag_type, tag_value in new_tags:
+            new_tag = Tag(user_id=user_id, tag_type=tag_type, tag_value=tag_value)
+            db_session.add(new_tag)
+            created_tags.append(tag_value)
+
+        db_session.commit()
+
+        return {
+            "success": True,
+            "created_count": len(created_tags),
+            "created_tags": created_tags
+        }
+
+    except Exception as e:
+        db_session.rollback()
+        logger.error(f"❌ Sync tags error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

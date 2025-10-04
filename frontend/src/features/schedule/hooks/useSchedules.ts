@@ -22,6 +22,7 @@ export function useAddSchedule() {
     mutationFn: addSchedule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
     },
   })
 }
@@ -33,6 +34,7 @@ export function useUpdateSchedule() {
     mutationFn: updateSchedule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
     },
   })
 }
