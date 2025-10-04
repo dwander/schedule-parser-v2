@@ -27,8 +27,14 @@ import { toast } from 'sonner'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
-export function ScheduleTable() {
-  const { data, isLoading, error } = useSchedules()
+interface ScheduleTableProps {
+  data: Schedule[]
+  globalFilter: string
+  onGlobalFilterChange: (value: string) => void
+}
+
+export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: ScheduleTableProps) {
+  const { isLoading, error } = useSchedules()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const { dateRangeFilter, setDateRangeFilter: setDateRange } = useSettingsStore()
@@ -39,7 +45,7 @@ export function ScheduleTable() {
     to: dateRangeFilter.to ? new Date(dateRangeFilter.to) : null,
   }
 
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
+  const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -222,7 +228,7 @@ export function ScheduleTable() {
             </Button>
             <input
               value={globalFilter ?? ''}
-              onChange={(e) => setGlobalFilter(e.target.value)}
+              onChange={(e) => onGlobalFilterChange(e.target.value)}
               placeholder="검색..."
               className={`px-2 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
                 searchExpanded ? 'w-full opacity-100' : 'w-0 opacity-0'

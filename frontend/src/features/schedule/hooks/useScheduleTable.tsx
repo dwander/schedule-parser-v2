@@ -25,8 +25,7 @@ import { useTagOptions } from './useTagOptions'
 import { useCreateTag, useDeleteTag, useTags } from './useTags'
 
 export function useScheduleTable(
-  data: Schedule[] = [],
-  dateRange: { from: Date | null; to: Date | null } = { from: null, to: null }
+  data: Schedule[] = []
 ) {
   const updateSchedule = useUpdateSchedule()
   const createTag = useCreateTag()
@@ -37,24 +36,11 @@ export function useScheduleTable(
   const { brandOptions, albumOptions } = useTagOptions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
 
-  // 날짜 범위 필터 적용
-  const filteredData = useMemo(() => {
-    if (!dateRange.from || !dateRange.to) return data
-
-    return data.filter((schedule) => {
-      if (!schedule.date) return false
-
-      // YYYY.MM.DD 형식을 Date 객체로 변환
-      const [year, month, day] = schedule.date.split('.').map(Number)
-      const scheduleDate = new Date(year, month - 1, day)
-
-      return scheduleDate >= dateRange.from! && scheduleDate <= dateRange.to!
-    })
-  }, [data, dateRange])
+  // 이미 App에서 필터링된 데이터를 받으므로 여기서는 추가 필터링 불필요
+  const filteredData = data
 
   // 중복/충돌 스케줄 탐지 (날짜 + 시간 기준)
   const { duplicateSchedules, conflictSchedules } = useMemo(() => {
@@ -554,13 +540,11 @@ export function useScheduleTable(
     state: {
       sorting,
       columnFilters,
-      globalFilter,
       rowSelection,
       columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
     enableRowSelection: true,
@@ -576,8 +560,6 @@ export function useScheduleTable(
 
   return {
     table,
-    globalFilter,
-    setGlobalFilter,
     rowSelection,
     flexColumnId, // 가변폭 컬럼 ID 반환
     columnVisibility,
