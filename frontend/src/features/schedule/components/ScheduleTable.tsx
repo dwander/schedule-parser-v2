@@ -31,7 +31,13 @@ export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
-  const { dateRangeFilter: dateRange, setDateRangeFilter: setDateRange } = useSettingsStore()
+  const { dateRangeFilter, setDateRangeFilter: setDateRange } = useSettingsStore()
+
+  // localStorage에서 불러온 문자열을 Date 객체로 변환
+  const dateRange = {
+    from: dateRangeFilter.from ? new Date(dateRangeFilter.from) : null,
+    to: dateRangeFilter.to ? new Date(dateRangeFilter.to) : null,
+  }
 
   const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
