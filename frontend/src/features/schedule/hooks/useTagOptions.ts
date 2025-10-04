@@ -8,7 +8,9 @@ export function useTagOptions() {
     const brands = new Set<string>()
     schedules.forEach(schedule => {
       if (schedule.brand && schedule.brand.trim()) {
-        brands.add(schedule.brand.trim())
+        // 연속된 공백을 하나로 정규화
+        const normalized = schedule.brand.trim().replace(/\s+/g, ' ')
+        brands.add(normalized)
       }
     })
     return Array.from(brands).sort()
@@ -18,7 +20,9 @@ export function useTagOptions() {
     const albums = new Set<string>()
     schedules.forEach(schedule => {
       if (schedule.album && schedule.album.trim()) {
-        albums.add(schedule.album.trim())
+        // 연속된 공백을 하나로 정규화
+        const normalized = schedule.album.trim().replace(/\s+/g, ' ')
+        albums.add(normalized)
       }
     })
     return Array.from(albums).sort()

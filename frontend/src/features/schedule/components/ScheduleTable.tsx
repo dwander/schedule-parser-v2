@@ -19,7 +19,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection } = useScheduleTable(data)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -104,6 +104,8 @@ export function ScheduleTable() {
 
   return (
     <>
+      {deleteConfirmDialog}
+
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

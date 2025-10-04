@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, X } from 'lucide-react'
 
 interface TagSelectCellProps {
   value: string
   onSave: (value: string) => void
+  onDelete?: (tag: string) => void
   options: string[]
   placeholder?: string
 }
 
-export function TagSelectCell({ value, onSave, options, placeholder = '선택' }: TagSelectCellProps) {
+export function TagSelectCell({ value, onSave, onDelete, options, placeholder = '선택' }: TagSelectCellProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -103,19 +104,39 @@ export function TagSelectCell({ value, onSave, options, placeholder = '선택' }
               {filteredOptions.map((option) => (
                 <div
                   key={option}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    handleSelect(option)
-                  }}
-                  className={`px-3 py-1 rounded-full cursor-pointer transition-colors text-sm flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full transition-colors text-sm flex items-center gap-1 ${
                     value === option
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary hover:bg-secondary/80'
                   }`}
                 >
-                  <span>#{option}</span>
-                  {value === option && <Check className="h-3 w-3" />}
+                  <span
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleSelect(option)
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {option}
+                  </span>
+                  {value === option ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    onDelete && (
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onDelete(option)
+                        }}
+                        className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                        aria-label={`${option} 삭제`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )
+                  )}
                 </div>
               ))}
             </div>
@@ -128,7 +149,7 @@ export function TagSelectCell({ value, onSave, options, placeholder = '선택' }
               }}
               className="px-3 py-1 rounded-full cursor-pointer bg-secondary hover:bg-secondary/80 transition-colors text-sm text-muted-foreground inline-block"
             >
-              #{search} 추가
+              {search} 추가
             </div>
           ) : (
             <div className="px-3 py-2 text-sm text-muted-foreground">

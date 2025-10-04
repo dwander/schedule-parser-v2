@@ -12,7 +12,10 @@ import type {
 import { useState, useMemo } from 'react'
 import type { Schedule } from '../types/schedule'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { useUpdateSchedule } from './useSchedules'
+import { useUpdateSchedule, useSchedules } from './useSchedules'
+import { useState as useConfirmState } from 'react'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { toast } from 'sonner'
 import { EditableCell } from '../components/EditableCell'
 import { MemoCell } from '../components/MemoCell'
 import { DatePickerCell } from '../components/DatePickerCell'
@@ -22,11 +25,13 @@ import { useTagOptions } from './useTagOptions'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const updateSchedule = useUpdateSchedule()
+  const { data: allSchedules = [] } = useSchedules()
   const { brandOptions, albumOptions } = useTagOptions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
+  const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tag: string; field: 'brand' | 'album' } | null>(null)
 
   // 컬럼 가시성 설정 (zustand store에서 가져오기)
   const columnVisibility = useSettingsStore((state) => state.columnVisibility)
@@ -44,6 +49,38 @@ export function useScheduleTable(data: Schedule[] = []) {
 
   // 가변폭 컬럼 ID (memo가 숨겨지면 spacer가 대신 사용됨)
   const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
+
+  // 태그 삭제 핸들러
+  const handleDeleteTag = (tag: string, field: 'brand' | 'album') => {
+    const affectedCount = allSchedules.filter(s => s[field] === tag).length
+
+    if (affectedCount > 0) {
+      setDeleteConfirm({ tag, field })
+    } else {
+      toast.info(`"${tag}" 태그는 사용 중이지 않습니다`)
+    }
+  }
+
+  const confirmDeleteTag = async () => {
+    if (!deleteConfirm) return
+
+    const { tag, field } = deleteConfirm
+    const affectedSchedules = allSchedules.filter(s => s[field] === tag)
+
+    try {
+      for (const schedule of affectedSchedules) {
+        await updateSchedule.mutateAsync({
+          id: schedule.id,
+          [field]: ''
+        })
+      }
+      toast.success(`"${tag}" 태그가 삭제되었습니다 (${affectedSchedules.length}개 항목 업데이트)`)
+    } catch (error) {
+      toast.error('태그 삭제 중 오류가 발생했습니다')
+    } finally {
+      setDeleteConfirm(null)
+    }
+  }
 
   const columns = useMemo<ColumnDef<Schedule>[]>(
     () => [
@@ -240,6 +277,7 @@ export function useScheduleTable(data: Schedule[] = []) {
                 brand: value
               })
             }}
+            onDelete={(tag) => handleDeleteTag(tag, 'brand')}
           />
         ),
       },
@@ -263,6 +301,7 @@ export function useScheduleTable(data: Schedule[] = []) {
                 album: value
               })
             }}
+            onDelete={(tag) => handleDeleteTag(tag, 'album')}
           />
         ),
       },
@@ -446,6 +485,10 @@ export function useScheduleTable(data: Schedule[] = []) {
     getFilteredRowModel: getFilteredRowModel(),
   })
 
+  const affectedCount = deleteConfirm
+    ? allSchedules.filter(s => s[deleteConfirm.field] === deleteConfirm.tag).length
+    : 0
+
   return {
     table,
     globalFilter,
@@ -454,5 +497,15 @@ export function useScheduleTable(data: Schedule[] = []) {
     flexColumnId, // 가변폭 컬럼 ID 반환
     columnVisibility,
     setColumnVisibility,
+    deleteConfirmDialog: deleteConfirm && (
+      <ConfirmDialog
+        open={true}
+        onOpenChange={(open) => !open && setDeleteConfirm(null)}
+        onConfirm={confirmDeleteTag}
+        title="태그 삭제"
+        description={`"${deleteConfirm.tag}" 태그를 삭제하시겠습니까?\n\n이 태그를 사용하는 ${affectedCount}개의 항목이 빈 값으로 변경됩니다.`}
+        variant="destructive"
+      />
+    )
   }
 }
