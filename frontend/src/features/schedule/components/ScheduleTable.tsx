@@ -66,16 +66,16 @@ export function ScheduleTable() {
   const rows = table.getRowModel().rows
 
   return (
-    <div ref={containerRef} className="space-y-4">
+    <div ref={containerRef} className="space-y-4 w-full">
       {/* Search */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <input
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
           placeholder="검색..."
-          className="px-3 py-2 border border-input rounded-md bg-background text-foreground"
+          className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px]"
         />
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
           {rows.length}개 스케줄
         </div>
       </div>

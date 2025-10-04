@@ -20,11 +20,11 @@ export function AppFooter({ stats }: AppFooterProps) {
 
   return (
     <footer className="w-full border-t border-border bg-background">
-      <div className="flex h-12 items-center justify-around px-4">
+      <div className="flex h-12 items-center justify-around px-4 gap-2 sm:gap-4">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">{item.label}</span>
-            <span className="font-semibold text-foreground">{item.value}</span>
+          <div key={index} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+            <span className="text-muted-foreground whitespace-nowrap">{item.label}</span>
+            <span className="font-semibold text-foreground whitespace-nowrap">{item.value}</span>
           </div>
         ))}
       </div>

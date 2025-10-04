@@ -32,9 +32,9 @@ function App() {
           onTestPanelVisibleChange={setTestPanelVisible}
         >
           {/* 파서 입력창 */}
-          <section className="mb-6 container max-w-screen-2xl px-8 pt-6">
-            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-card-foreground">
+          <section className="mb-6 container max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-4 sm:pt-6">
+            <div className="rounded-lg border border-border bg-card p-4 sm:p-6 shadow-sm">
+              <h2 className="mb-4 text-base sm:text-lg font-semibold text-card-foreground">
                 카카오톡 메시지 파싱
               </h2>
               <ParserInput onParsed={handleParsed} />
@@ -43,7 +43,7 @@ function App() {
           </section>
 
           {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
-          <section className="px-4 pb-6">
+          <section className="px-2 sm:px-4 pb-4 sm:pb-6">
             <ScheduleTable />
           </section>
         </AppLayout>

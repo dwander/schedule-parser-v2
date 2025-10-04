@@ -33,7 +33,7 @@ export function AppHeader({ onMenuClick, onAddClick }: AppHeaderProps) {
           className="bg-background/50 backdrop-blur-sm"
         >
           <ListPlus className="h-[1.25rem] w-[1.25rem]" />
-          <span>새 스케줄</span>
+          <span className="hidden sm:inline">새 스케줄</span>
         </Button>
       </div>
     </header>
