@@ -2167,15 +2167,12 @@ def batch_create_schedules(
         created_schedules = []
 
         for schedule in schedules:
-            # Convert v2 format to database format
-            couple = f"{schedule.get('groom', '')} ♥ {schedule.get('bride', '')}"
-
             new_schedule = Schedule(
                 user_id=user_id,
                 date=schedule.get('date', ''),
                 time=schedule.get('time', ''),
                 location=schedule.get('location', ''),
-                couple=couple,
+                couple=schedule.get('couple', ''),
                 brand=schedule.get('brand', ''),
                 album=schedule.get('album', ''),
                 photographer=schedule.get('photographer', ''),
@@ -2190,15 +2187,13 @@ def batch_create_schedules(
             db.add(new_schedule)
             db.flush()  # Get ID without committing
 
-            # Add to result list in v2 format
+            # Add to result list
             created_schedules.append({
                 'id': str(new_schedule.id),
                 'date': new_schedule.date,
                 'time': new_schedule.time,
                 'location': new_schedule.location,
-                'groom': schedule.get('groom', ''),
-                'bride': schedule.get('bride', ''),
-                'couple': couple,
+                'couple': new_schedule.couple,
                 'cuts': new_schedule.cuts,
                 'price': new_schedule.price,
                 'photographer': new_schedule.photographer,
