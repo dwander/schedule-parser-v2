@@ -1952,23 +1952,16 @@ def get_schedules(
     """Get all schedules for a user"""
     try:
         schedules = db.query(Schedule).filter(Schedule.user_id == user_id).all()
-        
-        # Convert to v2 format
+
+        # Convert to response format
         result = []
         for schedule in schedules:
-            # couple 필드를 groom/bride로 분리
-            couple = schedule.couple or ""
-            parts = couple.split('♥') if '♥' in couple else couple.split('❤')
-            groom = parts[0].strip() if len(parts) > 0 else ""
-            bride = parts[1].strip() if len(parts) > 1 else couple
-            
             result.append({
                 'id': str(schedule.id),
                 'date': schedule.date,
                 'time': schedule.time,
                 'location': schedule.location,
-                'groom': groom,
-                'bride': bride,
+                'couple': schedule.couple or "",
                 'contact': schedule.contact or "",
                 'brand': schedule.brand or "",
                 'album': schedule.album or "",
@@ -1981,7 +1974,7 @@ def get_schedules(
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
                 'updatedAt': schedule.updated_at.isoformat() if schedule.updated_at else None,
             })
-        
+
         return result
         
     except Exception as e:
@@ -1996,16 +1989,12 @@ def create_schedule(
 ):
     """Create a new schedule"""
     try:
-        
-        # Convert v2 format to database format
-        couple = f"{schedule.get('groom', '')} ♥ {schedule.get('bride', '')}"
-
         new_schedule = Schedule(
             user_id=user_id,
             date=schedule.get('date', ''),
             time=schedule.get('time', ''),
             location=schedule.get('location', ''),
-            couple=couple,
+            couple=schedule.get('couple', ''),
             brand=schedule.get('brand', ''),
             cuts=schedule.get('cuts', 0),
             price=schedule.get('price', 0),
@@ -2018,14 +2007,12 @@ def create_schedule(
         db.commit()
         db.refresh(new_schedule)
 
-        # Return in v2 format
         return {
             'id': str(new_schedule.id),
             'date': new_schedule.date,
             'time': new_schedule.time,
             'location': new_schedule.location,
-            'groom': schedule.get('groom', ''),
-            'bride': schedule.get('bride', ''),
+            'couple': new_schedule.couple,
             'cuts': new_schedule.cuts,
             'price': new_schedule.price,
             'manager': new_schedule.manager,
@@ -2059,17 +2046,14 @@ def update_schedule(
             raise HTTPException(status_code=404, detail="Schedule not found")
         
         # Update fields
-        if 'groom' in schedule or 'bride' in schedule:
-            groom = schedule.get('groom', existing.couple.split('♥')[0].strip() if '♥' in existing.couple else '')
-            bride = schedule.get('bride', existing.couple.split('♥')[1].strip() if '♥' in existing.couple and len(existing.couple.split('♥')) > 1 else '')
-            existing.couple = f"{groom} ♥ {bride}"
-        
         if 'date' in schedule:
             existing.date = schedule['date']
         if 'time' in schedule:
             existing.time = schedule['time']
         if 'location' in schedule:
             existing.location = schedule['location']
+        if 'couple' in schedule:
+            existing.couple = schedule['couple']
         if 'contact' in schedule:
             existing.contact = schedule['contact']
         if 'brand' in schedule:
@@ -2095,19 +2079,13 @@ def update_schedule(
 
         db.commit()
         db.refresh(existing)
-        
-        # Return in v2 format
-        parts = existing.couple.split('♥') if '♥' in existing.couple else existing.couple.split('❤')
-        groom = parts[0].strip() if len(parts) > 0 else ""
-        bride = parts[1].strip() if len(parts) > 1 else existing.couple
-        
+
         return {
             'id': str(existing.id),
             'date': existing.date,
             'time': existing.time,
             'location': existing.location,
-            'groom': groom,
-            'bride': bride,
+            'couple': existing.couple,
             'contact': existing.contact,
             'brand': existing.brand,
             'album': existing.album,
@@ -2186,6 +2164,8 @@ def batch_create_schedules(
 
             db.add(new_schedule)
             db.flush()  # Get ID without committing
+
+            print(f"📝 Created schedule - couple: '{new_schedule.couple}'")
 
             # Add to result list
             created_schedules.append({
