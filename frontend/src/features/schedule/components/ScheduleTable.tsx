@@ -4,7 +4,7 @@ import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
-import { Trash2, Settings } from 'lucide-react'
+import { Trash2, Settings, Search, Calendar } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
@@ -19,13 +19,18 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { DateRangeFilterDialog } from './DateRangeFilterDialog'
 import { toast } from 'sonner'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
+  const [searchExpanded, setSearchExpanded] = useState(false)
+  const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
+
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -189,14 +194,48 @@ export function ScheduleTable() {
 
       <div className="space-y-4 w-full">
         {/* Search and Actions */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4">
-        <input
-          value={globalFilter ?? ''}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="검색..."
-          className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px] focus:ring-1 focus:ring-ring/30 focus:border-ring/50 focus:outline-none"
-        />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Expandable Search */}
+          <div
+            className={`flex items-center border border-input rounded-md bg-background overflow-hidden transition-all duration-300 ease-in-out ${
+              searchExpanded ? 'w-full sm:w-64' : 'w-10'
+            }`}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchExpanded(!searchExpanded)}
+              className="flex-shrink-0 hover:bg-transparent h-8 w-8 p-0"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+            <input
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder="검색..."
+              className={`px-2 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
+                searchExpanded ? 'w-full opacity-100' : 'w-0 opacity-0'
+              }`}
+              autoFocus={searchExpanded}
+            />
+          </div>
+
+          {/* Date Range Filter Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDateRangeDialogOpen(true)}
+            className="flex-shrink-0 gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {dateRange.from && dateRange.to
+                ? `${dateRange.from.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')} ~ ${dateRange.to.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`
+                : '전체기간'}
+            </span>
+          </Button>
+
+        <div className="flex items-center gap-1 ml-auto">
           <Button
             variant="ghost"
             size="icon"
@@ -422,6 +461,14 @@ export function ScheduleTable() {
           </div>
         </div>
       )}
+
+      {/* Date Range Filter Dialog */}
+      <DateRangeFilterDialog
+        open={dateRangeDialogOpen}
+        onOpenChange={setDateRangeDialogOpen}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      />
       </div>
     </>
   )

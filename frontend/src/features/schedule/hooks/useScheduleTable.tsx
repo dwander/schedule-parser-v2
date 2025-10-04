@@ -24,7 +24,10 @@ import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
 import { useCreateTag, useDeleteTag, useTags } from './useTags'
 
-export function useScheduleTable(data: Schedule[] = []) {
+export function useScheduleTable(
+  data: Schedule[] = [],
+  dateRange: { from: Date | null; to: Date | null } = { from: null, to: null }
+) {
   const updateSchedule = useUpdateSchedule()
   const createTag = useCreateTag()
   const deleteTagMutation = useDeleteTag()
@@ -37,6 +40,21 @@ export function useScheduleTable(data: Schedule[] = []) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
+
+  // 날짜 범위 필터 적용
+  const filteredData = useMemo(() => {
+    if (!dateRange.from || !dateRange.to) return data
+
+    return data.filter((schedule) => {
+      if (!schedule.date) return false
+
+      // YYYY.MM.DD 형식을 Date 객체로 변환
+      const [year, month, day] = schedule.date.split('.').map(Number)
+      const scheduleDate = new Date(year, month - 1, day)
+
+      return scheduleDate >= dateRange.from! && scheduleDate <= dateRange.to!
+    })
+  }, [data, dateRange])
 
   // 컬럼 가시성 설정 (zustand store에서 가져오기)
   const columnVisibility = useSettingsStore((state) => state.columnVisibility)
@@ -468,7 +486,7 @@ export function useScheduleTable(data: Schedule[] = []) {
   )
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
