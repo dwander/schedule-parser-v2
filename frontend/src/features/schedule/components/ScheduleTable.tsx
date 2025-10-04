@@ -36,9 +36,17 @@ export function ScheduleTable() {
 
   // Grid virtualizer (card 모드일 때만)
   const gridContainerRef = useRef<HTMLDivElement>(null)
-  const [gridColumns, setGridColumns] = useState(3)
+  const measureCardRef = useRef<HTMLDivElement>(null)
   const cardWidth = 320
   const gap = 16
+  const [gridColumns, setGridColumns] = useState(() => {
+    // 초기값을 window 크기로 계산
+    if (typeof window !== 'undefined') {
+      return Math.max(1, Math.floor((window.innerWidth + gap) / (cardWidth + gap)))
+    }
+    return 1 // SSR fallback
+  })
+  const [measuredCardHeight, setMeasuredCardHeight] = useState(400)
 
   useLayoutEffect(() => {
     if (viewMode !== 'card') return
@@ -55,27 +63,44 @@ export function ScheduleTable() {
     return () => window.removeEventListener('resize', updateColumns)
   }, [viewMode])
 
+  // 카드 높이 측정
+  useLayoutEffect(() => {
+    if (viewMode !== 'card' || !measureCardRef.current) return
+
+    const height = measureCardRef.current.getBoundingClientRect().height
+    if (height > 0 && height !== measuredCardHeight) {
+      setMeasuredCardHeight(height)
+    }
+  }, [viewMode, table.getRowModel().rows.length, measuredCardHeight])
+
   const rowCount = Math.ceil(table.getRowModel().rows.length / gridColumns)
+
   const gridVirtualizer = useVirtualizer({
     count: rowCount,
-    getScrollElement: () => window,
-    estimateSize: () => 375,
-    overscan: 2,
+    getScrollElement: () => window as any,
+    estimateSize: () => measuredCardHeight + gap,
+    overscan: 3,
+    scrollMargin: gridContainerRef.current?.offsetTop ?? 0,
     observeElementRect: (instance, cb) => {
-      // window는 Element가 아니므로 ResizeObserver 대신 직접 측정
       const handler = () => {
         cb({
           width: window.innerWidth,
           height: window.innerHeight,
-        })
+        } as DOMRectReadOnly)
       }
 
-      // 초기 측정
       handler()
-
-      // 리사이즈 감지
       window.addEventListener('resize', handler)
       return () => window.removeEventListener('resize', handler)
+    },
+    observeElementOffset: (instance, cb) => {
+      const handler = () => {
+        cb(window.scrollY)
+      }
+
+      handler()
+      window.addEventListener('scroll', handler)
+      return () => window.removeEventListener('scroll', handler)
     },
   })
 
@@ -372,10 +397,9 @@ export function ScheduleTable() {
             }}
           >
             {gridVirtualizer.getVirtualItems().map((virtualRow) => {
-              const startIndex = virtualRow.index * gridColumns
-              const rowSchedules = table.getRowModel().rows
-                .slice(startIndex, startIndex + gridColumns)
-                .map(r => r.original)
+              const startIdx = virtualRow.index * gridColumns
+              const endIdx = Math.min(startIdx + gridColumns, table.getRowModel().rows.length)
+              const rowSchedules = table.getRowModel().rows.slice(startIdx, endIdx)
 
               return (
                 <div
@@ -385,21 +409,27 @@ export function ScheduleTable() {
                     top: 0,
                     left: 0,
                     width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                    paddingBottom: '16px',
+                    transform: `translateY(${virtualRow.start - (gridVirtualizer.options.scrollMargin || 0)}px)`,
                   }}
                 >
-                  <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>
-                    {rowSchedules.map((schedule) => {
+                  <div
+                    className="grid gap-4"
+                    style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+                  >
+                    {rowSchedules.map((row, idx) => {
+                      const schedule = row.original
                       const isSelected = rowSelection[schedule.id] || false
+                      // 첫 번째 카드만 측정용으로 ref 부여
+                      const cardRef = virtualRow.index === 0 && idx === 0 ? measureCardRef : undefined
                       return (
-                        <ScheduleCard
-                          key={schedule.id}
-                          schedule={schedule}
-                          isSelected={isSelected}
-                          onToggleSelect={() => table.getRow(String(table.getRowModel().rows.findIndex(r => r.original.id === schedule.id))).toggleSelected()}
-                          onDeleteTag={handleDeleteTag}
-                        />
+                        <div key={schedule.id} ref={cardRef}>
+                          <ScheduleCard
+                            schedule={schedule}
+                            isSelected={isSelected}
+                            onToggleSelect={() => row.toggleSelected()}
+                            onDeleteTag={handleDeleteTag}
+                          />
+                        </div>
                       )
                     })}
                   </div>
