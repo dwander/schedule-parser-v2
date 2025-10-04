@@ -2,17 +2,17 @@ import { PanelLeftClose } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useEffect } from 'react'
 
 interface AppSidebarProps {
   open: boolean
   onClose: () => void
-  testPanelVisible: boolean
-  onTestPanelToggle: (visible: boolean) => void
   onSettingsClick?: () => void
 }
 
-export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle, onSettingsClick }: AppSidebarProps) {
+export function AppSidebar({ open, onClose, onSettingsClick }: AppSidebarProps) {
+  const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return
@@ -117,7 +117,7 @@ export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle,
                 <span className="text-sm text-muted-foreground">UI 테스트 패널</span>
                 <Switch
                   checked={testPanelVisible}
-                  onCheckedChange={onTestPanelToggle}
+                  onCheckedChange={setTestPanelVisible}
                 />
               </div>
             </div>

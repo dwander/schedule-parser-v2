@@ -1,16 +1,22 @@
-import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes'
-import { ReactNode } from 'react'
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
+import { ReactNode, useEffect } from 'react'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface ThemeProviderProps {
   children: ReactNode
-  attribute?: 'class' | 'data-theme'
-  defaultTheme?: string
-  enableSystem?: boolean
-  storageKey?: string
 }
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
-}
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const theme = useSettingsStore((state) => state.theme)
 
-export { useTheme }
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      forcedTheme={theme}
+    >
+      {children}
+    </NextThemesProvider>
+  )
+}

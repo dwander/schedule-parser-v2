@@ -8,11 +8,12 @@ import { Toaster } from '@/components/ui/sonner'
 import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useState } from 'react'
 
 function App() {
   const [parsedData, setParsedData] = useState<any[]>([])
-  const [testPanelVisible, setTestPanelVisible] = useState(true)
+  const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
 
   const handleParsed = (data: any[]) => {
     console.log('파싱된 데이터:', data)
@@ -25,11 +26,9 @@ function App() {
   }
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AppLayout
-          testPanelVisible={testPanelVisible}
-          onTestPanelVisibleChange={setTestPanelVisible}
           stats={{
             scheduleCount: 42,
             totalCuts: 1234,

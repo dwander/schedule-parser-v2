@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Select,
   SelectContent,
@@ -6,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface StatItem {
   label: string
@@ -21,7 +21,7 @@ interface AppFooterProps {
 }
 
 export function AppFooter({ stats }: AppFooterProps) {
-  const [priceMode, setPriceMode] = useState<'total' | 'net'>('total')
+  const { priceMode, setPriceMode } = useSettingsStore()
 
   const totalPrice = stats?.totalPrice ?? 0
   const netPrice = Math.floor(totalPrice * 0.967)

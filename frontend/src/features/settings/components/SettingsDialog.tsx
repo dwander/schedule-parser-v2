@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Settings, Palette } from 'lucide-react'
-import { useTheme } from '@/components/providers/ThemeProvider'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface SettingsDialogProps {
   open: boolean
@@ -21,7 +21,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useSettingsStore()
 
   const getThemeLabel = () => {
     switch (theme) {
