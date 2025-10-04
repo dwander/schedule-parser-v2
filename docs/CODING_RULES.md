@@ -168,6 +168,25 @@ export function BadComponent() {
 }
 ```
 
+## 개발 서버 관리
+
+### 개발 서버 재시작 규칙
+
+개발 서버를 재시작할 때는 기존 포트를 먼저 정리하고 시작:
+
+```bash
+# ✅ 올바른 재시작 방법
+fuser -k 5173/tcp 5174/tcp; npm run dev
+
+# ❌ 잘못된 방법 (포트 충돌 발생)
+npm run dev  # 기존 프로세스가 남아있어 5174로 실행됨
+```
+
+**이유**:
+- 항상 5173 포트에서 실행되도록 보장
+- 여러 개의 좀비 프로세스 방지
+- 일관된 개발 환경 유지
+
 ## 참고 자료
 
 - [Tailwind CSS 문서](https://tailwindcss.com/docs)
