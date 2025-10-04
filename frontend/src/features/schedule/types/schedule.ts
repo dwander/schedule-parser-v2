@@ -5,12 +5,10 @@ export interface Schedule {
   date: string // ISO 8601
   time: string
   location: string
-  groom: string
-  bride: string
+  couple: string
   contact?: string
   cuts: number
   price: number
-  fee: number
   manager: string
   brand: Brand
   album?: string

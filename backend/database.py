@@ -96,7 +96,7 @@ class Schedule(Base):
 
     # Core schedule fields
     date = Column(String(20), nullable=False)  # 2024.09.15 형식
-    venue = Column(String(500), nullable=False, default="")
+    location = Column(String(500), nullable=False, default="")
     time = Column(String(20), nullable=False, default="")  # 14:00 형식
     couple = Column(String(500), nullable=False, default="")
 
@@ -105,8 +105,8 @@ class Schedule(Base):
     brand = Column(String(200), nullable=False, default="")
     album = Column(String(200), nullable=False, default="")
     photographer = Column(String(200), nullable=False, default="")
-    comments = Column(Text, nullable=False, default="")
-    contractor = Column(String(200), nullable=False, default="")
+    memo = Column(Text, nullable=False, default="")
+    manager = Column(String(200), nullable=False, default="")
     price = Column(Integer, nullable=False, default=0)  # 촬영단가
 
     # Review fields
@@ -117,7 +117,7 @@ class Schedule(Base):
     photo_note = Column(JSON, nullable=True)
 
     # New fields
-    cuts_count = Column(Integer, nullable=False, default=0)  # 컷 수
+    cuts = Column(Integer, nullable=False, default=0)  # 컷 수
     folder_name = Column(String(500), nullable=False, default="")  # 폴더명
 
     # Timestamp fields
@@ -136,20 +136,20 @@ class Schedule(Base):
         return {
             'id': self.id,
             'date': self.date,
-            'venue': self.venue,
+            'location': self.location,
             'time': self.time,
             'couple': self.couple,
             'contact': self.contact,
             'brand': self.brand,
             'album': self.album,
             'photographer': self.photographer,
-            'comments': self.comments,
-            'contractor': self.contractor,
+            'memo': self.memo,
+            'manager': self.manager,
             'price': self.price,
             'needs_review': self.needs_review,
             'review_reason': self.review_reason,
             'photoNote': self.photo_note,
-            'cutsCount': self.cuts_count,
+            'cuts': self.cuts,
             'folderName': self.folder_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
@@ -161,20 +161,20 @@ class Schedule(Base):
         return cls(
             user_id=user_id,
             date=data.get('date', ''),
-            venue=data.get('venue', ''),
+            location=data.get('location', ''),
             time=data.get('time', ''),
             couple=data.get('couple', ''),
             contact=data.get('contact', ''),
             brand=data.get('brand', ''),
             album=data.get('album', ''),
             photographer=data.get('photographer', ''),
-            comments=data.get('comments', ''),
-            contractor=data.get('contractor', ''),
+            memo=data.get('memo', ''),
+            manager=data.get('manager', ''),
             price=data.get('price', 0),
             needs_review=data.get('needs_review', False),
             review_reason=data.get('review_reason', ''),
             photo_note=data.get('photoNote'),
-            cuts_count=data.get('cutsCount', 0),
+            cuts=data.get('cuts', 0),
             folder_name=data.get('folderName', ''),
         )
 
@@ -328,9 +328,9 @@ class ScheduleService:
 
             # 허용된 필드만 업데이트
             allowed_fields = [
-                'date', 'venue', 'time', 'couple', 'contact', 'brand',
-                'album', 'photographer', 'comments', 'contractor', 'price',
-                'needs_review', 'review_reason', 'photo_note', 'cuts_count', 'folder_name'
+                'date', 'location', 'time', 'couple', 'contact', 'brand',
+                'album', 'photographer', 'memo', 'manager', 'price',
+                'needs_review', 'review_reason', 'photo_note', 'cuts', 'folder_name'
             ]
 
             if field not in allowed_fields:

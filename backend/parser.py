@@ -40,7 +40,7 @@ DEFAULT_ALBUM = '30P'
 MANAGER_NAME = 'KPAG(업무용)'
 
 # NLP-style parsing constants
-VENUE_KEYWORDS = [
+LOCATION_KEYWORDS = [
     '호텔', '웨딩홀', '컨벤션', '교회', '성당', '채플', '스튜디오', '홀', '센터', '타워',
     '그랜드', '메르시앙', '플로팅', '이리스', '하우스', '팰리스', '레지던스'
 ]
@@ -122,7 +122,7 @@ BRAND_WITH_DUMMY_DATA = '세컨플로우'
 class Schedule:
     # Core fields
     date: str = ""
-    venue: str = ""
+    location: str = ""
     time: str = ""
     couple: str = ""
     # Parsed fields
@@ -130,8 +130,8 @@ class Schedule:
     brand: str = ""
     album: str = ""
     photographer: str = ""
-    comments: str = ""
-    contractor: str = ""
+    memo: str = ""
+    manager: str = ""
     price: int = 0  # 촬영단가 (숫자만)
     needs_review: bool = False
     review_reason: str = ""  # 검토 필요 이유
@@ -259,32 +259,32 @@ def parse_contact(line: str) -> str:
     if len(digits) == 11 and digits.startswith('010'):
         return f"{digits[:3]}-{digits[3:7]}-{digits[7:]}"
     return m.group(1)  # Return original if formatting fails
-def clean_venue(venue: str) -> str:
-    """Clean venue name by removing parentheses content, '단독'/'단독홀', trailing '홀', and standardizing names"""
-    if not venue:
-        return venue
+def clean_location(location: str) -> str:
+    """Clean location name by removing parentheses content, '단독'/'단독홀', trailing '홀', and standardizing names"""
+    if not location:
+        return location
 
     # Remove parentheses and their content (e.g., "(17층)", "(해운대)")
-    venue = re.sub(r'\([^)]*\)', '', venue).strip()
+    location = re.sub(r'\([^)]*\)', '', location).strip()
 
     # Remove "단독" or "단독홀"
-    venue = re.sub(r'단독홀?', '', venue).strip()
+    location = re.sub(r'단독홀?', '', location).strip()
 
-    # Remove "홀" at the end of venue name
-    if venue.endswith('홀'):
-        venue = venue[:-1].strip()
+    # Remove "홀" at the end of location name
+    if location.endswith('홀'):
+        location = location[:-1].strip()
 
-    # Standardize specific venue names
+    # Standardize specific location names
     venue_replacements = {
         '더블유': '센텀',
         '그랜드 블랑': '그랜드블랑'
     }
 
     for old_name, new_name in venue_replacements.items():
-        if old_name in venue:
-            venue = venue.replace(old_name, new_name)
+        if old_name in location:
+            location = location.replace(old_name, new_name)
 
-    return venue.strip()
+    return location.strip()
 def parse_brand_album(line: str) -> (str, str):
     # Create regex pattern from BRAND_PATTERNS
     brand_pattern = '|'.join([f'({pattern})' for pattern in BRAND_PATTERNS])
@@ -464,7 +464,7 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             day = int(schedule_match.group(2))
             hour = int(schedule_match.group(3))
             minute = int(schedule_match.group(4))
-            venue = schedule_match.group(5).strip()
+            location = schedule_match.group(5).strip()
             groom = schedule_match.group(6).strip()
             bride = schedule_match.group(7).strip()
             photographer = schedule_match.group(8).strip()
@@ -477,9 +477,9 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             couple = f"{groom} {bride}"
 
             schedule = Schedule(
-                date=date, venue=clean_venue(venue), time=time, couple=couple,
-                photographer=photographer, contractor="", brand="", album="",
-                contact="", comments="", needs_review=True,
+                date=date, location=clean_location(location), time=time, couple=couple,
+                photographer=photographer, manager="", brand="", album="",
+                contact="", memo="", needs_review=True,
                 review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
             )
             schedules.append(schedule)
@@ -495,7 +495,7 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             day = int(schedule_match.group(2))
             hour = int(schedule_match.group(3))
             minute = int(schedule_match.group(4))
-            venue = schedule_match.group(5).strip()
+            location = schedule_match.group(5).strip()
             groom = schedule_match.group(6).strip()
             bride = schedule_match.group(7).strip()
             photographer = schedule_match.group(8).strip()
@@ -508,9 +508,9 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             couple = f"{groom} {bride}"
 
             schedule = Schedule(
-                date=date, venue=clean_venue(venue), time=time, couple=couple,
-                photographer=photographer, contractor="", brand="", album="",
-                contact="", comments="", needs_review=True,
+                date=date, location=clean_location(location), time=time, couple=couple,
+                photographer=photographer, manager="", brand="", album="",
+                contact="", memo="", needs_review=True,
                 review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
             )
             schedules.append(schedule)
@@ -525,7 +525,7 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             month = int(schedule_match.group(1))
             day = int(schedule_match.group(2))
             hour = int(schedule_match.group(3))
-            venue = schedule_match.group(4).strip()
+            location = schedule_match.group(4).strip()
             groom = schedule_match.group(5).strip()
             bride = schedule_match.group(6).strip()
             photographer = schedule_match.group(7).strip()
@@ -538,9 +538,9 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
             couple = f"{groom} {bride}"
 
             schedule = Schedule(
-                date=date, venue=clean_venue(venue), time=time, couple=couple,
-                photographer=photographer, contractor="", brand="", album="",
-                contact="", comments="", needs_review=True,
+                date=date, location=clean_location(location), time=time, couple=couple,
+                photographer=photographer, manager="", brand="", album="",
+                contact="", memo="", needs_review=True,
                 review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
             )
             schedules.append(schedule)
@@ -561,7 +561,7 @@ def extract_korean_words(text: str) -> List[str]:
     words = re.findall(r'[가-힣]{2,4}', text)
     return [word for word in words if word not in COMMON_WORDS]
 
-def extract_venue_smart(text: str) -> str:
+def extract_location_smart(text: str) -> str:
     """스마트 장소 추출"""
     words = text.split()
     venue_parts = []
@@ -569,12 +569,12 @@ def extract_venue_smart(text: str) -> str:
     for word in words:
         clean_word = word.replace('"', '').replace("'", '')
 
-        if any(keyword in clean_word for keyword in VENUE_KEYWORDS):
+        if any(keyword in clean_word for keyword in LOCATION_KEYWORDS):
             venue_parts.append(clean_word)
         elif re.match(r'^[가-힣]{3,}$', clean_word) and clean_word not in COMMON_WORDS:
             venue_parts.append(clean_word)
 
-    return ' '.join(venue_parts[:2])
+    return ' '.join(location_parts[:2])
 
 def extract_names_smart(text: str) -> List[str]:
     """스마트 이름 추출"""
@@ -583,7 +583,7 @@ def extract_names_smart(text: str) -> List[str]:
 
     for word in words:
         if 2 <= len(word) <= 4:
-            if not any(keyword in word for keyword in VENUE_KEYWORDS):
+            if not any(keyword in word for keyword in LOCATION_KEYWORDS):
                 if word not in ['컨벤션', '웨딩홀', '스몰웨딩']:
                     names.append(word)
 
@@ -592,7 +592,7 @@ def extract_names_smart(text: str) -> List[str]:
 def extract_schedule_with_nlp(text: str) -> Dict[str, Any]:
     """가벼운 NLP 스타일 스케줄 정보 추출"""
     components = {
-        'date': '', 'time': '', 'venue': '', 'names': [], 'photographer': '', 'weekday': ''
+        'date': '', 'time': '', 'location': '', 'names': [], 'photographer': '', 'weekday': ''
     }
 
     # 시간 추출
@@ -621,7 +621,7 @@ def extract_schedule_with_nlp(text: str) -> Dict[str, Any]:
             break
 
     # 장소, 이름 추출
-    components['venue'] = extract_venue_smart(text)
+    components['location'] = extract_location_smart(text)
     components['names'] = extract_names_smart(text)
 
     # 작가 추출
@@ -650,7 +650,7 @@ def is_meaningful_schedule(text: str, components: Dict[str, Any]) -> bool:
             return False
 
     # ✅ 시간이 있으면서 장소도 있는 경우 (가장 확실한 스케줄)
-    if components['time'] and components['venue']:
+    if components['time'] and components['location']:
         return True
 
     # ✅ 완전한 날짜 정보가 있으면서 시간도 있는 경우
@@ -658,11 +658,11 @@ def is_meaningful_schedule(text: str, components: Dict[str, Any]) -> bool:
         return True
 
     # ✅ 작가 정보가 명시된 경우 (확실한 스케줄)
-    if components['photographer'] and (components['time'] or components['venue']):
+    if components['photographer'] and (components['time'] or components['location']):
         return True
 
     # 🚫 시간도 장소도 없으면 의미없음
-    if not components['time'] and not components['venue']:
+    if not components['time'] and not components['location']:
         return False
 
     # 🚫 너무 짧은 텍스트 (5글자 미만)
@@ -697,7 +697,7 @@ def nlp_parse_flexible_format(text: str, current_year: int = None) -> Optional[S
     # 각 요소 추출
     date_str = extract_date_from_entities_spacy(entities, normalized_text, current_year)
     time_str = extract_time_from_entities_spacy(entities, normalized_text)
-    venue_str = extract_venue_from_entities_spacy(entities, normalized_text)
+    location_str = extract_location_from_entities_spacy(entities, normalized_text)
     couple_str = extract_couple_from_entities_spacy(entities)
 
     # 브랜드/앨범 추출 (정규표현식)
@@ -708,8 +708,8 @@ def nlp_parse_flexible_format(text: str, current_year: int = None) -> Optional[S
         return None
 
     # 장소가 없으면 기본값
-    if not venue_str and time_str:
-        venue_str = "장소 미상"
+    if not location_str and time_str:
+        location_str = "장소 미상"
 
     # 검토 필요성 판단
     review_reasons = []
@@ -717,7 +717,7 @@ def nlp_parse_flexible_format(text: str, current_year: int = None) -> Optional[S
         review_reasons.append("날짜 정보 없음")
     if not time_str:
         review_reasons.append("시간 정보 없음")
-    if not venue_str or venue_str == "장소 미상":
+    if not location_str or location_str == "장소 미상":
         review_reasons.append("장소 정보 없음")
     if not couple_str:
         review_reasons.append("커플 정보 없음")
@@ -730,15 +730,15 @@ def nlp_parse_flexible_format(text: str, current_year: int = None) -> Optional[S
 
     return Schedule(
         date=date_str or "",
-        venue=clean_venue(venue_str) if venue_str else "",
+        location=clean_location(location_str) if location_str else "",
         time=time_str or "",
         couple=separated_couple,
         photographer="",
-        contractor="",
+        manager="",
         brand=brand_str or "",
         album="",
         contact="",
-        comments="",
+        memo="",
         needs_review=needs_review,
         review_reason=review_reason
     )
@@ -790,7 +790,7 @@ def parse_flexible_format(text: str, current_year: int) -> Optional[Schedule]:
     time_str = extracted_info['time'] or ""
 
     # 🏢 장소 정보 처리
-    venue_str = extracted_info['venue'] or ""
+    location_str = extracted_info['location'] or ""
 
     # 👥 커플 정보 처리
     couple_str = ""
@@ -805,15 +805,15 @@ def parse_flexible_format(text: str, current_year: int) -> Optional[Schedule]:
         photographer_str = extracted_info['names'][-1]  # 마지막 이름
 
     # 최소 조건 확인: 날짜, 시간, 장소 중 하나는 있어야 함
-    if not date_str and not venue_str and not time_str:
+    if not date_str and not location_str and not time_str:
         return None
 
     # 스케줄 관련 키워드가 있으면 더 관대하게 처리
     schedule_keywords = ['스케줄', '촬영', '가능', '연락', '예약']
     has_schedule_keyword = any(keyword in text.lower() for keyword in schedule_keywords)
 
-    if has_schedule_keyword and not venue_str and not time_str:
-        venue_str = "일반 문의"  # 키워드가 있으면 임시 장소 설정
+    if has_schedule_keyword and not location_str and not time_str:
+        location_str = "일반 문의"  # 키워드가 있으면 임시 장소 설정
 
     # 🔧 검토 이유 생성
     review_reasons = []
@@ -823,7 +823,7 @@ def parse_flexible_format(text: str, current_year: int) -> Optional[Schedule]:
         review_reasons.append("커플 정보 없음")
     if not photographer_str:
         review_reasons.append("작가 정보 없음")
-    if not venue_str:
+    if not location_str:
         review_reasons.append("장소 정보 없음")
 
     review_reason = f"유연한 파서: {', '.join(review_reasons)}" if review_reasons else ""
@@ -833,11 +833,11 @@ def parse_flexible_format(text: str, current_year: int) -> Optional[Schedule]:
 
     return Schedule(
         date=date_str,
-        venue=clean_venue(venue_str),
+        location=clean_location(location_str),
         time=time_str,
         couple=separated_couple,
         photographer=photographer_str,
-        contractor="", brand="", album="", contact="", comments="",
+        manager="", brand="", album="", contact="", memo="",
         needs_review=True,
         review_reason=review_reason
     )
@@ -850,7 +850,7 @@ def extract_schedule_components(text: str) -> Dict[str, Any]:
         'date': None,
         'weekday': None,
         'time': None,
-        'venue': None,
+        'location': None,
         'names': [],
         'photographer': None
     }
@@ -898,22 +898,22 @@ def extract_schedule_components(text: str) -> Dict[str, Any]:
     for pattern in venue_patterns:
         matches = re.findall(pattern, text)
         if matches:
-            components['venue'] = matches[0]
+            components['location'] = matches[0]
             break
 
     # 🏢 지역명 기반 장소 추출
-    if not components['venue']:
+    if not components['location']:
         location_pattern = r'(김해|창원|부산|해운대|센텀|광주|대구|서울|인천|대전)(?:\s*[가-힣]*)?'
         location_match = re.search(location_pattern, text)
         if location_match:
-            components['venue'] = location_match.group(0).strip()
+            components['location'] = location_match.group(0).strip()
 
     # 🏢 일반적인 장소 키워드들 추출
-    if not components['venue']:
+    if not components['location']:
         general_venue_keywords = ['촬영', '스케줄', '웨딩', '예식']
         for keyword in general_venue_keywords:
             if keyword in text:
-                components['venue'] = f'{keyword} 관련'
+                components['location'] = f'{keyword} 관련'
                 break
 
     # 👥 인명 추출 (한글 2-4글자)
@@ -1008,7 +1008,7 @@ def find_manager_speaker(speaker_blocks: List[Tuple[str, str]]) -> str:
             # Count brand patterns
             elif any(re.search(pattern, line) for pattern in BRAND_PATTERNS):
                 schedule_indicators += 2  # Medium weight for brands
-            # Count venue-like patterns (contains 홀, 층, etc.)
+            # Count location-like patterns (contains 홀, 층, etc.)
             elif any(keyword in line for keyword in ['홀', '층', '컨벤션', '웨딩', '더']):
                 schedule_indicators += 1  # Low weight for venues
 
@@ -1057,23 +1057,23 @@ def parse_manager_block(block_text: str) -> List[Schedule]:
         if len(schedule_lines) < 4: continue
 
         # Core 4-line block validation
-        date, venue, time, couple = schedule_lines[0], schedule_lines[1], schedule_lines[2], schedule_lines[3]
+        date, location, time, couple = schedule_lines[0], schedule_lines[1], schedule_lines[2], schedule_lines[3]
         if not (is_valid_date(date) and is_valid_time(time) and is_valid_couple(couple)):
             continue
 
         # 신랑신부 이름 분리 처리
         separated_couple = separate_couple_names(couple)
-        sch = Schedule(date=date, venue=clean_venue(venue), time=time, couple=separated_couple)
+        sch = Schedule(date=date, location=clean_location(location), time=time, couple=separated_couple)
         
         # Subtractive parsing on the rest of the lines
         remaining_lines = schedule_lines[4:]
         processed_indices = set()
 
         if remaining_lines:
-            sch.contractor = remaining_lines.pop(-1).strip()
+            sch.manager = remaining_lines.pop(-1).strip()
             # Standardize contractor names
-            if '그랜드 블랑' in sch.contractor:
-                sch.contractor = sch.contractor.replace('그랜드 블랑', '그랜드블랑')
+            if '그랜드 블랑' in sch.manager:
+                sch.manager = sch.manager.replace('그랜드 블랑', '그랜드블랑')
 
         # First, check for contact number in the first line only (right after couple names)
         if remaining_lines:
@@ -1131,11 +1131,11 @@ def parse_manager_block(block_text: str) -> List[Schedule]:
             j += 1
 
         # Create comments from unprocessed lines
-        sch.comments = "\n".join(remaining_lines[k] for k in range(len(remaining_lines)) if k not in processed_indices).strip()
+        sch.memo = "\n".join(remaining_lines[k] for k in range(len(remaining_lines)) if k not in processed_indices).strip()
 
         # If we have comments content, it means there were unprocessed lines
         # Reset needs_review to False since comments content is intentional
-        if sch.comments:
+        if sch.memo:
             sch.needs_review = False
             sch.review_reason = ""
 
@@ -1144,7 +1144,7 @@ def parse_manager_block(block_text: str) -> List[Schedule]:
         if not sch.brand: missing_fields.append("브랜드")
         if not sch.album: missing_fields.append("앨범")
         if not sch.photographer: missing_fields.append("작가")
-        if not sch.contractor: missing_fields.append("계약자")
+        if not sch.manager: missing_fields.append("계약자")
 
         if missing_fields:
             sch.needs_review = True
@@ -1164,7 +1164,7 @@ def get_schedule_completeness_score(schedule: Schedule) -> int:
 
     # Core fields (must exist for basic validity)
     if schedule.date and extract_date(schedule.date): score += 10
-    if schedule.venue: score += 5
+    if schedule.location: score += 5
     if schedule.time and is_valid_time(schedule.time): score += 10
     if schedule.couple and is_valid_couple(schedule.couple): score += 10
 
@@ -1172,11 +1172,11 @@ def get_schedule_completeness_score(schedule: Schedule) -> int:
     if schedule.brand: score += 8
     if schedule.album: score += 8
     if schedule.photographer: score += 8
-    if schedule.contractor: score += 8
+    if schedule.manager: score += 8
 
     # Optional but valuable fields
     if schedule.contact and parse_contact(schedule.contact): score += 5
-    if schedule.comments: score += 2
+    if schedule.memo: score += 2
 
     return score
 
@@ -1460,7 +1460,7 @@ def extract_time_from_entities_spacy(entities: Dict[str, List[str]], text: str) 
 
     return None
 
-def extract_venue_from_entities_spacy(entities: Dict[str, List[str]], text: str) -> Optional[str]:
+def extract_location_from_entities_spacy(entities: Dict[str, List[str]], text: str) -> Optional[str]:
     """개체명에서 장소 추출"""
     # spaCy가 인식한 지명/조직명 우선 사용
     for location in entities.get('locations', []):
@@ -1609,23 +1609,23 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
             continue
 
         # Core 4-line block validation
-        date, venue, time, couple = schedule_lines[0], schedule_lines[1], schedule_lines[2], schedule_lines[3]
+        date, location, time, couple = schedule_lines[0], schedule_lines[1], schedule_lines[2], schedule_lines[3]
         if not (is_valid_date(date) and is_valid_time(time) and is_valid_couple(couple)):
             continue
 
         # 신랑신부 이름 분리 처리
         separated_couple = separate_couple_names(couple)
-        sch = Schedule(date=date, venue=clean_venue(venue), time=time, couple=separated_couple)
+        sch = Schedule(date=date, location=clean_location(location), time=time, couple=separated_couple)
 
         # Subtractive parsing on the rest of the lines
         remaining_lines = schedule_lines[4:]
         processed_indices = set()
 
         if remaining_lines:
-            sch.contractor = remaining_lines.pop(-1).strip()
+            sch.manager = remaining_lines.pop(-1).strip()
             # Standardize contractor names
-            if '그랜드 블랑' in sch.contractor:
-                sch.contractor = sch.contractor.replace('그랜드 블랑', '그랜드블랑')
+            if '그랜드 블랑' in sch.manager:
+                sch.manager = sch.manager.replace('그랜드 블랑', '그랜드블랑')
 
         # First, check for contact number in the first line only (right after couple names)
         if remaining_lines:
@@ -1683,11 +1683,11 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
             j += 1
 
         # Create comments from unprocessed lines
-        sch.comments = "\n".join(remaining_lines[k] for k in range(len(remaining_lines)) if k not in processed_indices).strip()
+        sch.memo = "\n".join(remaining_lines[k] for k in range(len(remaining_lines)) if k not in processed_indices).strip()
 
         # If we have comments content, it means there were unprocessed lines
         # Reset needs_review to False since comments content is intentional
-        if sch.comments:
+        if sch.memo:
             sch.needs_review = False
             sch.review_reason = ""
 
@@ -1696,7 +1696,7 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
         if not sch.brand: missing_fields.append("브랜드")
         if not sch.album: missing_fields.append("앨범")
         if not sch.photographer: missing_fields.append("작가")
-        if not sch.contractor: missing_fields.append("계약자")
+        if not sch.manager: missing_fields.append("계약자")
 
         if missing_fields:
             sch.needs_review = True
@@ -1716,7 +1716,7 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 line
             )
             if schedule_match:
-                month, day, hour, minute, venue, groom, bride, photographer = schedule_match.groups()
+                month, day, hour, minute, location, groom, bride, photographer = schedule_match.groups()
                 month, day, hour, minute = int(month), int(day), int(hour), int(minute)
 
                 date = f"{current_year}.{month:02d}.{day:02d}"
@@ -1724,9 +1724,9 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 couple = f"{groom} {bride}"
 
                 schedule = Schedule(
-                    date=date, venue=clean_venue(venue), time=time, couple=couple,
-                    photographer=photographer, contractor="", brand="", album="",
-                    contact="", comments="", needs_review=True,
+                    date=date, location=clean_location(location), time=time, couple=couple,
+                    photographer=photographer, manager="", brand="", album="",
+                    contact="", memo="", needs_review=True,
                     review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
                 )
                 schedules.append(schedule)
@@ -1738,7 +1738,7 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 line
             )
             if schedule_match:
-                month, day, hour, minute, venue, groom, bride, photographer = schedule_match.groups()
+                month, day, hour, minute, location, groom, bride, photographer = schedule_match.groups()
                 month, day, hour, minute = int(month), int(day), int(hour), int(minute)
 
                 date = f"{current_year}.{month:02d}.{day:02d}"
@@ -1746,9 +1746,9 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 couple = f"{groom} {bride}"
 
                 schedule = Schedule(
-                    date=date, venue=clean_venue(venue), time=time, couple=couple,
-                    photographer=photographer, contractor="", brand="", album="",
-                    contact="", comments="", needs_review=True,
+                    date=date, location=clean_location(location), time=time, couple=couple,
+                    photographer=photographer, manager="", brand="", album="",
+                    contact="", memo="", needs_review=True,
                     review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
                 )
                 schedules.append(schedule)
@@ -1760,7 +1760,7 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 line
             )
             if schedule_match:
-                month, day, hour, venue, groom, bride, photographer = schedule_match.groups()
+                month, day, hour, location, groom, bride, photographer = schedule_match.groups()
                 month, day, hour = int(month), int(day), int(hour)
 
                 date = f"{current_year}.{month:02d}.{day:02d}"
@@ -1768,9 +1768,9 @@ def parse_manager_block_classic_only(block_text: str) -> List[Schedule]:
                 couple = f"{groom} {bride}"
 
                 schedule = Schedule(
-                    date=date, venue=clean_venue(venue), time=time, couple=couple,
-                    photographer=photographer, contractor="", brand="", album="",
-                    contact="", comments="", needs_review=True,
+                    date=date, location=clean_location(location), time=time, couple=couple,
+                    photographer=photographer, manager="", brand="", album="",
+                    contact="", memo="", needs_review=True,
                     review_reason="간결한 형식: 브랜드, 앨범, 계약자 정보 누락"
                 )
                 schedules.append(schedule)

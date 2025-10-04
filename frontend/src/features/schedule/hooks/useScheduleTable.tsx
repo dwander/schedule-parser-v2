@@ -204,11 +204,11 @@ export function useScheduleTable(data: Schedule[] = []) {
         size: 150,
         cell: (info) => (
           <EditableCell
-            value={info.row.original.groom}
+            value={info.getValue() as string}
             onSave={(value) => {
               updateSchedule.mutate({
                 id: info.row.original.id,
-                groom: value
+                couple: value
               })
             }}
           />

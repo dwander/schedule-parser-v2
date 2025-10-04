@@ -7,11 +7,7 @@ export async function fetchSchedules(): Promise<Schedule[]> {
   const { data } = await apiClient.get('/api/schedules', {
     params: { user_id: getUserId() }
   })
-  // couple 필드가 없으면 groom ♥ bride로 생성
-  return data.map((schedule: any) => ({
-    ...schedule,
-    couple: schedule.couple || `${schedule.groom} ♥ ${schedule.bride}`
-  }))
+  return data
 }
 
 export async function fetchSchedule(id: string): Promise<Schedule> {

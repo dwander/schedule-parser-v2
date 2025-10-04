@@ -1966,18 +1966,17 @@ def get_schedules(
                 'id': str(schedule.id),
                 'date': schedule.date,
                 'time': schedule.time,
-                'location': schedule.venue,
+                'location': schedule.location,
                 'groom': groom,
                 'bride': bride,
                 'contact': schedule.contact or "",
                 'brand': schedule.brand or "",
                 'album': schedule.album or "",
                 'photographer': schedule.photographer or "",
-                'cuts': schedule.cuts_count or 0,
+                'cuts': schedule.cuts or 0,
                 'price': schedule.price or 0,
-                'fee': 0,  # TODO: fee 계산 로직 추가
-                'manager': schedule.contractor or "",
-                'memo': schedule.comments or "",
+                'manager': schedule.manager or "",
+                'memo': schedule.memo or "",
                 'isDuplicate': schedule.needs_review,
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
                 'updatedAt': schedule.updated_at.isoformat() if schedule.updated_at else None,
@@ -2000,39 +1999,38 @@ def create_schedule(
         
         # Convert v2 format to database format
         couple = f"{schedule.get('groom', '')} ♥ {schedule.get('bride', '')}"
-        
+
         new_schedule = Schedule(
             user_id=user_id,
             date=schedule.get('date', ''),
             time=schedule.get('time', ''),
-            venue=schedule.get('location', ''),
+            location=schedule.get('location', ''),
             couple=couple,
             brand=schedule.get('brand', ''),
-            cuts_count=schedule.get('cuts', 0),
+            cuts=schedule.get('cuts', 0),
             price=schedule.get('price', 0),
-            contractor=schedule.get('manager', ''),
-            comments=schedule.get('memo', ''),
+            manager=schedule.get('manager', ''),
+            memo=schedule.get('memo', ''),
             needs_review=schedule.get('isDuplicate', False),
         )
-        
+
         db.add(new_schedule)
         db.commit()
         db.refresh(new_schedule)
-        
+
         # Return in v2 format
         return {
             'id': str(new_schedule.id),
             'date': new_schedule.date,
             'time': new_schedule.time,
-            'location': new_schedule.venue,
+            'location': new_schedule.location,
             'groom': schedule.get('groom', ''),
             'bride': schedule.get('bride', ''),
-            'cuts': new_schedule.cuts_count,
+            'cuts': new_schedule.cuts,
             'price': new_schedule.price,
-            'fee': 0,
-            'manager': new_schedule.contractor,
+            'manager': new_schedule.manager,
             'brand': new_schedule.brand,
-            'memo': new_schedule.comments,
+            'memo': new_schedule.memo,
             'isDuplicate': new_schedule.needs_review,
             'createdAt': new_schedule.created_at.isoformat() if new_schedule.created_at else None,
             'updatedAt': new_schedule.updated_at.isoformat() if new_schedule.updated_at else None,
@@ -2071,7 +2069,7 @@ def update_schedule(
         if 'time' in schedule:
             existing.time = schedule['time']
         if 'location' in schedule:
-            existing.venue = schedule['location']
+            existing.location = schedule['location']
         if 'contact' in schedule:
             existing.contact = schedule['contact']
         if 'brand' in schedule:
@@ -2081,13 +2079,13 @@ def update_schedule(
         if 'photographer' in schedule:
             existing.photographer = schedule['photographer']
         if 'cuts' in schedule:
-            existing.cuts_count = schedule['cuts']
+            existing.cuts = schedule['cuts']
         if 'price' in schedule:
             existing.price = schedule['price']
         if 'manager' in schedule:
-            existing.contractor = schedule['manager']
+            existing.manager = schedule['manager']
         if 'memo' in schedule:
-            existing.comments = schedule['memo']
+            existing.memo = schedule['memo']
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
 
@@ -2107,18 +2105,17 @@ def update_schedule(
             'id': str(existing.id),
             'date': existing.date,
             'time': existing.time,
-            'location': existing.venue,
+            'location': existing.location,
             'groom': groom,
             'bride': bride,
             'contact': existing.contact,
             'brand': existing.brand,
             'album': existing.album,
             'photographer': existing.photographer,
-            'cuts': existing.cuts_count,
+            'cuts': existing.cuts,
             'price': existing.price,
-            'fee': 0,
-            'manager': existing.contractor,
-            'memo': existing.comments,
+            'manager': existing.manager,
+            'memo': existing.memo,
             'isDuplicate': existing.needs_review,
             'createdAt': existing.created_at.isoformat() if existing.created_at else None,
             'updatedAt': existing.updated_at.isoformat() if existing.updated_at else None,
@@ -2177,16 +2174,16 @@ def batch_create_schedules(
                 user_id=user_id,
                 date=schedule.get('date', ''),
                 time=schedule.get('time', ''),
-                venue=schedule.get('location', ''),
+                location=schedule.get('location', ''),
                 couple=couple,
                 brand=schedule.get('brand', ''),
                 album=schedule.get('album', ''),
                 photographer=schedule.get('photographer', ''),
                 contact=schedule.get('contact', ''),
-                cuts_count=schedule.get('cuts', 0),
+                cuts=schedule.get('cuts', 0),
                 price=schedule.get('price', 0),
-                contractor=schedule.get('manager', ''),
-                comments=schedule.get('memo', ''),
+                manager=schedule.get('manager', ''),
+                memo=schedule.get('memo', ''),
                 needs_review=schedule.get('isDuplicate', False),
             )
 
@@ -2198,18 +2195,18 @@ def batch_create_schedules(
                 'id': str(new_schedule.id),
                 'date': new_schedule.date,
                 'time': new_schedule.time,
-                'location': new_schedule.venue,
+                'location': new_schedule.location,
                 'groom': schedule.get('groom', ''),
                 'bride': schedule.get('bride', ''),
                 'couple': couple,
-                'cuts': new_schedule.cuts_count,
+                'cuts': new_schedule.cuts,
                 'price': new_schedule.price,
                 'photographer': new_schedule.photographer,
                 'contact': new_schedule.contact,
                 'album': new_schedule.album,
                 'brand': new_schedule.brand,
-                'manager': new_schedule.contractor,
-                'memo': new_schedule.comments,
+                'manager': new_schedule.manager,
+                'memo': new_schedule.memo,
                 'isDuplicate': new_schedule.needs_review,
                 'createdAt': new_schedule.created_at.isoformat() if new_schedule.created_at else None,
                 'updatedAt': new_schedule.updated_at.isoformat() if new_schedule.updated_at else None,

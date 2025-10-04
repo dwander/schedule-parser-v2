@@ -20,30 +20,6 @@ export async function parseText(text: string, engine: ParserEngine = 'classic'):
     engine
   })
 
-  // 백엔드 필드명을 프론트엔드 필드명으로 매핑
-  if (data.success && data.data) {
-    data.data = data.data.map((item: any) => {
-      const [groom, bride] = item.couple ? item.couple.split(' ') : ['', '']
-      return {
-        date: item.date,
-        time: item.time,
-        location: item.venue,
-        groom: groom,
-        bride: bride || '',
-        couple: item.couple,
-        contact: item.contact || '',
-        brand: item.brand || '',
-        album: item.album || '',
-        photographer: item.photographer || '',
-        cuts: item.cuts_count || 0,
-        price: item.price || 0,
-        manager: item.contractor || '',
-        memo: item.comments || '',
-        isDuplicate: item.needs_review || false,
-      }
-    })
-  }
-
   return data
 }
 
@@ -57,30 +33,6 @@ export async function parseFile(file: File, engine: ParserEngine = 'classic'): P
       'Content-Type': 'multipart/form-data'
     }
   })
-
-  // 백엔드 필드명을 프론트엔드 필드명으로 매핑
-  if (data.success && data.data) {
-    data.data = data.data.map((item: any) => {
-      const [groom, bride] = item.couple ? item.couple.split(' ') : ['', '']
-      return {
-        date: item.date,
-        time: item.time,
-        location: item.venue,
-        groom: groom,
-        bride: bride || '',
-        couple: item.couple,
-        contact: item.contact || '',
-        brand: item.brand || '',
-        album: item.album || '',
-        photographer: item.photographer || '',
-        cuts: item.cuts_count || 0,
-        price: item.price || 0,
-        manager: item.contractor || '',
-        memo: item.comments || '',
-        isDuplicate: item.needs_review || false,
-      }
-    })
-  }
 
   return data
 }

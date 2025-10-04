@@ -119,11 +119,11 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
           <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
-              value={schedule.groom}
+              value={schedule.couple}
               onSave={(value) => {
                 updateSchedule.mutate({
                   id: schedule.id,
-                  groom: value
+                  couple: value
                 })
               }}
               placeholder="신랑신부"
