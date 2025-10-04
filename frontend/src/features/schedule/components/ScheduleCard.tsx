@@ -37,7 +37,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
             type="checkbox"
             checked={isSelected}
             onChange={onToggleSelect}
-            className="mt-1 cursor-pointer flex-shrink-0"
+            className="mt-1 cursor-pointer flex-shrink-0 w-4 h-4"
           />
         )}
 
@@ -115,8 +115,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
       {/* Content */}
       <div className="space-y-3 p-4 pt-3">
         {/* Couple */}
-        <div className="flex items-start gap-2">
-          <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.groom}
@@ -132,8 +132,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
         </div>
 
         {/* Contact */}
-        <div className="flex items-start gap-2">
-          <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2">
+          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.contact}
@@ -175,8 +175,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
         </div>
 
         {/* Photographer */}
-        <div className="flex items-start gap-2">
-          <Camera className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2">
+          <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.photographer}
@@ -192,8 +192,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
         </div>
 
         {/* Cuts */}
-        <div className="flex items-start gap-2">
-          <Image className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2">
+          <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.cuts}
@@ -220,8 +220,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
         </div>
 
         {/* Price */}
-        <div className="flex items-start gap-2">
-          <DollarSign className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.price}
@@ -249,8 +249,8 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
 
         {/* Manager */}
         {schedule.manager && (
-          <div className="flex items-start gap-2">
-            <UserCog className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            <UserCog className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <EditableCell
                 value={schedule.manager}

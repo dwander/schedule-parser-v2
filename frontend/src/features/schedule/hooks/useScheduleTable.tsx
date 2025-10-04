@@ -502,6 +502,7 @@ export function useScheduleTable(data: Schedule[] = []) {
     columnVisibility,
     setColumnVisibility,
     columnLabels, // 컬럼 라벨 (동적으로 변경 가능)
+    handleDeleteTag, // 태그 삭제 핸들러 export
     deleteConfirmDialog: deleteConfirm && (
       <ConfirmDialog
         open={true}

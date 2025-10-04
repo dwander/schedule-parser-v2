@@ -25,7 +25,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, deleteConfirmDialog } = useScheduleTable(data)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -92,11 +92,6 @@ export function ScheduleTable() {
     },
     measureElement: (el) => el.getBoundingClientRect().height + gap,
   })
-
-  // 태그 삭제 핸들러 (useScheduleTable의 deleteConfirmDialog와 통합)
-  const handleDeleteTag = (tagValue: string, field: 'brand' | 'album') => {
-    // deleteConfirmDialog에서 처리
-  }
 
   // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
@@ -409,12 +404,11 @@ export function ScheduleTable() {
                   >
                     {rowSchedules.map((row) => {
                       const schedule = row.original
-                      const isSelected = rowSelection[schedule.id] || false
                       return (
                         <div key={schedule.id} className="min-w-0 overflow-hidden">
                           <ScheduleCard
                             schedule={schedule}
-                            isSelected={isSelected}
+                            isSelected={row.getIsSelected()}
                             onToggleSelect={() => row.toggleSelected()}
                             onDeleteTag={handleDeleteTag}
                           />
