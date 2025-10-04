@@ -9,8 +9,6 @@ import { Spinner } from '@/components/common/Spinner'
 import { LoadingOverlay } from '@/components/common/LoadingOverlay'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
-import { SunIcon, MoonIcon } from '@radix-ui/react-icons'
-import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 
 export function DialogTestPanel() {
@@ -21,30 +19,12 @@ export function DialogTestPanel() {
   const [errorOpen, setErrorOpen] = useState(false)
   const [emptyOpen, setEmptyOpen] = useState(false)
   const [name, setName] = useState('')
-  const { theme, setTheme } = useTheme()
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
 
   return (
     <div className="fixed bottom-4 right-4 p-4 bg-card border border-border rounded-lg shadow-lg space-y-2 max-h-[90vh] overflow-y-auto">
       <div className="text-sm font-semibold text-muted-foreground mb-2">
         UI 테스트 패널
       </div>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={toggleTheme}
-      >
-        <SunIcon className="h-[1rem] w-[1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <MoonIcon className="absolute h-[1rem] w-[1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span className="ml-6">테마 전환</span>
-      </Button>
-
-      <div className="border-t border-border my-2" />
 
       <Button
         variant="outline"

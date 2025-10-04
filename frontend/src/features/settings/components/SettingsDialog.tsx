@@ -57,7 +57,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               테마
             </h3>
             <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full focus:ring-1 focus:ring-ring/30 focus:outline-none">
                 <SelectValue>{getThemeLabel()}</SelectValue>
               </SelectTrigger>
               <SelectContent>

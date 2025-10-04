@@ -74,7 +74,7 @@ export function ScheduleTable() {
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
           placeholder="검색..."
-          className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px]"
+          className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px] focus:ring-1 focus:ring-ring/30 focus:border-ring/50 focus:outline-none"
         />
         <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
           {rows.length}개 스케줄

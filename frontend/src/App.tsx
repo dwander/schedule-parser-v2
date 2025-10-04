@@ -30,6 +30,11 @@ function App() {
         <AppLayout
           testPanelVisible={testPanelVisible}
           onTestPanelVisibleChange={setTestPanelVisible}
+          stats={{
+            scheduleCount: 42,
+            totalCuts: 1234,
+            totalPrice: 5678900
+          }}
         >
           {/* 파서 입력창 */}
           <section className="mb-6 container max-w-screen-2xl px-4 sm:px-6 md:px-8 pt-4 sm:pt-6">
