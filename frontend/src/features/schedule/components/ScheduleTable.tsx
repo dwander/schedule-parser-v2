@@ -3,11 +3,13 @@ import { useSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { Button } from '@/components/ui/button'
+import { Trash2, Settings } from 'lucide-react'
+import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter, flexColumnId } = useScheduleTable(data)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection } = useScheduleTable(data)
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const containerRef = useRef<HTMLDivElement>(null)
   const [flexWidth, setFlexWidth] = useState(0)
@@ -65,19 +67,45 @@ export function ScheduleTable() {
   }
 
   const rows = table.getRowModel().rows
+  const selectedCount = Object.keys(rowSelection).length
+  const hasSelection = selectedCount > 0
 
   return (
     <div className="space-y-4 w-full">
-      {/* Search */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      {/* Search and Actions */}
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
         <input
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
           placeholder="검색..."
           className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px] focus:ring-1 focus:ring-ring/30 focus:border-ring/50 focus:outline-none"
         />
-        <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-          {rows.length}개 스케줄
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {/* TODO: 삭제 기능 */}}
+            disabled={!hasSelection}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {/* TODO: 필터 기능 */}}
+          >
+            <MixerHorizontalIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {/* TODO: 설정 기능 */}}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
