@@ -147,6 +147,8 @@ export function ScheduleTable() {
                         transform: `translateY(${
                           virtualRow.start - virtualizer.options.scrollMargin
                         }px)`,
+                        display: 'flex',
+                        alignItems: 'center',
                       }}
                       className="border-b border-border hover:bg-accent/50 transition-colors"
                     >
