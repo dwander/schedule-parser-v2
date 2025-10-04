@@ -38,5 +38,8 @@ export async function deleteSchedule(id: string): Promise<void> {
 }
 
 export async function deleteSchedules(ids: string[]): Promise<void> {
-  await apiClient.post('/api/schedules/batch-delete', { ids })
+  await apiClient.post('/api/schedules/batch-delete',
+    { ids },
+    { params: { user_id: 'test' } } // TODO: 실제 인증된 사용자로 변경
+  )
 }

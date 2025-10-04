@@ -1,19 +1,23 @@
 import { flexRender } from '@tanstack/react-table'
-import { useSchedules } from '../hooks/useSchedules'
+import { useSchedules, useDeleteSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { Button } from '@/components/ui/button'
 import { Trash2, Settings } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { toast } from 'sonner'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
   const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection } = useScheduleTable(data)
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
+  const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
   const [flexWidth, setFlexWidth] = useState(0)
   const [tableWidth, setTableWidth] = useState('100%')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
@@ -70,10 +74,42 @@ export function ScheduleTable() {
   const selectedCount = Object.keys(rowSelection).length
   const hasSelection = selectedCount > 0
 
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    const selectedRows = table.getSelectedRowModel().rows
+    const selectedIds = selectedRows.map(row => row.original.id)
+
+    deleteSchedules.mutate(selectedIds, {
+      onSuccess: () => {
+        toast.success(`${selectedIds.length}개 스케줄이 삭제되었습니다`)
+        table.resetRowSelection()
+        setDeleteDialogOpen(false)
+      },
+      onError: (error) => {
+        toast.error('삭제 실패: ' + (error as Error).message)
+      }
+    })
+  }
+
   return (
-    <div className="space-y-4 w-full">
-      {/* Search and Actions */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4">
+    <>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="스케줄 삭제"
+        description={`선택한 ${selectedCount}개의 스케줄을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteConfirm}
+        variant="destructive"
+      />
+
+      <div className="space-y-4 w-full">
+        {/* Search and Actions */}
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
         <input
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
@@ -85,7 +121,7 @@ export function ScheduleTable() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => {/* TODO: 삭제 기능 */}}
+            onClick={handleDeleteClick}
             disabled={!hasSelection}
           >
             <Trash2 className="h-4 w-4" />
@@ -209,6 +245,7 @@ export function ScheduleTable() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
