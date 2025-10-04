@@ -9,13 +9,17 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { toast } from 'sonner'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
@@ -26,6 +30,8 @@ export function ScheduleTable() {
   const [flexWidth, setFlexWidth] = useState(0)
   const [tableWidth, setTableWidth] = useState('100%')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
+  const { theme, setTheme } = useSettingsStore()
 
   // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
@@ -169,14 +175,37 @@ export function ScheduleTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => {/* TODO: 설정 기능 */}}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <DropdownMenuLabel>보기 모드 전환</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as 'list' | 'card')}>
+                <DropdownMenuRadioItem value="list">리스트형</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="card">카드형</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>UI 테마</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}>
+                <DropdownMenuRadioItem value="light">라이트 모드</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark">다크 모드</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="system">시스템 설정</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>섹션3</DropdownMenuLabel>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
