@@ -501,6 +501,7 @@ export function useScheduleTable(data: Schedule[] = []) {
     flexColumnId, // 가변폭 컬럼 ID 반환
     columnVisibility,
     setColumnVisibility,
+    columnLabels, // 컬럼 라벨 (동적으로 변경 가능)
     deleteConfirmDialog: deleteConfirm && (
       <ConfirmDialog
         open={true}

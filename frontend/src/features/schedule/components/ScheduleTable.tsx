@@ -19,7 +19,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, deleteConfirmDialog } = useScheduleTable(data)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -34,9 +34,11 @@ export function ScheduleTable() {
 
       // clientWidth는 border를 제외한 내부 너비 (offsetWidth - border)
       const containerWidth = containerRef.current.clientWidth
+
+      // 보이는 컬럼만 필터링하여 계산
       const fixedColumnsWidth = table
         .getAllColumns()
-        .filter((col) => col.id !== 'memo' && col.id !== 'spacer')
+        .filter((col) => col.getIsVisible() && col.id !== 'memo' && col.id !== 'spacer')
         .reduce((sum, col) => sum + col.getSize(), 0)
 
       // 가변폭 계산 시 24px 패딩 고려
@@ -58,7 +60,7 @@ export function ScheduleTable() {
     calculateFlexWidth()
     window.addEventListener('resize', calculateFlexWidth)
     return () => window.removeEventListener('resize', calculateFlexWidth)
-  }, [table, data, flexColumnId])
+  }, [table, data, flexColumnId, table.getState().columnVisibility])
 
   if (isLoading) {
     return (
@@ -161,7 +163,7 @@ export function ScheduleTable() {
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                       onSelect={(e) => e.preventDefault()}
                     >
-                      {column.columnDef.header as string}
+                      {columnLabels[column.id as keyof typeof columnLabels] || column.id}
                     </DropdownMenuCheckboxItem>
                   )
                 })}
