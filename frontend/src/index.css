@@ -56,3 +56,16 @@
     font-family: system-ui, -apple-system, sans-serif;
   }
 }
+
+@keyframes slide-horizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-slide-horizontal {
+  animation: slide-horizontal 1.5s ease-in-out infinite;
+}

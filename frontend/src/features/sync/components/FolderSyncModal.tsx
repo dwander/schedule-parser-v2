@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -16,24 +16,20 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useSchedules, useUpdateSchedule } from '@/features/schedule/hooks/useSchedules'
+import { toast } from 'sonner'
+import {
+  parseFolderName,
+  findMatchingSchedule,
+  countPhotosInFolder,
+  findScheduleFolders,
+  isSelectFolder,
+  type FolderAnalysisResult
+} from '../utils/folderAnalyzer'
 
 interface FolderSyncModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-// 임시 타입 정의
-interface FolderAnalysis {
-  folderName: string
-  date: string
-  time: string
-  couple: string
-  jpgCount: number
-  rawCount: number
-  finalCount: number
-  matched: boolean
-  mismatch: boolean
-  scheduleId?: string
 }
 
 interface MismatchDetail {
@@ -42,79 +38,189 @@ interface MismatchDetail {
 }
 
 export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
+  const { data: schedules = [] } = useSchedules()
+  const updateSchedule = useUpdateSchedule()
+
   const [isDragging, setIsDragging] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [folders, setFolders] = useState<FolderAnalysis[]>([])
+  const [folders, setFolders] = useState<FolderAnalysisResult[]>([])
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const [mismatchDetail, setMismatchDetail] = useState<MismatchDetail | null>(null)
   const [isMobile] = useState(() => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+
+  // 모달이 열릴 때마다 상태 초기화
+  useEffect(() => {
+    if (open) {
+      setIsDragging(false)
+      setIsAnalyzing(false)
+      setFolders([])
+      setSelectedFolder(null)
+      setMismatchDetail(null)
+    }
+  }, [open])
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     setIsAnalyzing(true)
+    setFolders([])
 
-    // TODO: 실제 폴더 분석 로직
-    setTimeout(() => {
-      // 임시 데모 데이터
-      setFolders([
-        {
-          folderName: '2025.09.27 15시30분 디엘 아모르(최다솔 안연주) - 안현우',
-          date: '2025-09-27',
-          time: '15:30',
-          couple: '최다솔 안연주',
-          jpgCount: 234,
-          rawCount: 234,
-          finalCount: 234,
-          matched: true,
-          mismatch: false,
-          scheduleId: '1'
-        },
-        {
-          folderName: '2025-09-27 15시 30분 디엘 아모르, 최다슬 안연주',
-          date: '2025-09-27',
-          time: '15:30',
-          couple: '최다슬 안연주',
-          jpgCount: 189,
-          rawCount: 192,
-          finalCount: 192,
-          matched: true,
-          mismatch: true,
-          scheduleId: '2'
-        },
-        {
-          folderName: '2025-09-28 14시 그랜드블랑 퀸덤(김철수 이영희)',
-          date: '2025-09-28',
-          time: '14:00',
-          couple: '김철수 이영희',
-          jpgCount: 156,
-          rawCount: 156,
-          finalCount: 156,
-          matched: false,
-          mismatch: false
+    try {
+      const items = e.dataTransfer.items
+      const folderEntries: FileSystemDirectoryEntry[] = []
+
+      // 폴더 엔트리 수집
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.webkitGetAsEntry) {
+          const entry = item.webkitGetAsEntry()
+          if (entry && entry.isDirectory) {
+            folderEntries.push(entry as FileSystemDirectoryEntry)
+          }
         }
-      ])
+      }
+
+      if (folderEntries.length === 0) {
+        toast.error('폴더를 드래그해주세요. 파일은 지원하지 않습니다.')
+        return
+      }
+
+      // 1단계: 모든 스케줄 폴더 찾기
+      const allScheduleFolders: Array<{
+        entry: FileSystemDirectoryEntry
+        fullPath: string
+        parsedData: any
+      }> = []
+      const processedFolders = new Set<string>()
+
+      for (const folderEntry of folderEntries) {
+        // 셀렉 폴더 제외
+        if (isSelectFolder(folderEntry.name)) {
+          continue
+        }
+
+        // 드래그한 폴더 자체가 스케줄 폴더인지 확인
+        const directParsed = parseFolderName(folderEntry.name)
+
+        if (directParsed) {
+          const folderKey = `${directParsed.date}_${directParsed.time}_${directParsed.couple || 'unknown'}`
+          if (!processedFolders.has(folderKey)) {
+            processedFolders.add(folderKey)
+            allScheduleFolders.push({
+              entry: folderEntry,
+              fullPath: folderEntry.name,
+              parsedData: directParsed
+            })
+          }
+        } else {
+          // 상위 폴더 → 재귀 탐색
+          const foundFolders = await findScheduleFolders(folderEntry, processedFolders)
+          allScheduleFolders.push(...foundFolders)
+        }
+      }
+
+      if (allScheduleFolders.length === 0) {
+        toast.error('스케줄 폴더를 찾을 수 없습니다. 날짜와 시간이 포함된 폴더가 있는지 확인해주세요.')
+        return
+      }
+
+      // 2단계: 각 스케줄 폴더 처리
+      const results: FolderAnalysisResult[] = []
+
+      for (const scheduleFolder of allScheduleFolders) {
+        const { entry, fullPath, parsedData } = scheduleFolder
+
+        // 파일 카운팅
+        const fileCountResult = await countPhotosInFolder(entry)
+
+        // 컷수 결정
+        const cutsCount = parsedData.cutsFromName || fileCountResult.count
+
+        // 스케줄 매칭
+        const matchingSchedule = findMatchingSchedule(parsedData, schedules)
+
+        // RAW/JPG 불일치 시 매칭 무효화
+        const hasMismatch = fileCountResult.mismatch
+        const finalMatched = !hasMismatch && !!matchingSchedule
+
+        results.push({
+          folderName: fullPath,
+          date: parsedData.date,
+          time: parsedData.time,
+          couple: parsedData.couple,
+          jpgCount: fileCountResult.jpgCount,
+          rawCount: fileCountResult.rawCount,
+          finalCount: cutsCount,
+          matched: finalMatched,
+          mismatch: hasMismatch,
+          scheduleId: matchingSchedule?.id,
+          mismatchFiles: fileCountResult.mismatchFiles
+        })
+      }
+
+      setFolders(results)
+
+      // 불일치 경고
+      const mismatchCount = results.filter(r => r.mismatch).length
+      if (mismatchCount > 0) {
+        toast.warning(`${mismatchCount}개 폴더에서 RAW/JPG 파일 수가 일치하지 않습니다.`)
+      }
+
+    } catch (error) {
+      console.error('폴더 처리 오류:', error)
+      toast.error('폴더 처리 중 오류가 발생했습니다')
+    } finally {
       setIsAnalyzing(false)
-    }, 1500)
+    }
   }
 
   const matchedFolders = folders.filter(f => f.matched)
   const unmatchedFolders = folders.filter(f => !f.matched)
   const mismatchFolders = folders.filter(f => f.mismatch)
 
-  const handleFolderClick = (folder: FolderAnalysis) => {
-    if (folder.mismatch) {
+  const handleFolderClick = (folder: FolderAnalysisResult) => {
+    if (folder.mismatch && folder.mismatchFiles) {
       setSelectedFolder(folder.folderName)
-      // TODO: 실제 불일치 상세 정보 로드
-      setMismatchDetail({
-        jpgOnly: ['IMG_0001.jpg', 'IMG_0023.jpg', 'IMG_0045.jpg'],
-        rawOnly: ['DSC_1234.ARW', 'DSC_1256.ARW', 'DSC_1278.ARW']
-      })
+
+      // RAW와 JPG 파일 분리
+      const rawExtensions = /\.(raw|cr2|nef|arw|dng|orf|rw2|pef|srw|x3f|raf|3fr|fff|erf|mrw|dcr|kdc|srf|arq)$/i
+      const jpgExtensions = /\.(jpg|jpeg)$/i
+
+      const rawOnly = folder.mismatchFiles.filter(file => rawExtensions.test(file))
+      const jpgOnly = folder.mismatchFiles.filter(file => jpgExtensions.test(file))
+
+      setMismatchDetail({ rawOnly, jpgOnly })
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('클립보드에 복사되었습니다')
+    } catch (error) {
+      toast.error('클립보드 복사에 실패했습니다')
+    }
+  }
+
+  const handleSync = async () => {
+    if (matchedFolders.length === 0) return
+
+    try {
+      for (const folder of matchedFolders) {
+        if (folder.scheduleId) {
+          await updateSchedule.mutateAsync({
+            id: folder.scheduleId,
+            cuts: folder.finalCount
+          })
+        }
+      }
+
+      toast.success(`${matchedFolders.length}개 스케줄의 컷수가 업데이트되었습니다`)
+      onOpenChange(false)
+      setFolders([])
+    } catch (error) {
+      toast.error('컷수 업데이트 중 오류가 발생했습니다')
+    }
   }
 
   if (isMobile) {
@@ -174,7 +280,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
                 }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
-                className={`flex-1 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4 transition-colors ${
+                className={`flex-1 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4 py-12 transition-colors ${
                   isDragging
                     ? 'border-primary bg-primary/5'
                     : 'border-muted-foreground/25 hover:border-muted-foreground/50'
@@ -394,10 +500,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
               초기화
             </Button>
             <Button
-              onClick={() => {
-                // TODO: 실제 동기화 로직
-                onOpenChange(false)
-              }}
+              onClick={handleSync}
               className="flex-1"
               disabled={matchedFolders.length === 0}
             >
@@ -460,7 +563,7 @@ function FolderItem({ folder, onClick, selected }: FolderItemProps) {
         </div>
 
         {folder.mismatch && (
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-2" />
+          <ChevronRight className="h-5 w-5 text-orange-600 flex-shrink-0 mt-2 animate-slide-horizontal" />
         )}
       </div>
     </button>

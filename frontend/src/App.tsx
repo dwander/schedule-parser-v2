@@ -3,6 +3,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserModal } from './features/parser/components/ParserModal'
+import { FolderSyncModal } from './features/sync/components/FolderSyncModal'
 import { Toaster } from '@/components/ui/sonner'
 import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
@@ -14,6 +15,7 @@ import { useState, useMemo, useEffect } from 'react'
 
 function AppContent() {
   const [parserOpen, setParserOpen] = useState(false)
+  const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const { testPanelVisible } = useSettingsStore()
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
@@ -45,7 +47,11 @@ function AppContent() {
 
   return (
     <>
-      <AppLayout stats={stats} onAddClick={() => setParserOpen(true)}>
+      <AppLayout
+        stats={stats}
+        onAddClick={() => setParserOpen(true)}
+        onFolderSyncClick={() => setFolderSyncOpen(true)}
+      >
         {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
           <ScheduleTable />
@@ -57,6 +63,12 @@ function AppContent() {
         open={parserOpen}
         onOpenChange={setParserOpen}
         existingSchedules={schedules}
+      />
+
+      {/* 폴더 동기화 모달 */}
+      <FolderSyncModal
+        open={folderSyncOpen}
+        onOpenChange={setFolderSyncOpen}
       />
 
       <Toaster position="top-right" />

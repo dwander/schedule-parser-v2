@@ -1,4 +1,4 @@
-import { PanelLeftClose } from 'lucide-react'
+import { PanelLeftClose, FolderSync } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -9,9 +9,10 @@ interface AppSidebarProps {
   open: boolean
   onClose: () => void
   onSettingsClick?: () => void
+  onFolderSyncClick?: () => void
 }
 
-export function AppSidebar({ open, onClose, onSettingsClick }: AppSidebarProps) {
+export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick }: AppSidebarProps) {
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
   // ESC 키로 닫기
   useEffect(() => {
@@ -83,15 +84,16 @@ export function AppSidebar({ open, onClose, onSettingsClick }: AppSidebarProps) 
             </div>
           </div>
 
-          {/* 섹션 2 */}
+          {/* 데이터 관리 */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">섹션 2</h3>
+            <h3 className="text-sm font-semibold text-foreground">데이터 관리</h3>
             <div className="space-y-2">
-              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                메뉴 2-1
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
-                메뉴 2-2
+              <button
+                onClick={onFolderSyncClick}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <FolderSync className="h-4 w-4" />
+                폴더 동기화
               </button>
             </div>
           </div>
