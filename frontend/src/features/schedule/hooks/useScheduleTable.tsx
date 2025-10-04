@@ -15,6 +15,8 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useUpdateSchedule } from './useSchedules'
 import { EditableCell } from '../components/EditableCell'
 import { MemoCell } from '../components/MemoCell'
+import { DatePickerCell } from '../components/DatePickerCell'
+import { TimePickerCell } from '../components/TimePickerCell'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const updateSchedule = useUpdateSchedule()
@@ -79,8 +81,18 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 100,
-        // TODO: 날짜 피커로 변경
+        size: 130,
+        cell: (info) => (
+          <DatePickerCell
+            value={info.getValue() as string}
+            onSave={(value) => {
+              updateSchedule.mutate({
+                id: info.row.original.id,
+                date: value
+              })
+            }}
+          />
+        ),
       },
       {
         accessorKey: 'time',
@@ -91,8 +103,18 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 80,
-        // TODO: 시간 피커로 변경
+        size: 120,
+        cell: (info) => (
+          <TimePickerCell
+            value={info.getValue() as string}
+            onSave={(value) => {
+              updateSchedule.mutate({
+                id: info.row.original.id,
+                time: value
+              })
+            }}
+          />
+        ),
       },
       {
         accessorKey: 'location',
