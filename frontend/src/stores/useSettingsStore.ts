@@ -49,6 +49,10 @@ interface SettingsState {
   testPanelVisible: boolean
   setTestPanelVisible: (visible: boolean) => void
 
+  // 뷰 모드
+  viewMode: 'list' | 'card'
+  setViewMode: (mode: 'list' | 'card') => void
+
   // 테이블 컬럼 가시성
   columnVisibility: ColumnVisibility
   setColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
@@ -70,6 +74,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       priceMode: 'total',
       testPanelVisible: true,
+      viewMode: 'list',
       columnVisibility: {
         select: true,
         date: true,
@@ -106,6 +111,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setPriceMode: (mode) => set({ priceMode: mode }),
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
+      setViewMode: (mode) => set({ viewMode: mode }),
       setColumnVisibility: (visibility) =>
         set((state) => ({
           columnVisibility: { ...state.columnVisibility, ...visibility }

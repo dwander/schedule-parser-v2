@@ -2,9 +2,11 @@ import { flexRender } from '@tanstack/react-table'
 import { useSchedules, useDeleteSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
+import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
 import { Trash2, Settings } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -24,14 +26,63 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 export function ScheduleTable() {
   const { data, isLoading, error } = useSchedules()
   const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, deleteConfirmDialog } = useScheduleTable(data)
-  const { virtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
+  const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
   const [flexWidth, setFlexWidth] = useState(0)
   const [tableWidth, setTableWidth] = useState('100%')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
-  const { theme, setTheme } = useSettingsStore()
+  const { theme, setTheme, viewMode, setViewMode } = useSettingsStore()
+
+  // Grid virtualizer (card 모드일 때만)
+  const gridContainerRef = useRef<HTMLDivElement>(null)
+  const [gridColumns, setGridColumns] = useState(3)
+  const cardWidth = 320
+  const gap = 16
+
+  useLayoutEffect(() => {
+    if (viewMode !== 'card') return
+
+    const updateColumns = () => {
+      if (!gridContainerRef.current) return
+      const containerWidth = gridContainerRef.current.clientWidth
+      const cols = Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)))
+      setGridColumns(cols)
+    }
+
+    updateColumns()
+    window.addEventListener('resize', updateColumns)
+    return () => window.removeEventListener('resize', updateColumns)
+  }, [viewMode])
+
+  const rowCount = Math.ceil(table.getRowModel().rows.length / gridColumns)
+  const gridVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => window,
+    estimateSize: () => 375,
+    overscan: 2,
+    observeElementRect: (instance, cb) => {
+      // window는 Element가 아니므로 ResizeObserver 대신 직접 측정
+      const handler = () => {
+        cb({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        })
+      }
+
+      // 초기 측정
+      handler()
+
+      // 리사이즈 감지
+      window.addEventListener('resize', handler)
+      return () => window.removeEventListener('resize', handler)
+    },
+  })
+
+  // 태그 삭제 핸들러 (useScheduleTable의 deleteConfirmDialog와 통합)
+  const handleDeleteTag = (tagValue: string, field: 'brand' | 'album') => {
+    // deleteConfirmDialog에서 처리
+  }
 
   // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
   useLayoutEffect(() => {
@@ -71,7 +122,9 @@ export function ScheduleTable() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">로딩 중...</div>
+        <div className="text-muted-foreground">
+          로딩 중... (data: {data?.length ?? 'undefined'})
+        </div>
       </div>
     )
   }
@@ -209,102 +262,153 @@ export function ScheduleTable() {
         </div>
       </div>
 
-      {/* Table */}
-      <div ref={containerRef} className="border border-border rounded-md overflow-x-auto overflow-y-hidden w-full">
-        <div ref={tableRef} style={{ minWidth: tableWidth }}>
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize() + 48}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            <table style={{ tableLayout: 'fixed', width: '100%' }}>
-              <thead className="bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      // 가변폭 컬럼 (memo 또는 spacer)
-                      const width = header.column.id === flexColumnId ? flexWidth : header.getSize()
-                      return (
-                        <th
-                          key={header.id}
-                          style={{
-                            width: `${width}px`,
-                            minWidth: `${width}px`,
-                            maxWidth: `${width}px`
-                          }}
-                          className="px-3 py-2 text-left text-sm font-semibold text-foreground border-b border-border overflow-hidden whitespace-nowrap"
-                        >
-                          {header.isPlaceholder ? null : (
-                            <div
-                              className={
-                                header.column.getCanSort()
-                                  ? 'cursor-pointer select-none'
-                                  : ''
-                              }
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                            </div>
-                          )}
-                        </th>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody style={{ paddingTop: '48px' }}>
-                {virtualizer.getVirtualItems().map((virtualRow) => {
-                  const row = rows[virtualRow.index]
-                  return (
-                    <tr
-                      key={row.id}
-                      style={{
-                        position: 'absolute',
-                        top: '48px',
-                        left: 0,
-                        width: '100%',
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${
-                          virtualRow.start - virtualizer.options.scrollMargin
-                        }px)`,
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                      className="border-b border-border hover:bg-accent/50 transition-colors"
-                    >
-                      {row.getVisibleCells().map((cell) => {
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div ref={containerRef} className="border border-border rounded-md overflow-x-auto overflow-y-hidden w-full">
+          <div ref={tableRef} style={{ minWidth: tableWidth }}>
+            <div
+              style={{
+                height: `${listVirtualizer.getTotalSize() + 48}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              <table style={{ tableLayout: 'fixed', width: '100%' }}>
+                <thead className="bg-muted">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
                         // 가변폭 컬럼 (memo 또는 spacer)
-                        const width = cell.column.id === flexColumnId ? flexWidth : cell.column.getSize()
+                        const width = header.column.id === flexColumnId ? flexWidth : header.getSize()
                         return (
-                          <td
-                            key={cell.id}
+                          <th
+                            key={header.id}
                             style={{
                               width: `${width}px`,
                               minWidth: `${width}px`,
                               maxWidth: `${width}px`
                             }}
-                            className="px-3 py-2 text-sm overflow-hidden text-ellipsis whitespace-nowrap"
+                            className="px-3 py-2 text-left text-sm font-semibold text-foreground border-b border-border overflow-hidden whitespace-nowrap"
                           >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
+                            {header.isPlaceholder ? null : (
+                              <div
+                                className={
+                                  header.column.getCanSort()
+                                    ? 'cursor-pointer select-none'
+                                    : ''
+                                }
+                                onClick={header.column.getToggleSortingHandler()}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                              </div>
                             )}
-                          </td>
+                          </th>
                         )
                       })}
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </thead>
+                <tbody style={{ paddingTop: '48px' }}>
+                  {listVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const row = rows[virtualRow.index]
+                    return (
+                      <tr
+                        key={row.id}
+                        style={{
+                          position: 'absolute',
+                          top: '48px',
+                          left: 0,
+                          width: '100%',
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${
+                            virtualRow.start - listVirtualizer.options.scrollMargin
+                          }px)`,
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                        className="border-b border-border hover:bg-accent/50 transition-colors"
+                      >
+                        {row.getVisibleCells().map((cell) => {
+                          // 가변폭 컬럼 (memo 또는 spacer)
+                          const width = cell.column.id === flexColumnId ? flexWidth : cell.column.getSize()
+                          return (
+                            <td
+                              key={cell.id}
+                              style={{
+                                width: `${width}px`,
+                                minWidth: `${width}px`,
+                                maxWidth: `${width}px`
+                              }}
+                              className="px-3 py-2 text-sm overflow-hidden text-ellipsis whitespace-nowrap"
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Grid View */}
+      {viewMode === 'card' && (
+        <div ref={gridContainerRef} className="w-full">
+          <div
+            style={{
+              height: `${gridVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {gridVirtualizer.getVirtualItems().map((virtualRow) => {
+              const startIndex = virtualRow.index * gridColumns
+              const rowSchedules = table.getRowModel().rows
+                .slice(startIndex, startIndex + gridColumns)
+                .map(r => r.original)
+
+              return (
+                <div
+                  key={virtualRow.key}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                    paddingBottom: '16px',
+                  }}
+                >
+                  <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>
+                    {rowSchedules.map((schedule) => {
+                      const isSelected = rowSelection[schedule.id] || false
+                      return (
+                        <ScheduleCard
+                          key={schedule.id}
+                          schedule={schedule}
+                          isSelected={isSelected}
+                          onToggleSelect={() => table.getRow(String(table.getRowModel().rows.findIndex(r => r.original.id === schedule.id))).toggleSelected()}
+                          onDeleteTag={handleDeleteTag}
+                        />
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
       </div>
     </>
   )
