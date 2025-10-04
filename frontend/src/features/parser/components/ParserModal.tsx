@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react'
 import { parseText, parseFile } from '../api/parserApi'
 import { addSchedules } from '@/features/schedule/api/scheduleApi'
 import { useQueryClient } from '@tanstack/react-query'
@@ -198,6 +198,12 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     }
   }
 
+  const handleReset = () => {
+    setText('')
+    setParsedData(null)
+    setError(null)
+  }
+
   const handleClose = () => {
     setText('')
     setParsedData(null)
@@ -314,8 +320,14 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
 
         {/* 액션 버튼 */}
         <div className="flex gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose} className="flex-1">
-            취소
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="flex-1 gap-2"
+            disabled={!text.trim()}
+          >
+            <RotateCcw className="h-4 w-4" />
+            입력된 텍스트 초기화
           </Button>
           <Button
             onClick={handleSave}

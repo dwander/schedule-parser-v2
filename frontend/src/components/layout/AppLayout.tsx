@@ -11,16 +11,17 @@ interface AppLayoutProps {
     totalCuts?: number
     totalPrice?: number
   }
+  onAddClick?: () => void
 }
 
-export function AppLayout({ children, stats }: AppLayoutProps) {
+export function AppLayout({ children, stats, onAddClick }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="relative min-h-screen bg-background">
       {/* Floating Header */}
-      <AppHeader onMenuClick={() => setSidebarOpen(true)} />
+      <AppHeader onMenuClick={() => setSidebarOpen(true)} onAddClick={onAddClick} />
 
       {/* Sidebar */}
       <AppSidebar

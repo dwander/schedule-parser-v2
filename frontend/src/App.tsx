@@ -45,10 +45,10 @@ function AppContent() {
 
   return (
     <>
-      <AppLayout stats={stats}>
+      <AppLayout stats={stats} onAddClick={() => setParserOpen(true)}>
         {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
-          <ScheduleTable onParserOpen={() => setParserOpen(true)} />
+          <ScheduleTable />
         </section>
       </AppLayout>
 
