@@ -277,6 +277,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                   memo: value
                 })
               }}
+              cardMode={true}
             />
           </div>
         )}
