@@ -30,7 +30,7 @@ export function ScheduleTable() {
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
 
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -362,6 +362,8 @@ export function ScheduleTable() {
                 <tbody style={{ paddingTop: '48px' }}>
                   {listVirtualizer.getVirtualItems().map((virtualRow) => {
                     const row = rows[virtualRow.index]
+                    const isDuplicate = duplicateSchedules.has(virtualRow.index)
+                    const isConflict = conflictSchedules.has(virtualRow.index)
                     return (
                       <tr
                         key={row.id}
@@ -377,7 +379,13 @@ export function ScheduleTable() {
                           display: 'flex',
                           alignItems: 'center',
                         }}
-                        className="border-b border-border hover:bg-accent/50 transition-colors"
+                        className={`border-b border-border hover:bg-accent/50 transition-colors ${
+                          isDuplicate
+                            ? 'bg-yellow-50 dark:bg-yellow-950/20 border-l-4 border-l-yellow-500'
+                            : isConflict
+                            ? 'bg-red-50 dark:bg-red-950/20 border-l-4 border-l-red-500'
+                            : ''
+                        }`}
                       >
                         {row.getVisibleCells().map((cell) => {
                           // 가변폭 컬럼 (memo 또는 spacer)
@@ -441,13 +449,18 @@ export function ScheduleTable() {
                     className="grid gap-4"
                     style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
                   >
-                    {rowSchedules.map((row) => {
+                    {rowSchedules.map((row, idx) => {
                       const schedule = row.original
+                      const rowIndex = virtualRow.index * gridColumns + idx
+                      const isDuplicate = duplicateSchedules.has(rowIndex)
+                      const isConflict = conflictSchedules.has(rowIndex)
                       return (
                         <div key={schedule.id} className="min-w-0 overflow-hidden">
                           <ScheduleCard
                             schedule={schedule}
                             isSelected={row.getIsSelected()}
+                            isDuplicate={isDuplicate}
+                            isConflict={isConflict}
                             onToggleSelect={() => row.toggleSelected()}
                             onDeleteTag={handleDeleteTag}
                           />

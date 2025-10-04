@@ -12,11 +12,13 @@ import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCo
 interface ScheduleCardProps {
   schedule: Schedule
   isSelected: boolean
+  isDuplicate?: boolean
+  isConflict?: boolean
   onToggleSelect: () => void
   onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
 }
 
-export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag }: ScheduleCardProps) {
+export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
   const { columnVisibility } = useSettingsStore()
@@ -24,9 +26,16 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
   return (
     <div
       className={`
-        rounded-lg border border-border bg-card shadow-sm
+        rounded-lg border shadow-sm
         transition-all hover:shadow-md w-full max-w-full overflow-hidden
         ${isSelected ? 'ring-2 ring-primary' : ''}
+        ${
+          isDuplicate
+            ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-500 border-l-4'
+            : isConflict
+            ? 'bg-red-50 dark:bg-red-950/20 border-red-500 border-l-4'
+            : 'border-border bg-card'
+        }
       `}
     >
       {/* Header */}
