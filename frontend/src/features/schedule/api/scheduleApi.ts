@@ -29,7 +29,9 @@ export async function addSchedule(schedule: NewSchedule): Promise<Schedule> {
 }
 
 export async function updateSchedule(schedule: UpdateSchedule): Promise<Schedule> {
-  const { data } = await apiClient.put(`/api/schedules/${schedule.id}`, schedule)
+  const { data } = await apiClient.put(`/api/schedules/${schedule.id}`, schedule, {
+    params: { user_id: getUserId() }
+  })
   return data
 }
 
