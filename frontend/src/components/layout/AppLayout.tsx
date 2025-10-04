@@ -10,9 +10,11 @@ interface AppLayoutProps {
     totalCuts?: number
     totalPrice?: number
   }
+  testPanelVisible?: boolean
+  onTestPanelVisibleChange?: (visible: boolean) => void
 }
 
-export function AppLayout({ children, stats }: AppLayoutProps) {
+export function AppLayout({ children, stats, testPanelVisible = true, onTestPanelVisibleChange }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -21,7 +23,12 @@ export function AppLayout({ children, stats }: AppLayoutProps) {
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
 
       {/* Sidebar */}
-      <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AppSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        testPanelVisible={testPanelVisible}
+        onTestPanelToggle={(visible) => onTestPanelVisibleChange?.(visible)}
+      />
 
       {/* Main Content */}
       <main>

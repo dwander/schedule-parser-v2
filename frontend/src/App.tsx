@@ -12,6 +12,7 @@ import { useState } from 'react'
 
 function App() {
   const [parsedData, setParsedData] = useState<any[]>([])
+  const [testPanelVisible, setTestPanelVisible] = useState(true)
 
   const handleParsed = (data: any[]) => {
     console.log('파싱된 데이터:', data)
@@ -26,7 +27,10 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <AppLayout>
+        <AppLayout
+          testPanelVisible={testPanelVisible}
+          onTestPanelVisibleChange={setTestPanelVisible}
+        >
           {/* 파서 입력창 */}
           <section className="mb-6 container max-w-screen-2xl px-8 pt-6">
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
@@ -45,7 +49,7 @@ function App() {
         </AppLayout>
 
         <Toaster position="top-right" />
-        <DialogTestPanel />
+        {testPanelVisible && <DialogTestPanel />}
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ThemeProvider>

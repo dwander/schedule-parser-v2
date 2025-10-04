@@ -1,14 +1,17 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
 
 interface AppSidebarProps {
   open: boolean
   onClose: () => void
+  testPanelVisible: boolean
+  onTestPanelToggle: (visible: boolean) => void
 }
 
-export function AppSidebar({ open, onClose }: AppSidebarProps) {
+export function AppSidebar({ open, onClose, testPanelVisible, onTestPanelToggle }: AppSidebarProps) {
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return
@@ -63,9 +66,60 @@ export function AppSidebar({ open, onClose }: AppSidebarProps) {
           </Button>
         </div>
 
-        {/* Menu Items (나중에 추가) */}
-        <nav className="flex-1 overflow-y-auto p-4">
-          <p className="text-sm text-muted-foreground">메뉴 항목 (나중에 추가)</p>
+        {/* Menu Items */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* 섹션 1 */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">섹션 1</h3>
+            <div className="space-y-1">
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 1-1
+              </button>
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 1-2
+              </button>
+            </div>
+          </div>
+
+          {/* 섹션 2 */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">섹션 2</h3>
+            <div className="space-y-1">
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 2-1
+              </button>
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 2-2
+              </button>
+            </div>
+          </div>
+
+          {/* 섹션 3 */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">섹션 3</h3>
+            <div className="space-y-1">
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 3-1
+              </button>
+              <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors">
+                메뉴 3-2
+              </button>
+            </div>
+          </div>
+
+          {/* 개발자 도구 */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">개발자 도구</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors">
+                <span className="text-sm text-muted-foreground">UI 테스트 패널</span>
+                <Switch
+                  checked={testPanelVisible}
+                  onCheckedChange={onTestPanelToggle}
+                />
+              </div>
+            </div>
+          </div>
         </nav>
 
         {/* Login/Logout Button */}
