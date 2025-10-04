@@ -75,6 +75,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                   location: value
                 })
               }}
+              placeholder="장소"
             />
           </div>
         </div>
@@ -91,6 +92,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                   groom: value
                 })
               }}
+              placeholder="신랑신부"
             />
           </div>
         </div>
@@ -133,14 +135,15 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 }
                 return str
               }}
+              placeholder="연락처"
             />
           </div>
         </div>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-1 px-2 py-1 bg-accent/50 rounded text-xs">
-            <Camera className="h-3 w-3" />
+        {/* Brand */}
+        <div className="flex items-start gap-2">
+          <Camera className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <TagSelectCell
               value={schedule.brand}
               options={brandOptions}
@@ -151,10 +154,15 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 })
               }}
               onDelete={(tag) => onDeleteTag(tag, 'brand')}
+              placeholder="브랜드"
             />
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 bg-accent/50 rounded text-xs">
-            <Image className="h-3 w-3" />
+        </div>
+
+        {/* Album */}
+        <div className="flex items-start gap-2">
+          <Image className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <TagSelectCell
               value={schedule.album}
               options={albumOptions}
@@ -165,14 +173,15 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 })
               }}
               onDelete={(tag) => onDeleteTag(tag, 'album')}
+              placeholder="앨범"
             />
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-3 text-sm">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Camera className="h-3 w-3" />
+        {/* Photographer */}
+        <div className="flex items-start gap-2">
+          <Camera className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.photographer}
               onSave={(value) => {
@@ -181,10 +190,15 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                   photographer: value
                 })
               }}
+              placeholder="작가"
             />
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <span className="text-xs">컷:</span>
+        </div>
+
+        {/* Cuts */}
+        <div className="flex items-start gap-2">
+          <Image className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.cuts}
               onSave={(value) => {
@@ -204,10 +218,15 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 const num = Number(val)
                 return num > 0 ? num.toLocaleString() : ''
               }}
+              placeholder="컷수"
             />
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <DollarSign className="h-3 w-3" />
+        </div>
+
+        {/* Price */}
+        <div className="flex items-start gap-2">
+          <DollarSign className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <EditableCell
               value={schedule.price}
               onSave={(value) => {
@@ -227,6 +246,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                 const num = Number(val)
                 return num > 0 ? num.toLocaleString() : ''
               }}
+              placeholder="촬영비"
             />
           </div>
         </div>
@@ -244,6 +264,7 @@ export function ScheduleCard({ schedule, isSelected, onToggleSelect, onDeleteTag
                     manager: value
                   })
                 }}
+                placeholder="계약자"
               />
             </div>
           </div>

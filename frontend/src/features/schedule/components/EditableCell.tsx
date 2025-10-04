@@ -8,6 +8,7 @@ interface EditableCellProps {
   doubleClick?: boolean // 더블클릭으로 편집 모드 전환
   validate?: (value: string) => boolean // 입력 검증 함수
   format?: (value: string | number) => string // 표시 포맷 함수
+  placeholder?: string // 빈 값일 때 표시할 텍스트
 }
 
 export function EditableCell({
@@ -17,7 +18,8 @@ export function EditableCell({
   className = '',
   doubleClick = false,
   validate,
-  format
+  format,
+  placeholder = ''
 }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
@@ -80,14 +82,17 @@ export function EditableCell({
 
   // 표시할 값 (포맷 함수가 있으면 적용)
   const displayValue = format ? format(value) : value
+  const isEmpty = !displayValue || String(displayValue).trim() === ''
 
   return (
     <div
       onClick={doubleClick ? undefined : () => setIsEditing(true)}
       onDoubleClick={doubleClick ? () => setIsEditing(true) : undefined}
-      className={`w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors ${className}`}
+      className={`w-full min-h-[24px] cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors flex items-center ${className}`}
     >
-      {displayValue}
+      <span className={isEmpty ? 'text-muted-foreground/50' : ''}>
+        {isEmpty ? placeholder : displayValue}
+      </span>
     </div>
   )
 }

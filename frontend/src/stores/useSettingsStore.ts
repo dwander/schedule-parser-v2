@@ -102,7 +102,7 @@ export const useSettingsStore = create<SettingsState>()(
         photographer: '작가',
         cuts: '컷수',
         price: '촬영비',
-        manager: '담당자',
+        manager: '계약자',
         memo: '전달사항',
         folderName: '폴더',
       },

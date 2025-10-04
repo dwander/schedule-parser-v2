@@ -10,7 +10,7 @@ interface TagSelectCellProps {
   placeholder?: string
 }
 
-export function TagSelectCell({ value, onSave, onDelete, options, placeholder = '선택' }: TagSelectCellProps) {
+export function TagSelectCell({ value, onSave, onDelete, options, placeholder = '' }: TagSelectCellProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -167,10 +167,11 @@ export function TagSelectCell({ value, onSave, onDelete, options, placeholder = 
       <div ref={containerRef} className="w-full h-full">
         <div
           onClick={() => setIsOpen(true)}
-          className="w-full h-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors flex items-center justify-between"
+          className="w-full h-full min-h-[24px] cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors flex items-center"
         >
-          <span className="truncate">{value || placeholder}</span>
-          <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0 ml-1" />
+          <span className={`truncate ${!value ? 'text-muted-foreground/50' : ''}`}>
+            {value || placeholder}
+          </span>
         </div>
       </div>
       {dropdownContent}
