@@ -41,6 +41,10 @@ interface SettingsState {
   theme: Theme
   setTheme: (theme: Theme) => void
 
+  // 글꼴 크기 (12px ~ 24px, 기본 16px) - html root font-size
+  fontSize: number
+  setFontSize: (size: number) => void
+
   // 가격 표시 모드
   priceMode: 'total' | 'net'
   setPriceMode: (mode: 'total' | 'net') => void
@@ -72,6 +76,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       // 기본값
       theme: 'system',
+      fontSize: 16,
       priceMode: 'total',
       testPanelVisible: true,
       viewMode: 'list',
@@ -109,6 +114,7 @@ export const useSettingsStore = create<SettingsState>()(
 
       // Actions
       setTheme: (theme) => set({ theme }),
+      setFontSize: (size) => set({ fontSize: size }),
       setPriceMode: (mode) => set({ priceMode: mode }),
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
       setViewMode: (mode) => set({ viewMode: mode }),

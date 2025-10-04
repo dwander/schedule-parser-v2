@@ -16,10 +16,15 @@ import { useState, useMemo, useEffect } from 'react'
 function AppContent() {
   const [parserOpen, setParserOpen] = useState(false)
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
-  const { testPanelVisible } = useSettingsStore()
+  const { testPanelVisible, fontSize } = useSettingsStore()
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
+
+  // fontSize를 html 루트에 적용 (모든 rem 단위에 영향)
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}px`
+  }, [fontSize])
 
   // 초기 로드 시 태그가 없으면 스케줄에서 동기화
   useEffect(() => {

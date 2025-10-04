@@ -30,7 +30,7 @@ export function ScheduleTable() {
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
 
-  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
+  const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data, dateRange)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -258,6 +258,14 @@ export function ScheduleTable() {
             <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
               <DropdownMenuLabel>컬럼 표시</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {/* 체크박스 항목 */}
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.select}
+                onCheckedChange={(value) => setColumnVisibility({ select: !!value })}
+                onSelect={(e) => e.preventDefault()}
+              >
+                체크박스
+              </DropdownMenuCheckboxItem>
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
