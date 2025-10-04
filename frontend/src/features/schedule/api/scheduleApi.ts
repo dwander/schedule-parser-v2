@@ -45,3 +45,11 @@ export async function deleteSchedules(ids: string[]): Promise<void> {
     { params: { user_id: getUserId() } }
   )
 }
+
+export async function addSchedules(schedules: NewSchedule[]): Promise<Schedule[]> {
+  const { data } = await apiClient.post('/api/schedules/batch',
+    { schedules },
+    { params: { user_id: getUserId() } }
+  )
+  return data
+}

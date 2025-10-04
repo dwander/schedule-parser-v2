@@ -2159,6 +2159,71 @@ def delete_schedule(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/schedules/batch")
+def batch_create_schedules(
+    schedules: List[Dict] = Body(..., embed=True),
+    user_id: str = Query(..., description="User ID"),
+    db: Session = Depends(get_database)
+):
+    """Batch create schedules"""
+    try:
+        created_schedules = []
+
+        for schedule in schedules:
+            # Convert v2 format to database format
+            couple = f"{schedule.get('groom', '')} ♥ {schedule.get('bride', '')}"
+
+            new_schedule = Schedule(
+                user_id=user_id,
+                date=schedule.get('date', ''),
+                time=schedule.get('time', ''),
+                venue=schedule.get('location', ''),
+                couple=couple,
+                brand=schedule.get('brand', ''),
+                album=schedule.get('album', ''),
+                photographer=schedule.get('photographer', ''),
+                contact=schedule.get('contact', ''),
+                cuts_count=schedule.get('cuts', 0),
+                price=schedule.get('price', 0),
+                contractor=schedule.get('manager', ''),
+                comments=schedule.get('memo', ''),
+                needs_review=schedule.get('isDuplicate', False),
+            )
+
+            db.add(new_schedule)
+            db.flush()  # Get ID without committing
+
+            # Add to result list in v2 format
+            created_schedules.append({
+                'id': str(new_schedule.id),
+                'date': new_schedule.date,
+                'time': new_schedule.time,
+                'location': new_schedule.venue,
+                'groom': schedule.get('groom', ''),
+                'bride': schedule.get('bride', ''),
+                'couple': couple,
+                'cuts': new_schedule.cuts_count,
+                'price': new_schedule.price,
+                'photographer': new_schedule.photographer,
+                'contact': new_schedule.contact,
+                'album': new_schedule.album,
+                'brand': new_schedule.brand,
+                'manager': new_schedule.contractor,
+                'memo': new_schedule.comments,
+                'isDuplicate': new_schedule.needs_review,
+                'createdAt': new_schedule.created_at.isoformat() if new_schedule.created_at else None,
+                'updatedAt': new_schedule.updated_at.isoformat() if new_schedule.updated_at else None,
+            })
+
+        db.commit()
+
+        return created_schedules
+
+    except Exception as e:
+        logger.error(f"Failed to batch create schedules: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/schedules/batch-delete")
 def batch_delete_schedules(
     ids: List[str] = Body(..., embed=True),

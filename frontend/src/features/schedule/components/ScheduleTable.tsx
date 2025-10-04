@@ -4,7 +4,7 @@ import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
-import { Trash2, Settings } from 'lucide-react'
+import { Trash2, Settings, Plus } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
@@ -23,7 +23,11 @@ import { toast } from 'sonner'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
-export function ScheduleTable() {
+interface ScheduleTableProps {
+  onParserOpen?: () => void
+}
+
+export function ScheduleTable({ onParserOpen }: ScheduleTableProps) {
   const { data, isLoading, error } = useSchedules()
   const { table, globalFilter, setGlobalFilter, flexColumnId, rowSelection, columnLabels, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
@@ -197,6 +201,17 @@ export function ScheduleTable() {
           className="px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-input rounded-md bg-background text-foreground flex-1 sm:flex-initial sm:min-w-[200px] focus:ring-1 focus:ring-ring/30 focus:border-ring/50 focus:outline-none"
         />
         <div className="flex items-center gap-1">
+          {onParserOpen && (
+            <Button
+              variant="default"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onParserOpen}
+              title="스케줄 가져오기"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
