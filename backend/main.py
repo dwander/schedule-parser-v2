@@ -1952,11 +1952,14 @@ def get_schedules(
                 'location': schedule.venue,
                 'groom': groom,
                 'bride': bride,
+                'contact': schedule.contact or "",
+                'brand': schedule.brand or "",
+                'album': schedule.album or "",
+                'photographer': schedule.photographer or "",
                 'cuts': schedule.cuts_count or 0,
                 'price': schedule.price or 0,
                 'fee': 0,  # TODO: fee 계산 로직 추가
                 'manager': schedule.contractor or "",
-                'brand': schedule.brand or "",
                 'memo': schedule.comments or "",
                 'isDuplicate': schedule.needs_review,
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
@@ -2052,8 +2055,14 @@ def update_schedule(
             existing.time = schedule['time']
         if 'location' in schedule:
             existing.venue = schedule['location']
+        if 'contact' in schedule:
+            existing.contact = schedule['contact']
         if 'brand' in schedule:
             existing.brand = schedule['brand']
+        if 'album' in schedule:
+            existing.album = schedule['album']
+        if 'photographer' in schedule:
+            existing.photographer = schedule['photographer']
         if 'cuts' in schedule:
             existing.cuts_count = schedule['cuts']
         if 'price' in schedule:
@@ -2080,11 +2089,14 @@ def update_schedule(
             'location': existing.venue,
             'groom': groom,
             'bride': bride,
+            'contact': existing.contact,
+            'brand': existing.brand,
+            'album': existing.album,
+            'photographer': existing.photographer,
             'cuts': existing.cuts_count,
             'price': existing.price,
             'fee': 0,
             'manager': existing.contractor,
-            'brand': existing.brand,
             'memo': existing.comments,
             'isDuplicate': existing.needs_review,
             'createdAt': existing.created_at.isoformat() if existing.created_at else None,

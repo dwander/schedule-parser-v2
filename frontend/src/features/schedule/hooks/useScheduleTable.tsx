@@ -81,7 +81,7 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 130,
+        size: 120,
         cell: (info) => (
           <DatePickerCell
             value={info.getValue() as string}
@@ -103,7 +103,7 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 120,
+        size: 90,
         cell: (info) => (
           <TimePickerCell
             value={info.getValue() as string}
@@ -169,15 +169,50 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 120,
+        size: 130,
         cell: (info) => (
           <EditableCell
             value={info.getValue() as string}
             onSave={(value) => {
-              updateSchedule.mutate({
-                id: info.row.original.id,
-                contact: value
-              })
+              // 이메일 형식 체크
+              const isEmail = value.includes('@')
+
+              if (isEmail) {
+                // 이메일은 그대로 저장
+                updateSchedule.mutate({
+                  id: info.row.original.id,
+                  contact: value.trim()
+                })
+              } else {
+                // 전화번호 포맷으로 변환
+                const numbers = value.replace(/\D/g, '')
+                let formatted = numbers
+                if (numbers.length === 11) {
+                  formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
+                } else if (numbers.length === 10) {
+                  // 010 없는 번호도 처리
+                  formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
+                }
+                updateSchedule.mutate({
+                  id: info.row.original.id,
+                  contact: formatted
+                })
+              }
+            }}
+            format={(val) => {
+              const str = String(val)
+              // 이메일이면 그대로 반환
+              if (str.includes('@')) {
+                return str
+              }
+              // 전화번호 포맷 적용
+              const numbers = str.replace(/\D/g, '')
+              if (numbers.length === 11) {
+                return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
+              } else if (numbers.length === 10) {
+                return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
+              }
+              return str
             }}
           />
         ),
@@ -191,7 +226,7 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 80,
+        size: 160,
         cell: (info) => (
           <EditableCell
             value={info.getValue() as string}
@@ -213,7 +248,7 @@ export function useScheduleTable(data: Schedule[] = []) {
             doubleClick
           />
         ),
-        size: 80,
+        size: 110,
         cell: (info) => (
           <EditableCell
             value={info.getValue() as string}
@@ -261,12 +296,22 @@ export function useScheduleTable(data: Schedule[] = []) {
         cell: (info) => (
           <EditableCell
             value={info.getValue() as number}
-            type="number"
             onSave={(value) => {
-              updateSchedule.mutate({
-                id: info.row.original.id,
-                cuts: parseInt(value)
-              })
+              const num = parseInt(value.replace(/\D/g, ''))
+              if (!isNaN(num)) {
+                updateSchedule.mutate({
+                  id: info.row.original.id,
+                  cuts: num
+                })
+              }
+            }}
+            validate={(value) => {
+              const num = parseInt(value.replace(/\D/g, ''))
+              return !isNaN(num) && num >= 0
+            }}
+            format={(val) => {
+              const num = Number(val)
+              return num > 0 ? num.toLocaleString() : ''
             }}
           />
         ),
@@ -284,12 +329,22 @@ export function useScheduleTable(data: Schedule[] = []) {
         cell: (info) => (
           <EditableCell
             value={info.getValue() as number}
-            type="number"
             onSave={(value) => {
-              updateSchedule.mutate({
-                id: info.row.original.id,
-                price: parseInt(value)
-              })
+              const num = parseInt(value.replace(/\D/g, ''))
+              if (!isNaN(num)) {
+                updateSchedule.mutate({
+                  id: info.row.original.id,
+                  price: num
+                })
+              }
+            }}
+            validate={(value) => {
+              const num = parseInt(value.replace(/\D/g, ''))
+              return !isNaN(num) && num >= 0
+            }}
+            format={(val) => {
+              const num = Number(val)
+              return num > 0 ? num.toLocaleString() : ''
             }}
           />
         ),

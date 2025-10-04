@@ -13,7 +13,7 @@ export function MemoCell({ value, onSave }: MemoCellProps) {
     <>
       <div
         onClick={() => setDialogOpen(true)}
-        className="w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors truncate"
+        className="w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors truncate text-muted-foreground"
       >
         {value || '클릭하여 입력'}
       </div>

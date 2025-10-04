@@ -6,6 +6,8 @@ interface EditableCellProps {
   type?: 'text' | 'number' | 'date' | 'time'
   className?: string
   doubleClick?: boolean // 더블클릭으로 편집 모드 전환
+  validate?: (value: string) => boolean // 입력 검증 함수
+  format?: (value: string | number) => string // 표시 포맷 함수
 }
 
 export function EditableCell({
@@ -13,7 +15,9 @@ export function EditableCell({
   onSave,
   type = 'text',
   className = '',
-  doubleClick = false
+  doubleClick = false,
+  validate,
+  format
 }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
@@ -31,8 +35,18 @@ export function EditableCell({
   }, [value])
 
   const handleSave = () => {
-    if (editValue !== String(value)) {
-      onSave(editValue)
+    const trimmedValue = editValue.trim()
+
+    // 검증 함수가 있으면 검증
+    if (validate && !validate(trimmedValue)) {
+      // 검증 실패 시 원래 값으로 되돌림
+      setEditValue(String(value))
+      setIsEditing(false)
+      return
+    }
+
+    if (trimmedValue !== String(value)) {
+      onSave(trimmedValue)
     }
     setIsEditing(false)
   }
@@ -64,13 +78,16 @@ export function EditableCell({
     )
   }
 
+  // 표시할 값 (포맷 함수가 있으면 적용)
+  const displayValue = format ? format(value) : value
+
   return (
     <div
       onClick={doubleClick ? undefined : () => setIsEditing(true)}
       onDoubleClick={doubleClick ? () => setIsEditing(true) : undefined}
       className={`w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors ${className}`}
     >
-      {value}
+      {displayValue}
     </div>
   )
 }
