@@ -4,6 +4,7 @@ import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserModal } from './features/parser/components/ParserModal'
 import { FolderSyncModal } from './features/sync/components/FolderSyncModal'
+import { BackupRestoreDialog } from './features/schedule/components/BackupRestoreDialog'
 import { Toaster } from '@/components/ui/sonner'
 import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
@@ -17,6 +18,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 function AppContent() {
   const [parserOpen, setParserOpen] = useState(false)
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
+  const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
   const { testPanelVisible, fontSize, dateRangeFilter } = useSettingsStore()
   const { data: schedules = [] } = useSchedules()
@@ -93,6 +95,7 @@ function AppContent() {
         stats={stats}
         onAddClick={() => setParserOpen(true)}
         onFolderSyncClick={() => setFolderSyncOpen(true)}
+        onBackupRestoreClick={() => setBackupRestoreOpen(true)}
       >
         {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
@@ -115,6 +118,12 @@ function AppContent() {
       <FolderSyncModal
         open={folderSyncOpen}
         onOpenChange={setFolderSyncOpen}
+      />
+
+      {/* 백업 및 복원 다이얼로그 */}
+      <BackupRestoreDialog
+        open={backupRestoreOpen}
+        onOpenChange={setBackupRestoreOpen}
       />
 
       <Toaster position="top-right" />

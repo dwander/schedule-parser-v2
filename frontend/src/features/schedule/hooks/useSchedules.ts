@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchSchedules,
   addSchedule,
+  addSchedules,
   updateSchedule,
   deleteSchedule,
   deleteSchedules,
@@ -20,6 +21,18 @@ export function useAddSchedule() {
 
   return useMutation({
     mutationFn: addSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+    },
+  })
+}
+
+export function useBatchAddSchedules() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: addSchedules,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
       queryClient.invalidateQueries({ queryKey: ['tags'] })

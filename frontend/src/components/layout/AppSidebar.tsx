@@ -1,4 +1,4 @@
-import { PanelLeftClose, FolderSync } from 'lucide-react'
+import { PanelLeftClose, FolderSync, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -10,9 +10,10 @@ interface AppSidebarProps {
   onClose: () => void
   onSettingsClick?: () => void
   onFolderSyncClick?: () => void
+  onBackupRestoreClick?: () => void
 }
 
-export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick }: AppSidebarProps) {
+export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, onBackupRestoreClick }: AppSidebarProps) {
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
   // ESC 키로 닫기
   useEffect(() => {
@@ -94,6 +95,13 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick }
               >
                 <FolderSync className="h-4 w-4" />
                 폴더 동기화
+              </button>
+              <button
+                onClick={onBackupRestoreClick}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <Database className="h-4 w-4" />
+                데이터 백업 및 복원
               </button>
             </div>
           </div>

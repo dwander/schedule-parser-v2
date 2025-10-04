@@ -13,9 +13,10 @@ interface AppLayoutProps {
   }
   onAddClick?: () => void
   onFolderSyncClick?: () => void
+  onBackupRestoreClick?: () => void
 }
 
-export function AppLayout({ children, stats, onAddClick, onFolderSyncClick }: AppLayoutProps) {
+export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -38,6 +39,10 @@ export function AppLayout({ children, stats, onAddClick, onFolderSyncClick }: Ap
         }}
         onFolderSyncClick={() => {
           onFolderSyncClick?.()
+          setSidebarOpen(false)
+        }}
+        onBackupRestoreClick={() => {
+          onBackupRestoreClick?.()
           setSidebarOpen(false)
         }}
       />
