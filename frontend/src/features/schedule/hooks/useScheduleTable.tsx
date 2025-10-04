@@ -22,16 +22,21 @@ import { DatePickerCell } from '../components/DatePickerCell'
 import { TimePickerCell } from '../components/TimePickerCell'
 import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
+import { useCreateTag, useDeleteTag, useTags } from './useTags'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const updateSchedule = useUpdateSchedule()
+  const createTag = useCreateTag()
+  const deleteTagMutation = useDeleteTag()
   const { data: allSchedules = [] } = useSchedules()
+  const { data: brandTags = [] } = useTags('brand')
+  const { data: albumTags = [] } = useTags('album')
   const { brandOptions, albumOptions } = useTagOptions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tag: string; field: 'brand' | 'album' } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
 
   // 컬럼 가시성 설정 (zustand store에서 가져오기)
   const columnVisibility = useSettingsStore((state) => state.columnVisibility)
@@ -51,35 +56,44 @@ export function useScheduleTable(data: Schedule[] = []) {
   const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
 
   // 태그 삭제 핸들러
-  const handleDeleteTag = (tag: string, field: 'brand' | 'album') => {
-    const affectedCount = allSchedules.filter(s => s[field] === tag).length
+  const handleDeleteTag = (tagValue: string, field: 'brand' | 'album') => {
+    const tags = field === 'brand' ? brandTags : albumTags
+    const tag = tags.find(t => t.tag_value === tagValue)
 
-    if (affectedCount > 0) {
-      setDeleteConfirm({ tag, field })
-    } else {
-      toast.info(`"${tag}" 태그는 사용 중이지 않습니다`)
+    if (!tag) {
+      toast.error('태그를 찾을 수 없습니다')
+      return
     }
+
+    const affectedCount = allSchedules.filter(s => s[field] === tagValue).length
+    setDeleteConfirm({ tagId: tag.id, tagValue, field })
   }
 
   const confirmDeleteTag = async () => {
     if (!deleteConfirm) return
 
-    const { tag, field } = deleteConfirm
-    const affectedSchedules = allSchedules.filter(s => s[field] === tag)
+    const { tagId, tagValue } = deleteConfirm
 
     try {
-      for (const schedule of affectedSchedules) {
-        await updateSchedule.mutateAsync({
-          id: schedule.id,
-          [field]: ''
-        })
-      }
-      toast.success(`"${tag}" 태그가 삭제되었습니다 (${affectedSchedules.length}개 항목 업데이트)`)
+      await deleteTagMutation.mutateAsync(tagId)
+      toast.success(`"${tagValue}" 태그가 삭제되었습니다`)
     } catch (error) {
       toast.error('태그 삭제 중 오류가 발생했습니다')
     } finally {
       setDeleteConfirm(null)
     }
+  }
+
+  // 태그 생성 핸들러 (TagSelectCell에서 새 태그 입력 시)
+  const handleSaveTag = async (value: string, field: 'brand' | 'album', scheduleId: number) => {
+    // 먼저 스케줄 업데이트
+    updateSchedule.mutate({
+      id: scheduleId,
+      [field]: value
+    })
+
+    // 백엔드에서 자동으로 태그를 생성하므로 프론트엔드에서는 별도 처리 불필요
+    // updateSchedule가 성공하면 queryClient가 자동으로 tags를 refetch함
   }
 
   const columns = useMemo<ColumnDef<Schedule>[]>(
@@ -271,12 +285,7 @@ export function useScheduleTable(data: Schedule[] = []) {
           <TagSelectCell
             value={info.getValue() as string}
             options={brandOptions}
-            onSave={(value) => {
-              updateSchedule.mutate({
-                id: info.row.original.id,
-                brand: value
-              })
-            }}
+            onSave={(value) => handleSaveTag(value, 'brand', info.row.original.id)}
             onDelete={(tag) => handleDeleteTag(tag, 'brand')}
           />
         ),
@@ -295,12 +304,7 @@ export function useScheduleTable(data: Schedule[] = []) {
           <TagSelectCell
             value={info.getValue() as string}
             options={albumOptions}
-            onSave={(value) => {
-              updateSchedule.mutate({
-                id: info.row.original.id,
-                album: value
-              })
-            }}
+            onSave={(value) => handleSaveTag(value, 'album', info.row.original.id)}
             onDelete={(tag) => handleDeleteTag(tag, 'album')}
           />
         ),
@@ -486,7 +490,7 @@ export function useScheduleTable(data: Schedule[] = []) {
   })
 
   const affectedCount = deleteConfirm
-    ? allSchedules.filter(s => s[deleteConfirm.field] === deleteConfirm.tag).length
+    ? allSchedules.filter(s => s[deleteConfirm.field] === deleteConfirm.tagValue).length
     : 0
 
   return {
@@ -503,7 +507,7 @@ export function useScheduleTable(data: Schedule[] = []) {
         onOpenChange={(open) => !open && setDeleteConfirm(null)}
         onConfirm={confirmDeleteTag}
         title="태그 삭제"
-        description={`"${deleteConfirm.tag}" 태그를 삭제하시겠습니까?\n\n이 태그를 사용하는 ${affectedCount}개의 항목이 빈 값으로 변경됩니다.`}
+        description={`"${deleteConfirm.tagValue}" 태그를 삭제하시겠습니까?\n\n이 태그를 사용하는 ${affectedCount}개의 항목이 빈 값으로 변경됩니다.`}
         variant="destructive"
       />
     )

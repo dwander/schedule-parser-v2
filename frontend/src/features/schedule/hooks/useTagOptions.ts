@@ -1,32 +1,17 @@
 import { useMemo } from 'react'
-import { useSchedules } from './useSchedules'
+import { useTags } from './useTags'
 
 export function useTagOptions() {
-  const { data: schedules = [] } = useSchedules()
+  const { data: brandTags = [] } = useTags('brand')
+  const { data: albumTags = [] } = useTags('album')
 
   const brandOptions = useMemo(() => {
-    const brands = new Set<string>()
-    schedules.forEach(schedule => {
-      if (schedule.brand && schedule.brand.trim()) {
-        // 연속된 공백을 하나로 정규화
-        const normalized = schedule.brand.trim().replace(/\s+/g, ' ')
-        brands.add(normalized)
-      }
-    })
-    return Array.from(brands).sort()
-  }, [schedules])
+    return brandTags.map(tag => tag.tag_value).sort()
+  }, [brandTags])
 
   const albumOptions = useMemo(() => {
-    const albums = new Set<string>()
-    schedules.forEach(schedule => {
-      if (schedule.album && schedule.album.trim()) {
-        // 연속된 공백을 하나로 정규화
-        const normalized = schedule.album.trim().replace(/\s+/g, ' ')
-        albums.add(normalized)
-      }
-    })
-    return Array.from(albums).sort()
-  }, [schedules])
+    return albumTags.map(tag => tag.tag_value).sort()
+  }, [albumTags])
 
   return {
     brandOptions,
