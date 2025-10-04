@@ -1,11 +1,11 @@
 import { apiClient } from '@/lib/api/client'
 import type { Schedule, NewSchedule, UpdateSchedule } from '../types/schedule'
 import { mockSchedules } from '@/lib/api/mockData'
+import { getUserId } from '@/lib/utils/userUtils'
 
 export async function fetchSchedules(): Promise<Schedule[]> {
-  // TODO: user_id를 실제 인증된 사용자로 변경
   const { data } = await apiClient.get('/api/schedules', {
-    params: { user_id: 'test' }
+    params: { user_id: getUserId() }
   })
   // couple 필드가 없으면 groom ♥ bride로 생성
   return data.map((schedule: any) => ({
@@ -22,7 +22,7 @@ export async function fetchSchedule(id: string): Promise<Schedule> {
 export async function addSchedule(schedule: NewSchedule): Promise<Schedule> {
   const { data } = await apiClient.post('/api/schedules', schedule, {
     params: {
-      user_id: 'test' // TODO: 실제 인증된 사용자로 변경
+      user_id: getUserId()
     }
   })
   return data
@@ -40,6 +40,6 @@ export async function deleteSchedule(id: string): Promise<void> {
 export async function deleteSchedules(ids: string[]): Promise<void> {
   await apiClient.post('/api/schedules/batch-delete',
     { ids },
-    { params: { user_id: 'test' } } // TODO: 실제 인증된 사용자로 변경
+    { params: { user_id: getUserId() } }
   )
 }
