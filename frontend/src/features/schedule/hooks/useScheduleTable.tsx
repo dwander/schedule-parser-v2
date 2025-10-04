@@ -17,9 +17,12 @@ import { EditableCell } from '../components/EditableCell'
 import { MemoCell } from '../components/MemoCell'
 import { DatePickerCell } from '../components/DatePickerCell'
 import { TimePickerCell } from '../components/TimePickerCell'
+import { TagSelectCell } from '../components/TagSelectCell'
+import { useTagOptions } from './useTagOptions'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const updateSchedule = useUpdateSchedule()
+  const { brandOptions, albumOptions } = useTagOptions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState('')
@@ -228,8 +231,9 @@ export function useScheduleTable(data: Schedule[] = []) {
         ),
         size: 160,
         cell: (info) => (
-          <EditableCell
+          <TagSelectCell
             value={info.getValue() as string}
+            options={brandOptions}
             onSave={(value) => {
               updateSchedule.mutate({
                 id: info.row.original.id,
@@ -250,8 +254,9 @@ export function useScheduleTable(data: Schedule[] = []) {
         ),
         size: 110,
         cell: (info) => (
-          <EditableCell
+          <TagSelectCell
             value={info.getValue() as string}
+            options={albumOptions}
             onSave={(value) => {
               updateSchedule.mutate({
                 id: info.row.original.id,
@@ -416,7 +421,7 @@ export function useScheduleTable(data: Schedule[] = []) {
         cell: () => null,
       },
     ],
-    [columnLabels]
+    [columnLabels, brandOptions, albumOptions, updateSchedule]
   )
 
   const table = useReactTable({
