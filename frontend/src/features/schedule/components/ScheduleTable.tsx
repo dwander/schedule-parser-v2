@@ -4,9 +4,12 @@ import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
-import { Trash2, Settings, Search, Calendar } from 'lucide-react'
+import { Trash2, Settings, Search, Calendar, CalendarOff } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { EmptyState } from '@/components/ui/empty-state'
+import { ErrorFallback } from '@/components/error/ErrorFallback'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -136,20 +139,22 @@ export function ScheduleTable() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">
-          로딩 중... (data: {data?.length ?? 'undefined'})
-        </div>
+        <LoadingSpinner size="lg" text="스케줄을 불러오는 중..." />
       </div>
     )
   }
 
   if (error) {
+    return <ErrorFallback error={error as Error} />
+  }
+
+  if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-destructive">
-          에러가 발생했습니다: {(error as Error).message}
-        </div>
-      </div>
+      <EmptyState
+        icon={CalendarOff}
+        title="스케줄이 없습니다"
+        description="새로운 스케줄을 추가하거나 카카오톡 메시지를 파싱해보세요"
+      />
     )
   }
 

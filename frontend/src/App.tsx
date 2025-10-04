@@ -12,6 +12,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useState, useMemo, useEffect } from 'react'
+import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 
 function AppContent() {
   const [parserOpen, setParserOpen] = useState(false)
@@ -85,11 +86,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AppContent />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }
 
