@@ -11,6 +11,7 @@ import type {
 } from '@tanstack/react-table'
 import { useState, useMemo } from 'react'
 import type { Schedule } from '../types/schedule'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export function useScheduleTable(data: Schedule[] = []) {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -18,23 +19,15 @@ export function useScheduleTable(data: Schedule[] = []) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
 
-  // 컬럼 가시성 설정 (나중에 settings store로 이동 예정)
-  const [columnVisibility, setColumnVisibility] = useState({
-    select: true,
-    date: true,
-    location: true,
-    time: true,
-    couple: true,
-    contact: true,
-    brand: true,
-    album: true,
-    photographer: true,
-    cuts: true,
-    price: true,
-    manager: true,
-    memo: true,
-    folderName: true,
-  })
+  // 컬럼 가시성 설정 (zustand store에서 가져오기)
+  const columnVisibility = useSettingsStore((state) => state.columnVisibility)
+  const updateColumnVisibility = useSettingsStore((state) => state.setColumnVisibility)
+
+  // TanStack Table용 setter (Record<string, boolean> 형식 받음)
+  const setColumnVisibility = (updater: any) => {
+    const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater
+    updateColumnVisibility(newVisibility)
+  }
 
   // 가변폭 컬럼 ID (memo가 숨겨지면 spacer가 대신 사용됨)
   const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
@@ -67,6 +60,7 @@ export function useScheduleTable(data: Schedule[] = []) {
         size: 50,
         enableSorting: false,
         enableColumnFilter: false,
+        enableHiding: false,
       },
       {
         accessorKey: 'date',
@@ -144,6 +138,7 @@ export function useScheduleTable(data: Schedule[] = []) {
         size: 0, // 숨겨진 컬럼 대비 예비 공간 (나중에 컬럼 ON/OFF 기능 구현 시 사용)
         enableSorting: false,
         enableColumnFilter: false,
+        enableHiding: false,
         cell: () => null,
       },
     ],
@@ -158,12 +153,15 @@ export function useScheduleTable(data: Schedule[] = []) {
       columnFilters,
       globalFilter,
       rowSelection,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setColumnVisibility,
     enableRowSelection: true,
+    enableHiding: true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
