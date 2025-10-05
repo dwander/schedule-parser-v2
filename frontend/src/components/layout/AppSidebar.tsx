@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { useEffect } from 'react'
+import { LoginDialog } from '@/features/auth/components/LoginDialog'
+import { useEffect, useState } from 'react'
 
 interface AppSidebarProps {
   open: boolean
@@ -15,6 +16,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, onBackupRestoreClick }: AppSidebarProps) {
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return
@@ -136,7 +139,12 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
 
         {/* Login/Logout Button */}
         <div className="px-4 pb-4">
-          <Button variant="outline" className="w-full" size="sm">
+          <Button
+            variant="outline"
+            className="w-full"
+            size="sm"
+            onClick={() => setLoginDialogOpen(true)}
+          >
             로그인
           </Button>
         </div>
@@ -159,6 +167,9 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
         {/* Safe area for mobile bottom */}
         <div className="h-[env(safe-area-inset-bottom)]" />
       </aside>
+
+      {/* Login Dialog */}
+      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
     </>
   )
 }
