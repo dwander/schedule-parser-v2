@@ -5,6 +5,7 @@ export interface PhotoSequenceItem {
   text: string
   completed: boolean
   order: number
+  deleted?: boolean
 }
 
 export interface PhotoNote {

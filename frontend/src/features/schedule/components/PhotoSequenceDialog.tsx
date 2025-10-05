@@ -25,20 +25,34 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [items, setItems] = useState<PhotoSequenceItem[]>(() =>
     schedule.photoSequence || generatePhotoSequence()
   )
-  const [deletedItems, setDeletedItems] = useState<PhotoSequenceItem[]>([])
   const [newItemText, setNewItemText] = useState('')
   const [isLocked, setIsLocked] = useState(() => {
     const saved = localStorage.getItem('photoSequenceLocked')
     return saved ? JSON.parse(saved) : false
   })
 
-  // schedule이 변경되면 items 업데이트
+  // 모달이 열릴 때만 초기화
   useEffect(() => {
     if (open) {
+      console.log('📋 PhotoSequenceDialog opened:', {
+        scheduleId: schedule.id,
+        hasPhotoSequence: !!schedule.photoSequence,
+        photoSequence: schedule.photoSequence
+      })
       setItems(schedule.photoSequence || generatePhotoSequence())
-      setDeletedItems([])
     }
-  }, [open, schedule.photoSequence])
+  }, [open])  // open만 의존성으로 설정
+
+  // schedule.photoSequence가 변경되면 items 업데이트
+  useEffect(() => {
+    if (open && schedule.photoSequence) {
+      setItems(schedule.photoSequence)
+    }
+  }, [schedule.photoSequence])
+
+  // 활성 항목과 삭제된 항목 분리
+  const activeItems = items.filter(item => !item.deleted)
+  const deletedItems = items.filter(item => item.deleted)
 
   // 실시간 저장
   const saveToServer = (updatedItems: PhotoSequenceItem[]) => {
@@ -68,6 +82,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       text: newItemText.trim(),
       completed: false,
       order: items.length + 1,
+      deleted: false,
     }
 
     setItems(prev => {
@@ -78,41 +93,43 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     setNewItemText('')
   }
 
-  // 항목 삭제 (삭제 목록으로 이동)
+  // 항목 삭제 (deleted 플래그로 변경)
   const deleteItem = (id: string) => {
-    const itemToDelete = items.find(item => item.id === id)
-    if (itemToDelete) {
-      setDeletedItems(prev => [...prev, itemToDelete])
-      setItems(prev => {
-        const updated = prev.filter(item => item.id !== id)
-        saveToServer(updated)
-        return updated
-      })
-    }
+    setItems(prev => {
+      const updated = prev.map(item =>
+        item.id === id ? { ...item, deleted: true } : item
+      )
+      saveToServer(updated)
+      return updated
+    })
   }
 
   // 삭제된 항목 복원 (실시간 저장)
   const restoreItem = (id: string) => {
-    const itemToRestore = deletedItems.find(item => item.id === id)
-    if (itemToRestore) {
-      setDeletedItems(prev => prev.filter(item => item.id !== id))
-      setItems(prev => {
-        const updated = [...prev, itemToRestore].sort((a, b) => a.order - b.order)
-        saveToServer(updated)
-        return updated
-      })
-    }
+    setItems(prev => {
+      const updated = prev.map(item =>
+        item.id === id ? { ...item, deleted: false } : item
+      )
+      saveToServer(updated)
+      return updated
+    })
   }
 
   // 영구 삭제
   const permanentlyDelete = (id: string) => {
-    setDeletedItems(prev => prev.filter(item => item.id !== id))
+    setItems(prev => {
+      const updated = prev.filter(item => item.id !== id)
+      saveToServer(updated)
+      return updated
+    })
   }
 
-  // 모두 초기화 (실시간 저장)
+  // 모두 초기화 (실시간 저장, 활성 항목만)
   const handleReset = () => {
     setItems(prev => {
-      const updated = prev.map(item => ({ ...item, completed: false }))
+      const updated = prev.map(item =>
+        item.deleted ? item : { ...item, completed: false }
+      )
       saveToServer(updated)
       return updated
     })
@@ -167,12 +184,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
         {/* 체크리스트 */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-          {items.length === 0 ? (
+          {activeItems.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               촬영 순서를 추가해주세요
             </div>
           ) : (
-            items.map((item) => (
+            activeItems.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"

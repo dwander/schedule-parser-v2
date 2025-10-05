@@ -2241,6 +2241,7 @@ def get_schedules(
                 'manager': schedule.manager or "",
                 'memo': schedule.memo or "",
                 'photoNote': schedule.photo_note,
+                'photoSequence': schedule.photo_sequence,
                 'isDuplicate': schedule.needs_review,
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
                 'updatedAt': schedule.updated_at.isoformat() if schedule.updated_at else None,
