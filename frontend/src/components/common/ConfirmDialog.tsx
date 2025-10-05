@@ -36,7 +36,9 @@ export function ConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && (
-            <AlertDialogDescription>{description}</AlertDialogDescription>
+            <AlertDialogDescription className="whitespace-pre-line">
+              {description}
+            </AlertDialogDescription>
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
