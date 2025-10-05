@@ -10,7 +10,8 @@ import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { cn } from '@/lib/utils'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -26,6 +27,34 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const { brandOptions, albumOptions } = useTagOptions()
   const { columnVisibility } = useSettingsStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
+
+  // 촬영노트 데이터 존재 여부 확인
+  const hasPhotoNoteData = useMemo(() => {
+    const note = schedule.photoNote
+    if (!note) return false
+
+    return !!(
+      note.importantMemo ||
+      note.makeupShop?.name ||
+      note.makeupShop?.departureTime ||
+      note.makeupShop?.arrivalTime ||
+      note.dress?.type ||
+      note.dress?.material ||
+      note.dress?.company ||
+      note.familyRelations?.groomFamily ||
+      note.familyRelations?.brideFamily ||
+      note.ceremony?.host?.memo ||
+      note.ceremony?.host?.type ||
+      note.ceremony?.events?.memo ||
+      Object.entries(note.ceremony?.events || {}).some(([key, value]) =>
+        key !== 'memo' && value === true
+      ) ||
+      note.subPhotographer?.videoDvd ||
+      note.subPhotographer?.subIphoneSnap ||
+      note.photoConceptMemo ||
+      note.requestsMemo
+    )
+  }, [schedule.photoNote])
 
   return (
     <div
@@ -286,15 +315,22 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
           {/* Right: FAB Buttons */}
           <div className="flex flex-col gap-2 flex-shrink-0">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-shadow"
-              onClick={() => setPhotoNoteOpen(true)}
-              title="촬영노트"
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
+            <div className="relative">
+              {hasPhotoNoteData && (
+                <span className="absolute inset-0 animate-gentle-ping">
+                  <span className="block h-full w-full rounded-full bg-primary" />
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all relative"
+                onClick={() => setPhotoNoteOpen(true)}
+                title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </div>
             {/* 추후 추가될 버튼들 */}
             {/* <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" title="구글 캘린더">
               <Calendar className="h-4 w-4" />
