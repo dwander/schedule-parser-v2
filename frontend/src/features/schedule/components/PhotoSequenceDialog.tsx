@@ -4,6 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -59,6 +60,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
   const [showTrainingManager, setShowTrainingManager] = useState(false)
+  const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
 
   // 모달이 열릴 때만 초기화
   useEffect(() => {
@@ -170,6 +172,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 음성 인식 토글
   const toggleVoice = () => {
+    // 켜려고 할 때 브라우저가 지원하지 않으면 경고
+    if (!voiceEnabled && !isSupported) {
+      setVoiceNotSupportedOpen(true)
+      return
+    }
+
     setVoiceEnabled(prev => {
       const newValue = !prev
       localStorage.setItem('photoSequenceVoiceEnabled', JSON.stringify(newValue))
@@ -223,7 +231,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   }
 
   // 음성 인식 훅 사용 (모달이 열려있을 때만)
-  const { isListening, lastRecognized } = useVoiceRecognition({
+  const { isListening, lastRecognized, isSupported } = useVoiceRecognition({
     enabled: open && voiceEnabled,
     trainingData,
     onMatch: handleVoiceMatch,
@@ -447,6 +455,14 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           localStorage.setItem('photoSequenceVoiceTraining', JSON.stringify(newData))
         }}
         items={activeItems}
+      />
+
+      {/* 브라우저 미지원 알림 */}
+      <AlertDialog
+        open={voiceNotSupportedOpen}
+        onOpenChange={setVoiceNotSupportedOpen}
+        title="음성 인식 지원 안 됨"
+        description="현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome, Edge, Safari 등의 브라우저를 사용해주세요."
       />
     </>
   )

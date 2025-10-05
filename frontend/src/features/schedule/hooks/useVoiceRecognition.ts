@@ -191,6 +191,7 @@ function findBestMatchInSentence(sentence: string, keyword: string): number {
 export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect }: UseVoiceRecognitionProps) {
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
+  const [isSupported, setIsSupported] = useState(true)
   const recognitionRef = useRef<any>(null)
   const enabledRef = useRef(enabled)
   const trainingDataRef = useRef(trainingData)
@@ -220,7 +221,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
     if (!SpeechRecognition) {
-      console.warn('⚠️ 이 브라우저는 음성 인식을 지원하지 않습니다.')
+      setIsSupported(false)
       return
     }
 
@@ -231,12 +232,10 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
     recognition.interimResults = true // 중간 결과도 받기
 
     recognition.onstart = () => {
-      console.log('🎤 음성 인식 시작')
       setIsListening(true)
     }
 
     recognition.onend = () => {
-      console.log('🎤 음성 인식 종료')
       setIsListening(false)
 
       // enabled가 true면 자동으로 재시작 (약간의 딜레이)
@@ -256,7 +255,6 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
       const transcript = event.results[last][0].transcript
       const isFinal = event.results[last].isFinal
 
-      console.log(`🎤 인식됨 [${isFinal ? '최종' : '중간'}]:`, transcript)
       setLastRecognized(transcript)
 
       // 최종 결과일 때만 매칭
@@ -276,7 +274,6 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
 
             // 1단계: 정확한 포함 매칭 (우선순위)
             if (normalizedTranscript.includes(normalizedKeyword)) {
-              console.log(`🎤 매칭 성공 [정확]: "${transcript}" → "${itemText}" (키워드: "${keyword}")`)
               onMatchRef.current(itemText)
               return
             }
@@ -293,27 +290,19 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
 
         // 최고 유사도 매칭이 있으면 실행
         if (bestMatch) {
-          console.log(
-            `🎤 매칭 성공 [유사도 ${(bestMatch.similarity * 100).toFixed(0)}%]: "${transcript}" → "${bestMatch.itemText}" (키워드: "${bestMatch.keyword}")`
-          )
           onMatchRef.current(bestMatch.itemText)
-        } else {
-          console.log(`🎤 매칭 실패: "${transcript}"`)
         }
       }
     }
 
     recognition.onerror = (event: any) => {
-      console.error('🎤 음성 인식 오류:', event.error)
-
       // 무시해도 되는 에러들 (자동 재시작됨)
       if (event.error === 'no-speech' || event.error === 'aborted') {
         return
       }
 
-      // network 에러는 경고만 (계속 재시작 시도)
+      // network 에러는 계속 재시작 시도
       if (event.error === 'network') {
-        console.warn('⚠️ 네트워크 오류 - 재시도 중...')
         return
       }
 
@@ -337,12 +326,10 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
     if (enabled) {
       try {
         recognitionRef.current.start()
-        console.log('🎤 음성 인식 활성화')
       } catch (e) {
-        console.log('이미 음성 인식이 실행 중입니다.')
+        // 이미 시작된 경우 무시
       }
     } else {
-      console.log('🎤 음성 인식 비활성화')
       recognitionRef.current.stop()
       setIsListening(false)
       setLastRecognized('')
@@ -352,5 +339,6 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
   return {
     isListening,
     lastRecognized,
+    isSupported,
   }
 }
