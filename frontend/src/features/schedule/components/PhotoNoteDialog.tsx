@@ -382,7 +382,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               readOnly={!isEditMode}
               placeholder={isEditMode ? '중요한 사항을 기록하세요' : ''}
               rows={1}
-              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none' : 'resize-none overflow-hidden'}
+              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none text-sm leading-tight' : 'resize-none overflow-hidden text-sm leading-tight'}
             />
           </SectionCard>
 
@@ -396,7 +396,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                 onBlur={saveField}
                 readOnly={!isEditMode}
                 placeholder="샵 이름"
-                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
               />
 
               <div className="grid grid-cols-2 gap-3">
@@ -408,7 +408,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="00:00"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
                 <div>
@@ -419,7 +419,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="00:00"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
               </div>
@@ -434,7 +434,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   onBlur={saveField}
                   readOnly={!isEditMode}
                   placeholder="종류"
-                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                 />
                 <Input
                   value={getValue('dress.material')}
@@ -442,7 +442,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   onBlur={saveField}
                   readOnly={!isEditMode}
                   placeholder="재질/장식"
-                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                 />
               </div>
               <Input
@@ -451,7 +451,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                 onBlur={saveField}
                 readOnly={!isEditMode}
                 placeholder="드레스샵"
-                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
               />
             </SectionCard>
 
@@ -466,7 +466,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="부, 모, 남동생"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
                 <div>
@@ -477,7 +477,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="부, 모, 언니"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
               </div>
@@ -494,7 +494,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="영상 작가"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
                 <div>
@@ -505,7 +505,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="서브 작가"
-                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''}
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
               </div>
@@ -556,7 +556,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               placeholder="메모"
               className={cn(
                 !isEditMode && !getValue('ceremony.host.memo') && 'hidden',
-                !isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0' : ''
+                !isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'
               )}
             />
           </SectionCard>
@@ -604,7 +604,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               placeholder="이벤트 메모"
               className={cn(
                 !isEditMode && !getValue('ceremony.events.memo') && 'hidden',
-                !isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 mt-2 shadow-none focus-visible:ring-0' : ''
+                !isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 mt-2 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'
               )}
             />
           </SectionCard>
@@ -619,7 +619,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               readOnly={!isEditMode}
               placeholder={isEditMode ? '원하시는 사진의 컨셉과 분위기를 자유롭게 작성해주세요' : ''}
               rows={1}
-              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none' : 'resize-none overflow-hidden'}
+              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none text-sm leading-tight' : 'resize-none overflow-hidden text-sm leading-tight'}
             />
           </SectionCard>
 
@@ -633,7 +633,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               readOnly={!isEditMode}
               placeholder={isEditMode ? '궁금한 점이나 특별한 요청사항을 작성해주세요' : ''}
               rows={1}
-              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none' : 'resize-none overflow-hidden'}
+              className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0 overflow-hidden shadow-none text-sm leading-tight' : 'resize-none overflow-hidden text-sm leading-tight'}
             />
           </SectionCard>
 
