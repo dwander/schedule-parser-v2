@@ -18,7 +18,7 @@ export interface PhotoNote {
   }
   ceremony?: {
     host?: {
-      type?: 'professional' | 'acquaintance'
+      type?: 'professional' | 'acquaintance' | ''
       memo?: string
     }
     events?: {

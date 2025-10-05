@@ -11,9 +11,20 @@ import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import type { Schedule, PhotoNote } from '../types/schedule'
-import { AlertCircle } from 'lucide-react'
+import {
+  Scissors,
+  Clock,
+  Users,
+  Sparkles,
+  Camera,
+  Palette,
+  MessageSquare,
+  AlertCircle,
+  FileText
+} from 'lucide-react'
 
 interface PhotoNoteDialogProps {
   open: boolean
@@ -40,7 +51,7 @@ const defaultPhotoNote: PhotoNote = {
   },
   ceremony: {
     host: {
-      type: 'professional',
+      type: '',
       memo: ''
     },
     events: {
@@ -88,7 +99,6 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T> 
 export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialogProps) {
   const updateSchedule = useUpdateSchedule()
 
-  // Deep merge로 기본값과 기존 데이터 병합
   const initialData = useMemo(
     () => deepMerge(defaultPhotoNote, schedule.photoNote),
     [schedule.photoNote]
@@ -97,13 +107,11 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   const [isEditMode, setIsEditMode] = useState(false)
   const [noteData, setNoteData] = useState<PhotoNote>(initialData)
 
-  // schedule이 변경되면 noteData 업데이트
   useEffect(() => {
     const merged = deepMerge(defaultPhotoNote, schedule.photoNote)
     setNoteData(merged)
   }, [schedule.photoNote])
 
-  // 데이터 존재 여부 확인
   const hasData = useMemo(() => {
     return !!(
       noteData.importantMemo ||
@@ -127,25 +135,25 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     )
   }, [noteData])
 
-  // 섹션별 데이터 존재 여부
   const hasAnyMakeupData = !!(noteData.makeupShop?.name || noteData.makeupShop?.departureTime || noteData.makeupShop?.arrivalTime)
   const hasAnyDressData = !!(noteData.dress?.type || noteData.dress?.material || noteData.dress?.company)
   const hasAnyFamilyData = !!(noteData.familyRelations?.groomFamily || noteData.familyRelations?.brideFamily)
-  const hasAnyCeremonyHostData = !!(noteData.ceremony?.host?.type || noteData.ceremony?.host?.memo)
+  const hasAnyCeremonyHostData = !!(
+    (noteData.ceremony?.host?.type && noteData.ceremony?.host?.type !== '') ||
+    noteData.ceremony?.host?.memo
+  )
   const hasAnyCeremonyEventsData = !!(
     noteData.ceremony?.events?.memo ||
     Object.entries(noteData.ceremony?.events || {}).some(([key, value]) => key !== 'memo' && value === true)
   )
   const hasAnySubPhotographerData = !!(noteData.subPhotographer?.videoDvd || noteData.subPhotographer?.subIphoneSnap)
 
-  // 초기 모드 설정 (다이얼로그 열릴 때만)
   useEffect(() => {
     if (open) {
       setIsEditMode(!hasData)
     }
-  }, [open]) // hasData 의존성 제거 - 타이핑 중 모드 전환 방지
+  }, [open])
 
-  // 필드 업데이트 (로컬만)
   const updateFieldLocal = (path: string, value: any) => {
     const pathArray = path.split('.')
     const newData = { ...noteData }
@@ -163,7 +171,6 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     setNoteData(newData)
   }
 
-  // 필드 저장 (로컬 + 서버)
   const saveField = () => {
     console.log('💾 Saving photoNote:', noteData)
     updateSchedule.mutate({
@@ -172,13 +179,11 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     })
   }
 
-  // 체크박스 토글
   const toggleEvent = (eventKey: string) => {
     const current = (noteData.ceremony?.events as any)?.[eventKey]
     updateFieldLocal(`ceremony.events.${eventKey}`, !current)
   }
 
-  // path로 값 가져오기
   const getValue = (path: string): any => {
     const pathArray = path.split('.')
     let current: any = noteData
@@ -189,7 +194,6 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     return current
   }
 
-  // 선택된 이벤트 목록 (readonly 모드용)
   const getSelectedEvents = () => {
     const events = noteData.ceremony?.events || {}
     const eventNames: Record<string, string> = {
@@ -208,7 +212,6 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     return Object.entries(events)
       .filter(([key, value]) => value === true && eventNames[key])
       .map(([key]) => eventNames[key])
-      .join(', ')
   }
 
   const eventItems = [
@@ -224,18 +227,61 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     { key: 'flowerShower', label: '플라워샤워' }
   ]
 
+  // Section Card Component
+  const SectionCard = ({
+    icon: Icon,
+    title,
+    children,
+    show = true
+  }: {
+    icon: any,
+    title: string,
+    children: React.ReactNode,
+    show?: boolean
+  }) => {
+    if (!show) return null
+
+    return (
+      <div className="group rounded-lg border bg-card p-4 transition-all hover:shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`p-1.5 rounded-md ${isEditMode ? 'bg-primary/10' : 'bg-muted'}`}>
+            <Icon className={`h-4 w-4 ${isEditMode ? 'text-primary' : 'text-muted-foreground'}`} />
+          </div>
+          <h3 className={`font-semibold ${isEditMode ? 'text-base' : 'text-sm text-muted-foreground'}`}>
+            {title}
+          </h3>
+        </div>
+        <div className="space-y-3">
+          {children}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>촬영노트</DialogTitle>
-            <div className="flex items-center gap-2 mr-5">
-              <Label htmlFor="edit-mode" className="text-sm text-muted-foreground cursor-pointer">
-                편집모드
-              </Label>
+      <DialogContent className="w-full h-full max-w-full sm:max-w-4xl sm:h-auto sm:max-h-[85vh] sm:overflow-y-auto p-0 sm:p-6 flex flex-col sm:block">
+        <DialogHeader className="pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0 flex-shrink-0 sm:flex-shrink">
+          <div className="flex items-center justify-between gap-4">
+            {/* 왼쪽: 아이콘 + 타이틀 */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-xl text-left">촬영노트</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                  {schedule.couple} · {schedule.location}
+                </p>
+              </div>
+            </div>
+
+            {/* 오른쪽: 상태 + 토글 */}
+            <div className="flex items-center gap-2 flex-shrink-0 relative top-3">
+              <span className="text-sm text-muted-foreground">
+                {isEditMode ? '편집 중' : '읽기 전용'}
+              </span>
               <Switch
-                id="edit-mode"
                 checked={isEditMode}
                 onCheckedChange={setIsEditMode}
               />
@@ -243,216 +289,213 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 px-4 sm:px-0 flex-1 overflow-y-auto sm:flex-auto sm:overflow-visible">
           {/* 중요 메모 */}
           {(isEditMode || getValue('importantMemo')) && (
-            <div className="space-y-2">
-              <Label htmlFor="important-memo" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>중요 메모</Label>
+            <SectionCard icon={AlertCircle} title="중요 메모">
               <Textarea
-                id="important-memo"
                 value={getValue('importantMemo')}
                 onChange={(e) => updateFieldLocal('importantMemo', e.target.value)}
                 onBlur={saveField}
                 readOnly={!isEditMode}
-                placeholder={isEditMode ? '중요 메모 입력' : ''}
+                placeholder={isEditMode ? '중요한 사항을 기록하세요' : ''}
                 rows={2}
                 className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0' : ''}
               />
-            </div>
+            </SectionCard>
           )}
 
-          {/* 메이크업샵 */}
-          {(isEditMode || hasAnyMakeupData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>메이크업샵</h3>
+          {/* 메인 섹션들 - 2열 그리드 */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* 메이크업샵 */}
+            <SectionCard icon={Sparkles} title="메이크업샵" show={isEditMode || hasAnyMakeupData}>
+              <Input
+                value={getValue('makeupShop.name')}
+                onChange={(e) => updateFieldLocal('makeupShop.name', e.target.value)}
+                onBlur={saveField}
+                readOnly={!isEditMode}
+                placeholder="샵 이름"
+                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+              />
 
-              {(isEditMode || getValue('makeupShop.name')) && (
-                <Input
-                  id="makeup-name"
-                  value={getValue('makeupShop.name')}
-                  onChange={(e) => updateFieldLocal('makeupShop.name', e.target.value)}
-                  onBlur={saveField}
-                  readOnly={!isEditMode}
-                  placeholder={isEditMode ? '메이크업샵 이름' : ''}
-                  className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                />
-              )}
-
-              {(isEditMode || getValue('makeupShop.departureTime') || getValue('makeupShop.arrivalTime')) && (
-                <div className="grid grid-cols-2 gap-3">
-                  {(isEditMode || getValue('makeupShop.departureTime')) && (
-                    <div className="space-y-2">
-                      <Label htmlFor="makeup-departure" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>출발 시간</Label>
-                      <Input
-                        id="makeup-departure"
-                        value={getValue('makeupShop.departureTime')}
-                        onChange={(e) => updateFieldLocal('makeupShop.departureTime', e.target.value)}
-                        onBlur={saveField}
-                        readOnly={!isEditMode}
-                        placeholder={isEditMode ? 'HH:MM' : ''}
-                        className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                      />
-                    </div>
-                  )}
-
-                  {(isEditMode || getValue('makeupShop.arrivalTime')) && (
-                    <div className="space-y-2">
-                      <Label htmlFor="makeup-arrival" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>도착 시간</Label>
-                      <Input
-                        id="makeup-arrival"
-                        value={getValue('makeupShop.arrivalTime')}
-                        onChange={(e) => updateFieldLocal('makeupShop.arrivalTime', e.target.value)}
-                        onBlur={saveField}
-                        readOnly={!isEditMode}
-                        placeholder={isEditMode ? 'HH:MM' : ''}
-                        className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                      />
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">출발</Label>
+                  <Input
+                    value={getValue('makeupShop.departureTime')}
+                    onChange={(e) => updateFieldLocal('makeupShop.departureTime', e.target.value)}
+                    onBlur={saveField}
+                    readOnly={!isEditMode}
+                    placeholder="00:00"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+                  />
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* 드레스 */}
-          {(isEditMode || hasAnyDressData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>드레스</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {(isEditMode || getValue('dress.type')) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">도착</Label>
                   <Input
-                    id="dress-type"
-                    value={getValue('dress.type')}
-                    onChange={(e) => updateFieldLocal('dress.type', e.target.value)}
+                    value={getValue('makeupShop.arrivalTime')}
+                    onChange={(e) => updateFieldLocal('makeupShop.arrivalTime', e.target.value)}
                     onBlur={saveField}
                     readOnly={!isEditMode}
-                    placeholder={isEditMode ? '드레스 종류' : ''}
-                    className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                    placeholder="00:00"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
                   />
-                )}
-
-                {(isEditMode || getValue('dress.material')) && (
-                  <Input
-                    id="dress-material"
-                    value={getValue('dress.material')}
-                    onChange={(e) => updateFieldLocal('dress.material', e.target.value)}
-                    onBlur={saveField}
-                    readOnly={!isEditMode}
-                    placeholder={isEditMode ? '재질 / 장식' : ''}
-                    className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                  />
-                )}
+                </div>
               </div>
+            </SectionCard>
 
-              {(isEditMode || getValue('dress.company')) && (
+            {/* 드레스 */}
+            <SectionCard icon={Scissors} title="드레스" show={isEditMode || hasAnyDressData}>
+              <div className="grid grid-cols-2 gap-3">
                 <Input
-                  id="dress-company"
-                  value={getValue('dress.company')}
-                  onChange={(e) => updateFieldLocal('dress.company', e.target.value)}
+                  value={getValue('dress.type')}
+                  onChange={(e) => updateFieldLocal('dress.type', e.target.value)}
                   onBlur={saveField}
                   readOnly={!isEditMode}
-                  placeholder={isEditMode ? '드레스샵 이름' : ''}
-                  className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                  placeholder="종류"
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
                 />
-              )}
-            </div>
-          )}
+                <Input
+                  value={getValue('dress.material')}
+                  onChange={(e) => updateFieldLocal('dress.material', e.target.value)}
+                  onBlur={saveField}
+                  readOnly={!isEditMode}
+                  placeholder="재질/장식"
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+                />
+              </div>
+              <Input
+                value={getValue('dress.company')}
+                onChange={(e) => updateFieldLocal('dress.company', e.target.value)}
+                onBlur={saveField}
+                readOnly={!isEditMode}
+                placeholder="드레스샵"
+                className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+              />
+            </SectionCard>
 
-          {/* 가족관계 */}
-          {(isEditMode || hasAnyFamilyData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>직계 가족</h3>
+            {/* 직계 가족 */}
+            <SectionCard icon={Users} title="직계 가족" show={isEditMode || hasAnyFamilyData}>
               <div className="grid grid-cols-2 gap-3">
-                {(isEditMode || getValue('familyRelations.groomFamily')) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">신랑측</Label>
                   <Input
-                    id="groom-family"
                     value={getValue('familyRelations.groomFamily')}
                     onChange={(e) => updateFieldLocal('familyRelations.groomFamily', e.target.value)}
                     onBlur={saveField}
                     readOnly={!isEditMode}
-                    placeholder={isEditMode ? '신랑 (예: 부, 모, 남동생)' : ''}
-                    className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                    placeholder="부, 모, 남동생"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
                   />
-                )}
-
-                {(isEditMode || getValue('familyRelations.brideFamily')) && (
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">신부측</Label>
                   <Input
-                    id="bride-family"
                     value={getValue('familyRelations.brideFamily')}
                     onChange={(e) => updateFieldLocal('familyRelations.brideFamily', e.target.value)}
                     onBlur={saveField}
                     readOnly={!isEditMode}
-                    placeholder={isEditMode ? '신부 (예: 부, 모, 언니)' : ''}
-                    className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                    placeholder="부, 모, 언니"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
                   />
-                )}
+                </div>
               </div>
-            </div>
-          )}
+            </SectionCard>
+
+            {/* 서브 작가 */}
+            <SectionCard icon={Camera} title="서브 작가" show={isEditMode || hasAnySubPhotographerData}>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">영상(DVD)</Label>
+                  <Input
+                    value={getValue('subPhotographer.videoDvd')}
+                    onChange={(e) => updateFieldLocal('subPhotographer.videoDvd', e.target.value)}
+                    onBlur={saveField}
+                    readOnly={!isEditMode}
+                    placeholder="영상 작가"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">서브/아이폰</Label>
+                  <Input
+                    value={getValue('subPhotographer.subIphoneSnap')}
+                    onChange={(e) => updateFieldLocal('subPhotographer.subIphoneSnap', e.target.value)}
+                    onBlur={saveField}
+                    readOnly={!isEditMode}
+                    placeholder="서브 작가"
+                    className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
+                  />
+                </div>
+              </div>
+            </SectionCard>
+          </div>
 
           {/* 사회자 */}
           {(isEditMode || hasAnyCeremonyHostData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>사회자</h3>
-
-              {isEditMode ? (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={getValue('ceremony.host.type') === 'professional' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      updateFieldLocal('ceremony.host.type', 'professional')
-                      saveField()
-                    }}
-                  >
-                    전문가
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={getValue('ceremony.host.type') === 'acquaintance' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      updateFieldLocal('ceremony.host.type', 'acquaintance')
-                      saveField()
-                    }}
-                  >
-                    지인
-                  </Button>
-                </div>
-              ) : (
-                getValue('ceremony.host.type') && (
-                  <div className="text-sm">
-                    {getValue('ceremony.host.type') === 'professional' ? '전문가' : '지인'}
+            <SectionCard icon={MessageSquare} title="사회자">
+              <div className="flex items-center gap-2">
+                {isEditMode ? (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={getValue('ceremony.host.type') === 'professional' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        updateFieldLocal('ceremony.host.type', 'professional')
+                        saveField()
+                      }}
+                    >
+                      전문가
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={getValue('ceremony.host.type') === 'acquaintance' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        updateFieldLocal('ceremony.host.type', 'acquaintance')
+                        saveField()
+                      }}
+                    >
+                      지인
+                    </Button>
                   </div>
-                )
-              )}
-
+                ) : (
+                  getValue('ceremony.host.type') && (
+                    <Badge variant="secondary">
+                      {getValue('ceremony.host.type') === 'professional' ? '전문가' : '지인'}
+                    </Badge>
+                  )
+                )}
+              </div>
               {(isEditMode || getValue('ceremony.host.memo')) && (
                 <Input
-                  id="host-memo"
                   value={getValue('ceremony.host.memo')}
                   onChange={(e) => updateFieldLocal('ceremony.host.memo', e.target.value)}
                   onBlur={saveField}
                   readOnly={!isEditMode}
-                  placeholder={isEditMode ? '사회자 관련 메모' : ''}
-                  className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                  placeholder="메모"
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1' : ''}
                 />
               )}
-            </div>
+            </SectionCard>
           )}
 
           {/* 이벤트 */}
           {(isEditMode || hasAnyCeremonyEventsData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>이벤트</h3>
-
-              {!isEditMode && getSelectedEvents() && (
-                <div className="text-sm">{getSelectedEvents()}</div>
+            <SectionCard icon={Sparkles} title="예식 이벤트">
+              {!isEditMode && getSelectedEvents().length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {getSelectedEvents().map((event) => (
+                    <Badge key={event} variant="secondary">
+                      {event}
+                    </Badge>
+                  ))}
+                </div>
               )}
 
               {isEditMode && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {eventItems.map(({ key, label }) => (
                     <div key={key} className="flex items-center space-x-2">
                       <Checkbox
@@ -460,7 +503,6 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                         checked={getValue(`ceremony.events.${key}`) === true}
                         onCheckedChange={() => {
                           toggleEvent(key)
-                          // Checkbox 토글 후 즉시 저장
                           setTimeout(() => saveField(), 0)
                         }}
                       />
@@ -477,102 +519,64 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
 
               {(isEditMode || getValue('ceremony.events.memo')) && (
                 <Input
-                  id="events-memo"
                   value={getValue('ceremony.events.memo')}
                   onChange={(e) => updateFieldLocal('ceremony.events.memo', e.target.value)}
                   onBlur={saveField}
                   readOnly={!isEditMode}
-                  placeholder={isEditMode ? '이벤트 관련 메모' : ''}
-                  className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
+                  placeholder="이벤트 메모"
+                  className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 mt-2' : ''}
                 />
               )}
-            </div>
+            </SectionCard>
           )}
 
-          {/* 서브작가 */}
-          {(isEditMode || hasAnySubPhotographerData) && (
-            <div className="space-y-3">
-              <h3 className={`text-sm font-semibold ${!isEditMode ? 'text-muted-foreground text-xs' : ''}`}>서브 작가</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {(isEditMode || getValue('subPhotographer.videoDvd')) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="video-dvd" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>영상(DVD)</Label>
-                    <Input
-                      id="video-dvd"
-                      value={getValue('subPhotographer.videoDvd')}
-                      onChange={(e) => updateFieldLocal('subPhotographer.videoDvd', e.target.value)}
-                      onBlur={saveField}
-                      readOnly={!isEditMode}
-                      placeholder={isEditMode ? '영상 작가' : ''}
-                      className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                    />
-                  </div>
-                )}
-
-                {(isEditMode || getValue('subPhotographer.subIphoneSnap')) && (
-                  <div className="space-y-2">
-                    <Label htmlFor="sub-iphone" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>서브 / 아이폰 스냅</Label>
-                    <Input
-                      id="sub-iphone"
-                      value={getValue('subPhotographer.subIphoneSnap')}
-                      onChange={(e) => updateFieldLocal('subPhotographer.subIphoneSnap', e.target.value)}
-                      onBlur={saveField}
-                      readOnly={!isEditMode}
-                      placeholder={isEditMode ? '서브 작가' : ''}
-                      className={!isEditMode ? 'border-none bg-transparent px-0 focus-visible:ring-0' : ''}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 원하시는 사진 컨셉 & 분위기 */}
+          {/* 사진 컨셉 & 분위기 */}
           {(isEditMode || getValue('photoConceptMemo')) && (
-            <div className="space-y-2">
-              <Label htmlFor="photo-concept" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>원하시는 사진 컨셉 & 분위기</Label>
+            <SectionCard icon={Palette} title="사진 컨셉 & 분위기">
               <Textarea
-                id="photo-concept"
                 value={getValue('photoConceptMemo')}
                 onChange={(e) => updateFieldLocal('photoConceptMemo', e.target.value)}
                 onBlur={saveField}
                 readOnly={!isEditMode}
-                placeholder={isEditMode ? '원하시는 사진 컨셉 & 분위기 입력' : ''}
-                rows={2}
+                placeholder={isEditMode ? '원하시는 사진의 컨셉과 분위기를 자유롭게 작성해주세요' : ''}
+                rows={3}
                 className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0' : ''}
               />
-            </div>
+            </SectionCard>
           )}
 
           {/* 요청사항 & 질문 */}
           {(isEditMode || getValue('requestsMemo')) && (
-            <div className="space-y-2">
-              <Label htmlFor="requests" className={!isEditMode ? 'text-muted-foreground text-xs' : ''}>요청사항 & 질문</Label>
+            <SectionCard icon={MessageSquare} title="요청사항 & 질문">
               <Textarea
-                id="requests"
                 value={getValue('requestsMemo')}
                 onChange={(e) => updateFieldLocal('requestsMemo', e.target.value)}
                 onBlur={saveField}
                 readOnly={!isEditMode}
-                placeholder={isEditMode ? '요청사항 & 질문 입력' : ''}
-                rows={2}
+                placeholder={isEditMode ? '궁금한 점이나 특별한 요청사항을 작성해주세요' : ''}
+                rows={3}
                 className={!isEditMode ? 'resize-none border-none bg-transparent px-0 focus-visible:ring-0' : ''}
               />
-            </div>
+            </SectionCard>
           )}
 
-          {/* 빈 상태 안내 */}
+          {/* 빈 상태 */}
           {!hasData && !isEditMode && (
-            <div className="flex items-start gap-2 rounded-md bg-blue-50 dark:bg-blue-950/20 p-4 text-sm">
-              <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-500 flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="font-semibold text-blue-800 dark:text-blue-200">
-                  촬영노트가 비어있습니다
-                </p>
-                <p className="text-blue-700 dark:text-blue-300">
-                  편집모드를 켜서 촬영 관련 정보를 입력해보세요
-                </p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="rounded-full bg-muted p-4 mb-4">
+                <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
+              <h3 className="text-lg font-semibold mb-2">촬영노트가 비어있습니다</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                편집 모드를 활성화하여 촬영 관련 정보를 입력해보세요
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditMode(true)}
+              >
+                편집 모드 켜기
+              </Button>
             </div>
           )}
         </div>
