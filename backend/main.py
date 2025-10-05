@@ -1098,44 +1098,71 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
 @app.post("/api/calendar/naver")
 async def add_naver_calendar(request: NaverCalendarRequest):
-    """Add schedule to Naver Calendar via API."""
+    """Add schedule to Naver Calendar via API (iCalendar format)."""
     try:
-        # 네이버 캘린더 API 호출 (form-data 형식)
+        import uuid
+        import urllib.parse
+        from datetime import datetime
+
         calendar_url = "https://openapi.naver.com/calendar/createSchedule.json"
 
         headers = {
             'Authorization': f'Bearer {request.access_token}'
         }
 
-        # Schedule 데이터를 JSON 문자열로 변환
-        schedule_data = {
-            'subject': request.subject,
-            'location': request.location,
-            'start': {
-                'dateTime': request.start_datetime,
-                'timeZone': 'Asia/Seoul'
-            },
-            'end': {
-                'dateTime': request.end_datetime,
-                'timeZone': 'Asia/Seoul'
-            }
-        }
+        # 날짜 형식 변환: 2025-10-11T04:30:00 → 20251011T043000
+        def format_ical_datetime(dt_str: str) -> str:
+            # ISO 형식에서 구분자 제거
+            return dt_str.replace('-', '').replace(':', '')
 
-        if request.description:
-            schedule_data['description'] = request.description
+        start_dt = format_ical_datetime(request.start_datetime)
+        end_dt = format_ical_datetime(request.end_datetime)
+        uid = str(uuid.uuid4())
+        now = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+
+        # URL 인코딩
+        subject = urllib.parse.quote(request.subject)
+        location = urllib.parse.quote(request.location) if request.location else ""
+        description = urllib.parse.quote(request.description) if request.description else ""
+
+        # iCalendar 형식 문자열 생성
+        ical_string = "BEGIN:VCALENDAR\n"
+        ical_string += "VERSION:2.0\n"
+        ical_string += "PRODID:Naver Calendar\n"
+        ical_string += "CALSCALE:GREGORIAN\n"
+        ical_string += "BEGIN:VTIMEZONE\n"
+        ical_string += "TZID:Asia/Seoul\n"
+        ical_string += "BEGIN:STANDARD\n"
+        ical_string += "DTSTART:19700101T000000\n"
+        ical_string += "TZNAME:GMT%2B09:00\n"
+        ical_string += "TZOFFSETFROM:%2B0900\n"
+        ical_string += "TZOFFSETTO:%2B0900\n"
+        ical_string += "END:STANDARD\n"
+        ical_string += "END:VTIMEZONE\n"
+        ical_string += "BEGIN:VEVENT\n"
+        ical_string += "SEQUENCE:0\n"
+        ical_string += "CLASS:PUBLIC\n"
+        ical_string += "TRANSP:OPAQUE\n"
+        ical_string += f"UID:{uid}\n"
+        ical_string += f"DTSTART;TZID=Asia/Seoul:{start_dt}\n"
+        ical_string += f"DTEND;TZID=Asia/Seoul:{end_dt}\n"
+        ical_string += f"SUMMARY:{subject}\n"
+        if description:
+            ical_string += f"DESCRIPTION:{description}\n"
+        if location:
+            ical_string += f"LOCATION:{location}\n"
+        ical_string += f"CREATED:{now}\n"
+        ical_string += f"LAST-MODIFIED:{now}\n"
+        ical_string += f"DTSTAMP:{now}\n"
+        ical_string += "END:VEVENT\n"
+        ical_string += "END:VCALENDAR"
 
         # form-data 형식으로 전송
-        import json
-        data = {
-            'schedule': json.dumps(schedule_data)
-        }
+        data = f"calendarId=defaultCalendarId&scheduleIcalString={ical_string}"
 
-        print(f"📅 네이버 캘린더 요청 URL: {calendar_url}")
-        print(f"📅 요청 헤더: {headers}")
-        print(f"📅 요청 데이터: {data}")
-        print(f"📅 스케줄 JSON: {json.dumps(schedule_data, indent=2)}")
+        print(f"📅 네이버 캘린더 iCal String (처음 200자): {ical_string[:200]}")
 
-        response = requests.post(calendar_url, headers=headers, data=data)
+        response = requests.post(calendar_url, headers=headers, data=data.encode('utf-8'))
 
         print(f"📅 네이버 캘린더 API 응답: {response.status_code}")
         print(f"📅 응답 내용: {response.text}")
