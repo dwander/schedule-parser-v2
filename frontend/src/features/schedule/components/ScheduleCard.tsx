@@ -436,7 +436,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <Calendar className="h-4 w-4" />
             </Button>
-            {user?.naverAccessToken && (
+            {user?.naverAccessToken && user?.id?.startsWith('naver_') && (
               <Button
                 variant="outline"
                 size="icon"

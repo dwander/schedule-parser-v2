@@ -983,13 +983,16 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
 
         db.commit()
 
+        # Get the final user object to return current is_admin value
+        final_user = db.query(User).filter(User.id == user_id).first()
+
         # Return user information
         return {
-            "id": user_data.get("id"),
+            "id": user_id,  # google_{google_id} 형식
             "name": user_data.get("name"),
             "email": user_data.get("email"),
             "picture": user_data.get("picture"),
-            "is_admin": is_admin,
+            "is_admin": final_user.is_admin if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
@@ -1081,7 +1084,7 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
         # Return user information
         return {
-            "id": naver_id,
+            "id": user_id,  # naver_{naver_id} 형식
             "name": naver_user.get("name") or naver_user.get("nickname"),
             "email": naver_user.get("email"),
             "picture": naver_user.get("profile_image"),
@@ -1231,7 +1234,7 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
 
         # Return user information
         return {
-            "id": kakao_id,
+            "id": user_id,  # kakao_{kakao_id} 형식
             "name": profile.get("nickname"),
             "email": kakao_account.get("email"),
             "picture": profile.get("profile_image_url"),
