@@ -17,17 +17,11 @@ function generateUUID(): string {
 export function getUserId(): string {
   // Check if user is authenticated
   const authStorage = localStorage.getItem('auth-storage')
-  console.log('🔍 getUserId() - authStorage:', authStorage)
-
   if (authStorage) {
     try {
       const authState = JSON.parse(authStorage)
-      console.log('🔍 getUserId() - authState:', authState)
-
       if (authState.state?.isLoggedIn && authState.state?.user?.id) {
-        const userId = `google_${authState.state.user.id}`
-        console.log('✅ getUserId() - Logged in, returning:', userId)
-        return userId
+        return `google_${authState.state.user.id}`
       }
     } catch (e) {
       console.error('Failed to parse auth storage:', e)
@@ -39,14 +33,9 @@ export function getUserId(): string {
   if (!anonymousId) {
     anonymousId = generateUUID()
     localStorage.setItem('anonymous_user_id', anonymousId)
-    console.log('🆕 getUserId() - Created new anonymous ID:', anonymousId)
-  } else {
-    console.log('📋 getUserId() - Using existing anonymous ID:', anonymousId)
   }
 
-  const userId = `anonymous_${anonymousId}`
-  console.log('👤 getUserId() - Anonymous, returning:', userId)
-  return userId
+  return `anonymous_${anonymousId}`
 }
 
 /**
