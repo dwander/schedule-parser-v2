@@ -11,24 +11,24 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
   const recognitionRef = useRef<any>(null)
+  const enabledRef = useRef(enabled)
+  const trainingDataRef = useRef(trainingData)
+  const onMatchRef = useRef(onMatch)
 
-  // 키워드 매칭 함수
-  const matchKeyword = useCallback((transcript: string) => {
-    const lowerTranscript = transcript.toLowerCase()
+  // ref 업데이트
+  useEffect(() => {
+    enabledRef.current = enabled
+  }, [enabled])
 
-    // 모든 항목을 순회하면서 키워드 매칭
-    for (const [itemText, keywords] of Object.entries(trainingData)) {
-      for (const keyword of keywords) {
-        if (lowerTranscript.includes(keyword.toLowerCase())) {
-          console.log(`🎤 매칭 성공: "${transcript}" → "${itemText}" (키워드: "${keyword}")`)
-          onMatch(itemText)
-          return true
-        }
-      }
-    }
-    return false
-  }, [trainingData, onMatch])
+  useEffect(() => {
+    trainingDataRef.current = trainingData
+  }, [trainingData])
 
+  useEffect(() => {
+    onMatchRef.current = onMatch
+  }, [onMatch])
+
+  // 음성 인식 인스턴스 생성 (한 번만)
   useEffect(() => {
     // Web Speech API 지원 확인
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
@@ -54,7 +54,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
       setIsListening(false)
 
       // enabled가 true면 자동으로 재시작 (약간의 딜레이)
-      if (enabled) {
+      if (enabledRef.current) {
         setTimeout(() => {
           try {
             recognition.start()
@@ -75,7 +75,18 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
 
       // 최종 결과일 때만 매칭
       if (isFinal) {
-        matchKeyword(transcript)
+        const lowerTranscript = transcript.toLowerCase()
+
+        // 모든 항목을 순회하면서 키워드 매칭
+        for (const [itemText, keywords] of Object.entries(trainingDataRef.current)) {
+          for (const keyword of keywords) {
+            if (lowerTranscript.includes(keyword.toLowerCase())) {
+              console.log(`🎤 매칭 성공: "${transcript}" → "${itemText}" (키워드: "${keyword}")`)
+              onMatchRef.current(itemText)
+              break
+            }
+          }
+        }
       }
     }
 
@@ -104,7 +115,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
         recognitionRef.current.stop()
       }
     }
-  }, [enabled, matchKeyword])
+  }, []) // 한 번만 실행
 
   // enabled 상태에 따라 시작/중지
   useEffect(() => {
@@ -113,12 +124,15 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
     if (enabled) {
       try {
         recognitionRef.current.start()
+        console.log('🎤 음성 인식 활성화')
       } catch (e) {
         console.log('이미 음성 인식이 실행 중입니다.')
       }
     } else {
+      console.log('🎤 음성 인식 비활성화')
       recognitionRef.current.stop()
       setIsListening(false)
+      setLastRecognized('')
     }
   }, [enabled])
 
