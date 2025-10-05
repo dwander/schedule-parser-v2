@@ -1,0 +1,116 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useUsers } from '../hooks/useUsers'
+import { Badge } from '@/components/ui/badge'
+
+interface UserManagementDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function UserManagementDialog({ open, onOpenChange }: UserManagementDialogProps) {
+  const { data: users = [], isLoading, error } = useUsers()
+
+  // 날짜 포맷 함수
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>회원 관리</DialogTitle>
+          <DialogDescription>
+            등록된 회원 목록을 확인할 수 있습니다.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4">
+          {isLoading && (
+            <div className="text-center py-8 text-muted-foreground">
+              불러오는 중...
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-8 text-destructive">
+              회원 목록을 불러오는데 실패했습니다.
+            </div>
+          )}
+
+          {!isLoading && !error && users.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              등록된 회원이 없습니다.
+            </div>
+          )}
+
+          {!isLoading && !error && users.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-medium text-foreground">이름</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground">이메일</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground">SNS</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground">관리자</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground">가입일</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground">마지막 로그인</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-border hover:bg-accent/50 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-foreground">{user.name || '-'}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{user.email || '-'}</td>
+                      <td className="py-3 px-4">
+                        <Badge variant="outline" className="text-xs">
+                          {user.auth_provider || 'unknown'}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        {user.is_admin ? (
+                          <Badge variant="default" className="text-xs">
+                            관리자
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">일반</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground text-xs">
+                        {formatDate(user.created_at)}
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground text-xs">
+                        {formatDate(user.last_login)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="mt-4 text-sm text-muted-foreground">
+                총 {users.length}명의 회원
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

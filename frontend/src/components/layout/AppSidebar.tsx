@@ -1,10 +1,11 @@
-import { PanelLeftClose, FolderSync, Database, LogOut } from 'lucide-react'
+import { PanelLeftClose, FolderSync, Database, LogOut, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
+import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -20,6 +21,7 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
   const { isLoggedIn, user, logout } = useAuthStore()
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const [userManagementOpen, setUserManagementOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -175,6 +177,16 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-foreground">개발자 도구</h3>
             <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setUserManagementOpen(true)
+                  onClose()
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <Users className="h-4 w-4" />
+                회원 관리
+              </button>
               <div className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent transition-colors">
                 <span className="text-sm text-muted-foreground">UI 테스트 패널</span>
                 <Switch
@@ -207,6 +219,9 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
 
       {/* Login Dialog */}
       <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+
+      {/* User Management Dialog */}
+      <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
     </>
   )
 }

@@ -1008,6 +1008,17 @@ async def refresh_token(request: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
 
+# --- User Management API ---
+@app.get("/api/users")
+async def get_users(db: Session = Depends(get_database)):
+    """Get all users (for admin panel)"""
+    try:
+        users = db.query(User).order_by(User.created_at.desc()).all()
+        return [user.to_dict() for user in users]
+    except Exception as e:
+        logger.error(f"❌ Failed to get users: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get users: {str(e)}")
+
 @app.get("/api/parse-file")
 def parse_from_file():
     """Reads the predefined data file, parses it, and returns the schedules."""
