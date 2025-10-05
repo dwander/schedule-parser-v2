@@ -10,8 +10,10 @@ import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, GripVertical, ArrowLeft, RotateCcw, X, Lock, Unlock } from 'lucide-react'
+import { Plus, Trash2, GripVertical, ArrowLeft, RotateCcw, X, Lock, Unlock, Mic, MicOff } from 'lucide-react'
 import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
+import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
+import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
 import {
   DndContext,
   closestCenter,
@@ -44,6 +46,14 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [isLocked, setIsLocked] = useState(() => {
     const saved = localStorage.getItem('photoSequenceLocked')
     return saved ? JSON.parse(saved) : false
+  })
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    const saved = localStorage.getItem('photoSequenceVoiceEnabled')
+    return saved ? JSON.parse(saved) : false
+  })
+  const [trainingData] = useState<VoiceTrainingData>(() => {
+    const saved = localStorage.getItem('photoSequenceVoiceTraining')
+    return saved ? JSON.parse(saved) : DEFAULT_VOICE_TRAINING
   })
 
   // 모달이 열릴 때만 초기화
@@ -159,6 +169,31 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     })
   }
 
+  // 음성 인식 토글
+  const toggleVoice = () => {
+    setVoiceEnabled(prev => {
+      const newValue = !prev
+      localStorage.setItem('photoSequenceVoiceEnabled', JSON.stringify(newValue))
+      return newValue
+    })
+  }
+
+  // 음성 인식 매칭 콜백
+  const handleVoiceMatch = (itemText: string) => {
+    // 매칭된 항목을 찾아서 체크
+    const matchedItem = items.find(item => !item.deleted && item.text === itemText)
+    if (matchedItem && !matchedItem.completed) {
+      toggleComplete(matchedItem.id)
+    }
+  }
+
+  // 음성 인식 훅 사용 (모달이 열려있을 때만)
+  const { isListening, lastRecognized } = useVoiceRecognition({
+    enabled: open && voiceEnabled,
+    trainingData,
+    onMatch: handleVoiceMatch,
+  })
+
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -211,6 +246,15 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           <div className="flex-1"></div>
 
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleVoice}
+              className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''}`}
+              title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
+            >
+              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -284,6 +328,25 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                   />
                 </Badge>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 음성 인식 상태 */}
+        {voiceEnabled && (isListening || lastRecognized) && (
+          <div className="mx-4 mb-2 flex-shrink-0">
+            <div className="px-3 py-2 rounded-lg bg-muted/50 flex items-center gap-2 text-sm">
+              {isListening && (
+                <span className="flex items-center gap-1.5">
+                  <Mic className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                  <span className="text-muted-foreground">듣는 중...</span>
+                </span>
+              )}
+              {lastRecognized && (
+                <span className="text-muted-foreground flex-1 truncate">
+                  &ldquo;{lastRecognized}&rdquo;
+                </span>
+              )}
             </div>
           </div>
         )}
