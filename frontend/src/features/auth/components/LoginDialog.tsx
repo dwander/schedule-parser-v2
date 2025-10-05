@@ -111,8 +111,6 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
-      console.log('구글 인증 코드 받음:', codeResponse)
-
       try {
         // 백엔드로 authorization code 전송
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -120,8 +118,6 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           code: codeResponse.code,
           redirect_uri: redirectUri
         })
-
-        console.log('백엔드 응답:', response.data)
 
         const user = {
           id: response.data.id,
