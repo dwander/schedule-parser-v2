@@ -16,7 +16,7 @@ interface UserManagementDialogProps {
 export function UserManagementDialog({ open, onOpenChange }: UserManagementDialogProps) {
   const { data: users = [], isLoading, error } = useUsers()
 
-  // 날짜 포맷 함수
+  // 날짜 포맷 함수 (한국 시간대 GMT+9)
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
@@ -26,6 +26,7 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Seoul',
     })
   }
 
