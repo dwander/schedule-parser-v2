@@ -11,6 +11,7 @@ import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Calendar, CalendarPlus, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -35,6 +36,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
+  const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
 
   // 구글 캘린더 URL 생성 함수
   const generateGoogleCalendarUrl = () => {
@@ -72,9 +74,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarClick = () => {
-    // 네이버 토큰 확인
-    if (!user?.naverAccessToken) {
-      toast.error('네이버 로그인이 필요합니다')
+    // 네이버 로그인 확인
+    if (!user?.naverAccessToken || !user?.id?.startsWith('naver_')) {
+      setNaverLoginPromptOpen(true)
       return
     }
 
@@ -453,17 +455,15 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <Calendar className="h-4 w-4" />
             </Button>
-            {user?.naverAccessToken && user?.id?.startsWith('naver_') && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all bg-[#03C75A]/10 hover:bg-[#03C75A]/20 border-[#03C75A]/30"
-                onClick={handleNaverCalendarClick}
-                title="네이버 캘린더"
-              >
-                <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+              onClick={handleNaverCalendarClick}
+              title="네이버 캘린더"
+            >
+              <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
+            </Button>
           </div>
         </div>
 
@@ -506,6 +506,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         description={`이 일정을 네이버 캘린더에 추가하시겠습니까?\n추가된 일정은 네이버 캘린더 앱에서 확인하실 수 있습니다.`}
         confirmText="추가"
         onConfirm={handleNaverCalendarConfirm}
+      />
+
+      {/* Naver Login Prompt Dialog */}
+      <AlertDialog
+        open={naverLoginPromptOpen}
+        onOpenChange={setNaverLoginPromptOpen}
+        title="네이버 로그인 필요"
+        description="네이버 캘린더에 일정을 추가하려면 네이버 계정으로 로그인해주세요."
       />
     </div>
   )

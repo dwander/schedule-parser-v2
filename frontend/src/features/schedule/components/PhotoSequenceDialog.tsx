@@ -63,11 +63,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 모달이 열릴 때만 초기화
   useEffect(() => {
     if (open) {
-      console.log('📋 PhotoSequenceDialog opened:', {
-        scheduleId: schedule.id,
-        hasPhotoSequence: !!schedule.photoSequence,
-        photoSequence: schedule.photoSequence
-      })
       setItems(schedule.photoSequence || generatePhotoSequence())
     }
   }, [open])  // open만 의존성으로 설정
@@ -187,7 +182,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     setTrainingTargetId(itemId)
     setCollectedPhrases([])
     setExpandedTrainingId(null)
-    console.log('🎯 훈련 모드 시작:', itemId)
   }
 
   // 훈련 모드 종료
@@ -196,7 +190,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       setExpandedTrainingId(trainingTargetId)
     }
     setTrainingTargetId(null)
-    console.log('🎯 훈련 모드 종료, 수집:', collectedPhrases.length)
   }
 
   // 훈련 데이터 저장
@@ -209,7 +202,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     localStorage.setItem('photoSequenceVoiceTraining', JSON.stringify(newTrainingData))
     setExpandedTrainingId(null)
     setCollectedPhrases([])
-    console.log('💾 훈련 데이터 저장:', itemText, selectedPhrases)
   }
 
   // 음성 인식 매칭 콜백
@@ -227,7 +219,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const handleVoiceCollect = (phrase: string) => {
     if (trainingTargetId) {
       setCollectedPhrases(prev => [...prev, phrase])
-      console.log('📝 수집:', phrase)
     }
   }
 
