@@ -86,6 +86,16 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       // 종료 시간 (예식 1시간 후)
       const endDate = new Date(year, month - 1, day, hours + 1, minutes)
 
+      // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
+      const formatLocalISO = (date: Date) => {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const d = String(date.getDate()).padStart(2, '0')
+        const h = String(date.getHours()).padStart(2, '0')
+        const min = String(date.getMinutes()).padStart(2, '0')
+        return `${y}-${m}-${d}T${h}:${min}:00`
+      }
+
       // 백엔드를 통해 네이버 캘린더 API 호출
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await axios.post(
@@ -94,8 +104,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           access_token: user.naverAccessToken,
           subject: `${schedule.location} - ${schedule.couple}`,
           location: schedule.location,
-          start_datetime: startDate.toISOString(),
-          end_datetime: endDate.toISOString(),
+          start_datetime: formatLocalISO(startDate),
+          end_datetime: formatLocalISO(endDate),
           description: schedule.memo || ''
         }
       )
