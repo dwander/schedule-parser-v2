@@ -5,7 +5,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
@@ -162,7 +161,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px 이상 움직여야 드래그 시작
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -330,52 +333,48 @@ function SortableItem({ item, isLocked, onToggleComplete, onDelete }: SortableIt
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? undefined : transition,
   }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors group"
+      className={`${isDragging ? 'opacity-50' : ''}`}
     >
+      <div
+        onClick={() => onToggleComplete(item.id)}
+        className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer group origin-right transition-[transform,opacity] duration-[250ms] ease-out will-change-transform ${
+          item.completed ? 'scale-[0.83] opacity-50' : 'scale-100 opacity-100'
+        }`}
+      >
       <div
         {...attributes}
         {...listeners}
+        onClick={(e) => e.stopPropagation()}
         className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
 
-      <Checkbox
-        id={item.id}
-        checked={item.completed}
-        onCheckedChange={() => onToggleComplete(item.id)}
-        className="flex-shrink-0"
-      />
-
-      <label
-        htmlFor={item.id}
-        className={`flex-1 text-base cursor-pointer select-none transition-all ${
-          item.completed
-            ? 'line-through text-muted-foreground'
-            : 'text-foreground'
-        }`}
-      >
+      <div className="flex-1 text-base select-none">
         {item.text}
-      </label>
+      </div>
 
       {!isLocked && (
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8 flex-shrink-0"
-          onClick={() => onDelete(item.id)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(item.id)
+          }}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       )}
+      </div>
     </div>
   )
 }
