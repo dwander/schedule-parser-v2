@@ -162,6 +162,14 @@ class NaverAuthRequest(BaseModel):
 class KakaoAuthRequest(BaseModel):
     code: str
 
+class NaverCalendarRequest(BaseModel):
+    access_token: str
+    subject: str
+    location: str
+    start_datetime: str  # ISO 8601 format
+    end_datetime: str    # ISO 8601 format
+    description: Optional[str] = None
+
 class SaveSchedulesRequest(BaseModel):
     schedules: Union[List[Dict], str]  # 압축된 문자열도 허용
     user_id: str
@@ -1084,6 +1092,57 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Naver authentication failed: {str(e)}")
+
+@app.post("/api/calendar/naver")
+async def add_naver_calendar(request: NaverCalendarRequest):
+    """Add schedule to Naver Calendar via API."""
+    try:
+        # 네이버 캘린더 API 호출
+        calendar_url = "https://openapi.naver.com/calendar/createSchedule.json"
+
+        headers = {
+            'Authorization': f'Bearer {request.access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        payload = {
+            'calendarId': 'defaultCalendarId',
+            'schedule': {
+                'subject': request.subject,
+                'location': request.location,
+                'start': {
+                    'dateTime': request.start_datetime,
+                    'timeZone': 'Asia/Seoul'
+                },
+                'end': {
+                    'dateTime': request.end_datetime,
+                    'timeZone': 'Asia/Seoul'
+                }
+            }
+        }
+
+        if request.description:
+            payload['schedule']['description'] = request.description
+
+        response = requests.post(calendar_url, headers=headers, json=payload)
+
+        print(f"📅 네이버 캘린더 API 응답: {response.status_code}")
+        print(f"📅 응답 내용: {response.text}")
+
+        if not response.ok:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Naver Calendar API error: {response.text}"
+            )
+
+        result = response.json()
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ 네이버 캘린더 추가 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to add to Naver Calendar: {str(e)}")
 
 @app.post("/auth/kakao")
 async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_database)):

@@ -86,30 +86,17 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       // 종료 시간 (예식 1시간 후)
       const endDate = new Date(year, month - 1, day, hours + 1, minutes)
 
-      // 네이버 캘린더 API 요청
+      // 백엔드를 통해 네이버 캘린더 API 호출
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       const response = await axios.post(
-        'https://openapi.naver.com/calendar/createSchedule.json',
+        `${apiUrl}/api/calendar/naver`,
         {
-          calendarId: 'defaultCalendarId',
-          schedule: {
-            subject: `${schedule.location} - ${schedule.couple}`,
-            location: schedule.location,
-            start: {
-              dateTime: startDate.toISOString(),
-              timeZone: 'Asia/Seoul'
-            },
-            end: {
-              dateTime: endDate.toISOString(),
-              timeZone: 'Asia/Seoul'
-            },
-            description: schedule.memo || ''
-          }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${user.naverAccessToken}`,
-            'Content-Type': 'application/json'
-          }
+          access_token: user.naverAccessToken,
+          subject: `${schedule.location} - ${schedule.couple}`,
+          location: schedule.location,
+          start_datetime: startDate.toISOString(),
+          end_datetime: endDate.toISOString(),
+          description: schedule.memo || ''
         }
       )
 
