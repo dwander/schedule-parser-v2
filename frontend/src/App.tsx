@@ -80,6 +80,45 @@ function AppContent() {
     handleNaverCallback()
   }, [])
 
+  // 카카오 로그인 callback 처리
+  useEffect(() => {
+    const handleKakaoCallback = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      const path = window.location.pathname
+
+      if (path === '/auth/kakao/callback' && code) {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const response = await axios.post(`${apiUrl}/auth/kakao`, {
+            code
+          })
+
+          const user = {
+            id: response.data.id,
+            email: response.data.email,
+            name: response.data.name,
+            picture: response.data.picture,
+            isAdmin: response.data.is_admin || false
+          }
+
+          login(user)
+          toast.success(`환영합니다, ${user.name}님!`)
+
+          // 홈으로 리다이렉트
+          window.history.replaceState({}, '', '/')
+          window.location.reload()
+        } catch (error) {
+          console.error('카카오 로그인 실패:', error)
+          toast.error('카카오 로그인에 실패했습니다')
+          window.history.replaceState({}, '', '/')
+        }
+      }
+    }
+
+    handleKakaoCallback()
+  }, [])
+
   // fontSize를 html 루트에 적용 (모든 rem 단위에 영향)
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`

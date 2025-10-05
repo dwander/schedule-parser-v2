@@ -193,8 +193,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   }
 
   const handleKakaoLogin = () => {
-    console.log('카카오 로그인')
-    toast.info('카카오 로그인은 준비 중입니다')
+    const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || '22128eb4e8871df36806f59ddc27b65b'
+    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
+
+    // Redirect to Kakao login
+    const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`
+    window.location.href = kakaoLoginUrl
   }
 
   return (

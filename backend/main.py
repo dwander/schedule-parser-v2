@@ -128,16 +128,22 @@ if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
 NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
 
+# Kakao
+KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY')
+KAKAO_CLIENT_SECRET = os.getenv('KAKAO_CLIENT_SECRET')
+
 # Railway 환경 자동 감지 및 redirect URI 설정
 if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
     # Railway 배포 환경 - GIS 리다이렉트 모드
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://your-app.railway.app')
     GOOGLE_REDIRECT_URI = f'{FRONTEND_URL}/auth/callback.html'
     NAVER_REDIRECT_URI = f'{FRONTEND_URL}/auth/naver/callback'
+    KAKAO_REDIRECT_URI = f'{FRONTEND_URL}/auth/kakao/callback'
 else:
     # 로컬 개발 환경 - GIS 리다이렉트 모드
     GOOGLE_REDIRECT_URI = 'http://localhost:5173/auth/callback.html'
     NAVER_REDIRECT_URI = 'http://localhost:5173/auth/naver/callback'
+    KAKAO_REDIRECT_URI = 'http://localhost:5173/auth/kakao/callback'
 
 
 # --- Storage Configuration ---
@@ -152,6 +158,9 @@ class GoogleAuthRequest(BaseModel):
 class NaverAuthRequest(BaseModel):
     code: str
     state: str
+
+class KakaoAuthRequest(BaseModel):
+    code: str
 
 class SaveSchedulesRequest(BaseModel):
     schedules: Union[List[Dict], str]  # 압축된 문자열도 허용
@@ -1073,6 +1082,98 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Naver authentication failed: {str(e)}")
+
+@app.post("/auth/kakao")
+async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_database)):
+    """Exchange Kakao authorization code for user info."""
+    try:
+        if not KAKAO_REST_API_KEY:
+            raise HTTPException(status_code=500, detail="Kakao OAuth is not configured")
+
+        print(f"🔑 카카오 인증 코드: {auth_request.code[:20]}...")
+
+        # Step 1: Exchange authorization code for access token
+        token_url = "https://kauth.kakao.com/oauth/token"
+        token_data = {
+            'grant_type': 'authorization_code',
+            'client_id': KAKAO_REST_API_KEY,
+            'redirect_uri': KAKAO_REDIRECT_URI,
+            'code': auth_request.code
+        }
+
+        # Add client_secret if available
+        if KAKAO_CLIENT_SECRET:
+            token_data['client_secret'] = KAKAO_CLIENT_SECRET
+
+        token_response = requests.post(token_url, data=token_data)
+
+        print(f"📡 토큰 응답 상태: {token_response.status_code}")
+        if not token_response.ok:
+            print(f"❌ 토큰 에러: {token_response.text}")
+            raise HTTPException(status_code=400, detail=f"Token exchange failed: {token_response.text}")
+
+        token_json = token_response.json()
+        access_token = token_json.get('access_token')
+        refresh_token = token_json.get('refresh_token')
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="No access token received")
+
+        # Step 2: Get user info using access token
+        user_info_url = "https://kapi.kakao.com/v2/user/me"
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        user_response = requests.get(user_info_url, headers=headers)
+
+        if not user_response.ok:
+            raise HTTPException(status_code=400, detail=f"User info fetch failed: {user_response.text}")
+
+        user_data = user_response.json()
+        kakao_account = user_data.get('kakao_account', {})
+        profile = kakao_account.get('profile', {})
+
+        kakao_id = str(user_data.get('id'))  # 숫자로 오므로 문자열 변환
+
+        # Save or update user in database
+        user_id = f"kakao_{kakao_id}"
+
+        existing_user = db.query(User).filter(User.id == user_id).first()
+
+        if existing_user:
+            # Update existing user
+            existing_user.email = kakao_account.get("email")
+            existing_user.name = profile.get("nickname")
+            existing_user.last_login = func.now()
+            print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email})")
+        else:
+            # Create new user
+            new_user = User(
+                id=user_id,
+                auth_provider="kakao",
+                is_anonymous=False,
+                email=kakao_account.get("email"),
+                name=profile.get("nickname"),
+                is_admin=False
+            )
+            db.add(new_user)
+            print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email})")
+
+        db.commit()
+
+        # Return user information
+        return {
+            "id": kakao_id,
+            "name": profile.get("nickname"),
+            "email": kakao_account.get("email"),
+            "picture": profile.get("profile_image_url"),
+            "is_admin": False,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Kakao authentication failed: {str(e)}")
 
 @app.post("/auth/refresh")
 async def refresh_token(request: dict = Body(...)):
