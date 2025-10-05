@@ -10,6 +10,24 @@ function generateUUID(): string {
 }
 
 /**
+ * Format Google user ID to database format (google_${id})
+ * @param googleId - Raw Google ID (e.g., "115583503997097606746")
+ * @returns Formatted user ID (e.g., "google_115583503997097606746")
+ */
+export function formatGoogleUserId(googleId: string): string {
+  return `google_${googleId}`
+}
+
+/**
+ * Format anonymous user ID to database format (anonymous_${uuid})
+ * @param uuid - Anonymous UUID
+ * @returns Formatted user ID (e.g., "anonymous_a84d8829-3367-4b9a-9841-c0a00518cec8")
+ */
+export function formatAnonymousUserId(uuid: string): string {
+  return `anonymous_${uuid}`
+}
+
+/**
  * Get or create a unique user ID
  * For authenticated users: use Google/SNS ID
  * For anonymous users: generate and store UUID in localStorage
@@ -21,7 +39,7 @@ export function getUserId(): string {
     try {
       const authState = JSON.parse(authStorage)
       if (authState.state?.isLoggedIn && authState.state?.user?.id) {
-        return `google_${authState.state.user.id}`
+        return formatGoogleUserId(authState.state.user.id)
       }
     } catch (e) {
       console.error('Failed to parse auth storage:', e)
@@ -35,7 +53,7 @@ export function getUserId(): string {
     localStorage.setItem('anonymous_user_id', anonymousId)
   }
 
-  return `anonymous_${anonymousId}`
+  return formatAnonymousUserId(anonymousId)
 }
 
 /**
@@ -43,7 +61,7 @@ export function getUserId(): string {
  */
 export function getAnonymousUserId(): string | null {
   const anonymousId = localStorage.getItem('anonymous_user_id')
-  return anonymousId ? `anonymous_${anonymousId}` : null
+  return anonymousId ? formatAnonymousUserId(anonymousId) : null
 }
 
 /**
