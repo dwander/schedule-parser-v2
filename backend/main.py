@@ -1097,34 +1097,38 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 async def add_naver_calendar(request: NaverCalendarRequest):
     """Add schedule to Naver Calendar via API."""
     try:
-        # 네이버 캘린더 API 호출
+        # 네이버 캘린더 API 호출 (form-data 형식)
         calendar_url = "https://openapi.naver.com/calendar/createSchedule.json"
 
         headers = {
-            'Authorization': f'Bearer {request.access_token}',
-            'Content-Type': 'application/json'
+            'Authorization': f'Bearer {request.access_token}'
         }
 
-        payload = {
-            'calendarId': 'defaultCalendarId',
-            'schedule': {
-                'subject': request.subject,
-                'location': request.location,
-                'start': {
-                    'dateTime': request.start_datetime,
-                    'timeZone': 'Asia/Seoul'
-                },
-                'end': {
-                    'dateTime': request.end_datetime,
-                    'timeZone': 'Asia/Seoul'
-                }
+        # Schedule 데이터를 JSON 문자열로 변환
+        schedule_data = {
+            'subject': request.subject,
+            'location': request.location,
+            'start': {
+                'dateTime': request.start_datetime,
+                'timeZone': 'Asia/Seoul'
+            },
+            'end': {
+                'dateTime': request.end_datetime,
+                'timeZone': 'Asia/Seoul'
             }
         }
 
         if request.description:
-            payload['schedule']['description'] = request.description
+            schedule_data['description'] = request.description
 
-        response = requests.post(calendar_url, headers=headers, json=payload)
+        # form-data 형식으로 전송
+        import json
+        data = {
+            'calendarId': 'defaultCalendarId',
+            'schedule': json.dumps(schedule_data)
+        }
+
+        response = requests.post(calendar_url, headers=headers, data=data)
 
         print(f"📅 네이버 캘린더 API 응답: {response.status_code}")
         print(f"📅 응답 내용: {response.text}")
