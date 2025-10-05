@@ -210,6 +210,35 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     return value.replace(/->/g, '→').replace(/<-/g, '←')
   }
 
+  // 화살표 치환 + 커서 위치 보존 핸들러
+  const handleArrowReplacement = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    path: string
+  ) => {
+    const input = e.target
+    const cursorPos = input.selectionStart || 0
+    const oldValue = input.value
+
+    // 커서 위치 기준으로 앞뒤 분리하여 치환
+    const beforeCursor = oldValue.substring(0, cursorPos)
+    const afterCursor = oldValue.substring(cursorPos)
+
+    const newBeforeCursor = replaceArrows(beforeCursor)
+    const newAfterCursor = replaceArrows(afterCursor)
+
+    const newValue = newBeforeCursor + newAfterCursor
+    const newCursorPos = newBeforeCursor.length
+
+    updateFieldLocal(path, newValue)
+
+    // 치환이 발생했으면 커서 위치 복원
+    if (oldValue !== newValue) {
+      requestAnimationFrame(() => {
+        input.setSelectionRange(newCursorPos, newCursorPos)
+      })
+    }
+  }
+
   // Textarea auto-resize
   const handleTextareaInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
     const target = e.currentTarget
@@ -347,7 +376,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
           <SectionCard icon={AlertCircle} title="중요 메모" show={isEditMode ? true : !!getValue('importantMemo')} isEditMode={isEditMode}>
             <Textarea
               value={getValue('importantMemo')}
-              onChange={(e) => updateFieldLocal('importantMemo', replaceArrows(e.target.value))}
+              onChange={(e) => handleArrowReplacement(e, 'importantMemo')}
               onInput={handleTextareaInput}
               onBlur={saveField}
               readOnly={!isEditMode}
@@ -363,7 +392,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
             <SectionCard icon={Sparkles} title="메이크업샵" show={isEditMode ? true : hasAnyMakeupData} isEditMode={isEditMode}>
               <Input
                 value={getValue('makeupShop.name')}
-                onChange={(e) => updateFieldLocal('makeupShop.name', replaceArrows(e.target.value))}
+                onChange={(e) => handleArrowReplacement(e, 'makeupShop.name')}
                 onBlur={saveField}
                 readOnly={!isEditMode}
                 placeholder="샵 이름"
@@ -375,7 +404,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">출발</Label>
                   <Input
                     value={getValue('makeupShop.departureTime')}
-                    onChange={(e) => updateFieldLocal('makeupShop.departureTime', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'makeupShop.departureTime')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="00:00"
@@ -386,7 +415,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">도착</Label>
                   <Input
                     value={getValue('makeupShop.arrivalTime')}
-                    onChange={(e) => updateFieldLocal('makeupShop.arrivalTime', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'makeupShop.arrivalTime')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="00:00"
@@ -401,7 +430,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   value={getValue('dress.type')}
-                  onChange={(e) => updateFieldLocal('dress.type', replaceArrows(e.target.value))}
+                  onChange={(e) => handleArrowReplacement(e, 'dress.type')}
                   onBlur={saveField}
                   readOnly={!isEditMode}
                   placeholder="종류"
@@ -409,7 +438,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                 />
                 <Input
                   value={getValue('dress.material')}
-                  onChange={(e) => updateFieldLocal('dress.material', replaceArrows(e.target.value))}
+                  onChange={(e) => handleArrowReplacement(e, 'dress.material')}
                   onBlur={saveField}
                   readOnly={!isEditMode}
                   placeholder="재질/장식"
@@ -418,7 +447,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               </div>
               <Input
                 value={getValue('dress.company')}
-                onChange={(e) => updateFieldLocal('dress.company', replaceArrows(e.target.value))}
+                onChange={(e) => handleArrowReplacement(e, 'dress.company')}
                 onBlur={saveField}
                 readOnly={!isEditMode}
                 placeholder="드레스샵"
@@ -433,7 +462,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">신랑측</Label>
                   <Input
                     value={getValue('familyRelations.groomFamily')}
-                    onChange={(e) => updateFieldLocal('familyRelations.groomFamily', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'familyRelations.groomFamily')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="부, 모, 남동생"
@@ -444,7 +473,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">신부측</Label>
                   <Input
                     value={getValue('familyRelations.brideFamily')}
-                    onChange={(e) => updateFieldLocal('familyRelations.brideFamily', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'familyRelations.brideFamily')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="부, 모, 언니"
@@ -461,7 +490,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">영상(DVD)</Label>
                   <Input
                     value={getValue('subPhotographer.videoDvd')}
-                    onChange={(e) => updateFieldLocal('subPhotographer.videoDvd', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'subPhotographer.videoDvd')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="영상 작가"
@@ -472,7 +501,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <Label className="text-xs text-muted-foreground mb-1.5 block">서브/아이폰</Label>
                   <Input
                     value={getValue('subPhotographer.subIphoneSnap')}
-                    onChange={(e) => updateFieldLocal('subPhotographer.subIphoneSnap', replaceArrows(e.target.value))}
+                    onChange={(e) => handleArrowReplacement(e, 'subPhotographer.subIphoneSnap')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
                     placeholder="서브 작가"
@@ -521,7 +550,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
             </div>
             <Input
               value={getValue('ceremony.host.memo')}
-              onChange={(e) => updateFieldLocal('ceremony.host.memo', replaceArrows(e.target.value))}
+              onChange={(e) => handleArrowReplacement(e, 'ceremony.host.memo')}
               onBlur={saveField}
               readOnly={!isEditMode}
               placeholder="메모"
@@ -569,7 +598,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
 
             <Input
               value={getValue('ceremony.events.memo')}
-              onChange={(e) => updateFieldLocal('ceremony.events.memo', replaceArrows(e.target.value))}
+              onChange={(e) => handleArrowReplacement(e, 'ceremony.events.memo')}
               onBlur={saveField}
               readOnly={!isEditMode}
               placeholder="이벤트 메모"
@@ -584,7 +613,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
           <SectionCard icon={Palette} title="사진 컨셉 & 분위기" show={isEditMode ? true : !!getValue('photoConceptMemo')} isEditMode={isEditMode}>
             <Textarea
               value={getValue('photoConceptMemo')}
-              onChange={(e) => updateFieldLocal('photoConceptMemo', replaceArrows(e.target.value))}
+              onChange={(e) => handleArrowReplacement(e, 'photoConceptMemo')}
               onInput={handleTextareaInput}
               onBlur={saveField}
               readOnly={!isEditMode}
@@ -598,7 +627,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
           <SectionCard icon={MessageSquare} title="요청사항 & 질문" show={isEditMode ? true : !!getValue('requestsMemo')} isEditMode={isEditMode}>
             <Textarea
               value={getValue('requestsMemo')}
-              onChange={(e) => updateFieldLocal('requestsMemo', replaceArrows(e.target.value))}
+              onChange={(e) => handleArrowReplacement(e, 'requestsMemo')}
               onInput={handleTextareaInput}
               onBlur={saveField}
               readOnly={!isEditMode}
