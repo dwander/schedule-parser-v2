@@ -120,6 +120,9 @@ class Schedule(Base):
     # Photo note field (JSON data)
     photo_note = Column(JSON, nullable=True)
 
+    # Photo sequence field (JSON data)
+    photo_sequence = Column(JSON, nullable=True)
+
     # New fields
     cuts = Column(Integer, nullable=False, default=0)  # 컷 수
     folder_name = Column(String(500), nullable=False, default="")  # 폴더명
@@ -153,6 +156,7 @@ class Schedule(Base):
             'needs_review': self.needs_review,
             'review_reason': self.review_reason,
             'photoNote': self.photo_note,
+            'photoSequence': self.photo_sequence,
             'cuts': self.cuts,
             'folderName': self.folder_name,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -178,6 +182,7 @@ class Schedule(Base):
             needs_review=data.get('needs_review', False),
             review_reason=data.get('review_reason', ''),
             photo_note=data.get('photoNote'),
+            photo_sequence=data.get('photoSequence'),
             cuts=data.get('cuts', 0),
             folder_name=data.get('folderName', ''),
         )
@@ -375,7 +380,7 @@ class ScheduleService:
             allowed_fields = [
                 'date', 'location', 'time', 'couple', 'contact', 'brand',
                 'album', 'photographer', 'memo', 'manager', 'price',
-                'needs_review', 'review_reason', 'photo_note', 'cuts', 'folder_name'
+                'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'cuts', 'folder_name'
             ]
 
             if field not in allowed_fields:

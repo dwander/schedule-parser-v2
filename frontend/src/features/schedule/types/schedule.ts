@@ -1,5 +1,12 @@
 export type Brand = 'K7' | 'B7' | 'A+' | 'Graphy' | '2ndFlow'
 
+export interface PhotoSequenceItem {
+  id: string
+  text: string
+  completed: boolean
+  order: number
+}
+
 export interface PhotoNote {
   importantMemo?: string
   makeupShop?: {
@@ -58,6 +65,7 @@ export interface Schedule {
   photographer?: string
   memo?: string
   photoNote?: PhotoNote
+  photoSequence?: PhotoSequenceItem[]
   isDuplicate: boolean
   createdAt: string
   updatedAt: string

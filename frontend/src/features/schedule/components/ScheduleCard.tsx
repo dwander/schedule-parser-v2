@@ -5,11 +5,12 @@ import { DatePickerCell } from './DatePickerCell'
 import { TimePickerCell } from './TimePickerCell'
 import { TagSelectCell } from './TagSelectCell'
 import { PhotoNoteDialog } from './PhotoNoteDialog'
+import { PhotoSequenceDialog } from './PhotoSequenceDialog'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText } from 'lucide-react'
+import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const { brandOptions, albumOptions } = useTagOptions()
   const { columnVisibility } = useSettingsStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
+  const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
 
   // 촬영노트 데이터 존재 여부 확인
   const hasPhotoNoteData = useMemo(() => {
@@ -331,6 +333,15 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <FileText className="h-4 w-4" />
               </Button>
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+              onClick={() => setPhotoSequenceOpen(true)}
+              title="원판순서"
+            >
+              <ListTodo className="h-4 w-4" />
+            </Button>
             {/* 추후 추가될 버튼들 */}
             {/* <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" title="구글 캘린더">
               <Calendar className="h-4 w-4" />
@@ -362,6 +373,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       <PhotoNoteDialog
         open={photoNoteOpen}
         onOpenChange={setPhotoNoteOpen}
+        schedule={schedule}
+      />
+
+      {/* PhotoSequence Dialog */}
+      <PhotoSequenceDialog
+        open={photoSequenceOpen}
+        onOpenChange={setPhotoSequenceOpen}
         schedule={schedule}
       />
     </div>

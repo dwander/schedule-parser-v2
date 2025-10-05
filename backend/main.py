@@ -2347,6 +2347,8 @@ def update_schedule(
             existing.memo = schedule['memo']
         if 'photoNote' in schedule:
             existing.photo_note = schedule['photoNote']
+        if 'photoSequence' in schedule:
+            existing.photo_sequence = schedule['photoSequence']
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
 
@@ -2372,6 +2374,7 @@ def update_schedule(
             'manager': existing.manager,
             'memo': existing.memo,
             'photoNote': existing.photo_note,
+            'photoSequence': existing.photo_sequence,
             'isDuplicate': existing.needs_review,
             'createdAt': existing.created_at.isoformat() if existing.created_at else None,
             'updatedAt': existing.updated_at.isoformat() if existing.updated_at else None,
