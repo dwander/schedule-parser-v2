@@ -187,8 +187,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     // Store state in sessionStorage for verification
     sessionStorage.setItem('naver_state', STATE)
 
-    // Redirect to Naver login
-    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${STATE}`
+    // Redirect to Naver login (with calendar scope)
+    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${STATE}&scope=calendar`
     window.location.href = naverLoginUrl
   }
 

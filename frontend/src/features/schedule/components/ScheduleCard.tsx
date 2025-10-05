@@ -9,10 +9,13 @@ import { PhotoSequenceDialog } from './PhotoSequenceDialog'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
+import { Calendar, CalendarPlus, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import axios from 'axios'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -27,6 +30,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
   const { columnVisibility } = useSettingsStore()
+  const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
 
@@ -63,6 +67,65 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const handleGoogleCalendar = () => {
     const url = generateGoogleCalendarUrl()
     window.open(url, '_blank')
+  }
+
+  const handleNaverCalendar = async () => {
+    // 네이버 토큰 확인
+    if (!user?.naverAccessToken) {
+      toast.error('네이버 로그인이 필요합니다')
+      return
+    }
+
+    try {
+      // 날짜/시간 파싱
+      const [year, month, day] = schedule.date.split('.').map(Number)
+      const [hours, minutes] = schedule.time.split(':').map(Number)
+
+      // 시작 시간 (예식 1시간 전)
+      const startDate = new Date(year, month - 1, day, hours - 1, minutes)
+      // 종료 시간 (예식 1시간 후)
+      const endDate = new Date(year, month - 1, day, hours + 1, minutes)
+
+      // 네이버 캘린더 API 요청
+      const response = await axios.post(
+        'https://openapi.naver.com/calendar/createSchedule.json',
+        {
+          calendarId: 'defaultCalendarId',
+          schedule: {
+            subject: `${schedule.location} - ${schedule.couple}`,
+            location: schedule.location,
+            start: {
+              dateTime: startDate.toISOString(),
+              timeZone: 'Asia/Seoul'
+            },
+            end: {
+              dateTime: endDate.toISOString(),
+              timeZone: 'Asia/Seoul'
+            },
+            description: schedule.memo || ''
+          }
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${user.naverAccessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.result === 'success') {
+        toast.success('네이버 캘린더에 일정이 추가되었습니다')
+      } else {
+        toast.error('일정 추가에 실패했습니다')
+      }
+    } catch (error: any) {
+      console.error('네이버 캘린더 추가 실패:', error)
+      if (error.response?.status === 401) {
+        toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
+      } else {
+        toast.error('네이버 캘린더 추가 중 오류가 발생했습니다')
+      }
+    }
   }
 
   // 촬영노트 데이터 존재 여부 확인
@@ -386,6 +449,17 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <Calendar className="h-4 w-4" />
             </Button>
+            {user?.naverAccessToken && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all bg-[#03C75A]/10 hover:bg-[#03C75A]/20 border-[#03C75A]/30"
+                onClick={handleNaverCalendar}
+                title="네이버 캘린더"
+              >
+                <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
+              </Button>
+            )}
           </div>
         </div>
 

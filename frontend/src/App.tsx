@@ -59,7 +59,9 @@ function AppContent() {
             email: response.data.email,
             name: response.data.name,
             picture: response.data.picture,
-            isAdmin: response.data.is_admin || false
+            isAdmin: response.data.is_admin || false,
+            naverAccessToken: response.data.access_token,
+            naverRefreshToken: response.data.refresh_token
           }
 
           login(user)

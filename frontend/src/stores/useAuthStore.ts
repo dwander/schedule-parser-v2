@@ -7,6 +7,8 @@ export interface User {
   name: string
   picture?: string
   isAdmin?: boolean
+  naverAccessToken?: string
+  naverRefreshToken?: string
 }
 
 interface AuthState {
