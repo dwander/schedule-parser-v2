@@ -30,6 +30,41 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
 
+  // 구글 캘린더 URL 생성 함수
+  const generateGoogleCalendarUrl = () => {
+    // 날짜: "2025.04.05" → "20250405"
+    const dateStr = schedule.date.replace(/\./g, '')
+
+    // 시간: "14:00" → 시작: 13:00, 종료: 15:00
+    const [hours, minutes] = schedule.time.split(':').map(Number)
+    const startHour = String(hours - 1).padStart(2, '0')
+    const endHour = String(hours + 1).padStart(2, '0')
+    const minuteStr = String(minutes).padStart(2, '0')
+
+    // ISO 8601 형식: 20250405T130000/20250405T150000
+    const startDateTime = `${dateStr}T${startHour}${minuteStr}00`
+    const endDateTime = `${dateStr}T${endHour}${minuteStr}00`
+
+    // URL 파라미터 생성
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `${schedule.location} - ${schedule.couple}`,
+      dates: `${startDateTime}/${endDateTime}`,
+      location: schedule.location,
+    })
+
+    if (schedule.memo) {
+      params.append('details', schedule.memo)
+    }
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`
+  }
+
+  const handleGoogleCalendar = () => {
+    const url = generateGoogleCalendarUrl()
+    window.open(url, '_blank')
+  }
+
   // 촬영노트 데이터 존재 여부 확인
   const hasPhotoNoteData = useMemo(() => {
     const note = schedule.photoNote
@@ -342,13 +377,15 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <ListTodo className="h-4 w-4" />
             </Button>
-            {/* 추후 추가될 버튼들 */}
-            {/* <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" title="구글 캘린더">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+              onClick={handleGoogleCalendar}
+              title="구글 캘린더"
+            >
               <Calendar className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" title="폴더명 복사">
-              <Folder className="h-4 w-4" />
-            </Button> */}
           </div>
         </div>
 
