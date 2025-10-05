@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, GripVertical, ArrowLeft, RotateCcw, X, Lock, Unlock, Mic, MicOff, Settings } from 'lucide-react'
+import { Plus, Trash2, GripVertical, ArrowLeft, RotateCcw, X, Lock, Unlock, Mic, MicOff, CassetteTape } from 'lucide-react'
 import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
@@ -315,7 +315,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               className="h-9 w-9"
               title="훈련 데이터 관리"
             >
-              <Settings className="h-5 w-5" />
+              <CassetteTape className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
