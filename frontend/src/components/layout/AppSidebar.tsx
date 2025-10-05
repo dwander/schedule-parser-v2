@@ -26,6 +26,10 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
   const handleLogout = () => {
     logout()
     toast.success('로그아웃되었습니다')
+    // 페이지 새로고침하여 스케줄 데이터 초기화
+    setTimeout(() => {
+      window.location.reload()
+    }, 500)
   }
 
   // ESC 키로 닫기

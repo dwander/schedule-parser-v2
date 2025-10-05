@@ -98,6 +98,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       setMigrateDialogOpen(false)
       setPendingUser(null)
       onOpenChange(false)
+      // 페이지 새로고침하여 마이그레이션된 데이터 표시
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (error) {
       console.error('마이그레이션 실패:', error)
       toast.error('데이터 이동 중 오류가 발생했습니다')
@@ -120,6 +124,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     setMigrateDialogOpen(false)
     setPendingUser(null)
     onOpenChange(false)
+    // 페이지 새로고침하여 로그인 계정 데이터 표시
+    setTimeout(() => {
+      window.location.reload()
+    }, 500)
   }
 
   const handleGoogleLogin = useGoogleLogin({
@@ -153,6 +161,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           login(user)
           toast.success(`환영합니다, ${user.name}님!`)
           onOpenChange(false)
+          // 페이지 새로고침하여 스케줄 데이터 업데이트
+          setTimeout(() => {
+            window.location.reload()
+          }, 500)
         }
       } catch (error) {
         console.error('백엔드 인증 실패:', error)
