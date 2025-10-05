@@ -81,6 +81,16 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
     return () => window.removeEventListener('resize', updateColumns)
   }, [viewMode])
 
+  // 뷰 모드 전환 시 리스트 virtualizer 리프레시
+  useEffect(() => {
+    if (viewMode === 'list') {
+      // 다음 프레임에 측정하여 레이아웃이 완전히 렌더링된 후 실행
+      requestAnimationFrame(() => {
+        listVirtualizer.measure()
+      })
+    }
+  }, [viewMode, listVirtualizer])
+
   const rowCount = Math.ceil(table.getRowModel().rows.length / gridColumns)
 
   const gridVirtualizer = useVirtualizer({
