@@ -291,13 +291,27 @@ class ScheduleService:
         self.db = db
 
     def ensure_user_exists(self, user_id: str):
-        """Ensure user exists in User table, create if not exists (for anonymous users)"""
+        """Ensure user exists in User table, create if not exists"""
         try:
             existing_user = self.db.query(User).filter(User.id == user_id).first()
             if not existing_user:
-                # Create anonymous user
-                is_anonymous = user_id.startswith('anonymous_')
-                auth_provider = 'anonymous' if is_anonymous else 'unknown'
+                # Determine auth_provider from user_id prefix
+                if user_id.startswith('anonymous_'):
+                    auth_provider = 'anonymous'
+                    is_anonymous = True
+                elif user_id.startswith('google_'):
+                    auth_provider = 'google'
+                    is_anonymous = False
+                elif user_id.startswith('naver_'):
+                    auth_provider = 'naver'
+                    is_anonymous = False
+                elif user_id.startswith('kakao_'):
+                    auth_provider = 'kakao'
+                    is_anonymous = False
+                else:
+                    # Fallback for legacy or test data
+                    auth_provider = 'unknown'
+                    is_anonymous = False
 
                 new_user = User(
                     id=user_id,
@@ -309,7 +323,7 @@ class ScheduleService:
                 )
                 self.db.add(new_user)
                 self.db.commit()
-                logger.info(f"✅ Created user: {user_id} (anonymous={is_anonymous})")
+                logger.info(f"✅ Created user: {user_id} (provider={auth_provider}, anonymous={is_anonymous})")
         except Exception as e:
             logger.error(f"❌ Failed to ensure user exists: {e}")
             self.db.rollback()
