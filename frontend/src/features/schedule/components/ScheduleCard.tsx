@@ -10,6 +10,7 @@ import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Calendar, CalendarPlus, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -33,6 +34,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
+  const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
 
   // 구글 캘린더 URL 생성 함수
   const generateGoogleCalendarUrl = () => {
@@ -69,13 +71,18 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     window.open(url, '_blank')
   }
 
-  const handleNaverCalendar = async () => {
+  const handleNaverCalendarClick = () => {
     // 네이버 토큰 확인
     if (!user?.naverAccessToken) {
       toast.error('네이버 로그인이 필요합니다')
       return
     }
 
+    // 확인 다이얼로그 열기
+    setNaverCalendarConfirmOpen(true)
+  }
+
+  const handleNaverCalendarConfirm = async () => {
     try {
       // 날짜/시간 파싱
       const [year, month, day] = schedule.date.split('.').map(Number)
@@ -451,7 +458,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 variant="outline"
                 size="icon"
                 className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all bg-[#03C75A]/10 hover:bg-[#03C75A]/20 border-[#03C75A]/30"
-                onClick={handleNaverCalendar}
+                onClick={handleNaverCalendarClick}
                 title="네이버 캘린더"
               >
                 <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
@@ -489,6 +496,16 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         open={photoSequenceOpen}
         onOpenChange={setPhotoSequenceOpen}
         schedule={schedule}
+      />
+
+      {/* Naver Calendar Confirm Dialog */}
+      <ConfirmDialog
+        open={naverCalendarConfirmOpen}
+        onOpenChange={setNaverCalendarConfirmOpen}
+        title="네이버 캘린더에 추가"
+        description={`이 일정을 네이버 캘린더에 추가하시겠습니까?\n\n추가된 일정은 네이버 캘린더 앱에서 확인하실 수 있습니다.`}
+        confirmText="추가"
+        onConfirm={handleNaverCalendarConfirm}
       />
     </div>
   )
