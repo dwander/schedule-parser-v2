@@ -290,6 +290,30 @@ class ScheduleService:
     def __init__(self, db: Session):
         self.db = db
 
+    def ensure_user_exists(self, user_id: str):
+        """Ensure user exists in User table, create if not exists (for anonymous users)"""
+        try:
+            existing_user = self.db.query(User).filter(User.id == user_id).first()
+            if not existing_user:
+                # Create anonymous user
+                is_anonymous = user_id.startswith('anonymous_')
+                auth_provider = 'anonymous' if is_anonymous else 'unknown'
+
+                new_user = User(
+                    id=user_id,
+                    auth_provider=auth_provider,
+                    is_anonymous=is_anonymous,
+                    email=None,
+                    name=None,
+                    is_admin=False
+                )
+                self.db.add(new_user)
+                self.db.commit()
+                logger.info(f"✅ Created user: {user_id} (anonymous={is_anonymous})")
+        except Exception as e:
+            logger.error(f"❌ Failed to ensure user exists: {e}")
+            self.db.rollback()
+
     def get_schedules(self, user_id: str) -> List[Schedule]:
         """Get all schedules for a user"""
         return self.db.query(Schedule).filter(
@@ -299,6 +323,9 @@ class ScheduleService:
     def save_schedules(self, user_id: str, schedules_data: List[Dict[str, Any]]) -> List[Schedule]:
         """Replace all schedules for a user (bulk operation)"""
         try:
+            # Ensure user exists (create if anonymous)
+            self.ensure_user_exists(user_id)
+
             # 기존 데이터 모두 삭제
             self.db.query(Schedule).filter(Schedule.user_id == user_id).delete()
 
@@ -390,6 +417,9 @@ class ScheduleService:
     def save_schedule(self, user_id: str, schedule_data: Dict[str, Any]) -> Schedule:
         """Save a single schedule"""
         try:
+            # Ensure user exists (create if anonymous)
+            self.ensure_user_exists(user_id)
+
             schedule = Schedule.from_dict(schedule_data, user_id)
             self.db.add(schedule)
             self.db.commit()
