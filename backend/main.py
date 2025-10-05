@@ -1127,7 +1127,6 @@ async def add_naver_calendar(request: NaverCalendarRequest):
         # form-data 형식으로 전송
         import json
         data = {
-            'calendarId': 'defaultCalendarId',
             'schedule': json.dumps(schedule_data)
         }
 
