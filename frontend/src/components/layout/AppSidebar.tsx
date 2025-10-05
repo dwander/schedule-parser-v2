@@ -1,10 +1,12 @@
-import { PanelLeftClose, FolderSync, Database } from 'lucide-react'
+import { PanelLeftClose, FolderSync, Database, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface AppSidebarProps {
   open: boolean
@@ -16,7 +18,13 @@ interface AppSidebarProps {
 
 export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, onBackupRestoreClick }: AppSidebarProps) {
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
+  const { isLoggedIn, user, logout } = useAuthStore()
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    toast.success('로그아웃되었습니다')
+  }
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -71,6 +79,47 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
           >
             <PanelLeftClose className="h-[1.25rem] w-[1.25rem]" />
           </Button>
+        </div>
+
+        {/* User Profile or Login Button */}
+        <div className="px-4 pb-4 border-b border-border">
+          {isLoggedIn && user ? (
+            <div className="flex items-center gap-3 p-3 bg-accent rounded-lg">
+              {user.picture && (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="h-10 w-10 rounded-full"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                aria-label="로그아웃"
+                className="h-8 w-8 shrink-0"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full"
+              size="sm"
+              onClick={() => setLoginDialogOpen(true)}
+            >
+              로그인
+            </Button>
+          )}
         </div>
 
         {/* Menu Items */}
@@ -136,18 +185,6 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
             </div>
           </div>
         </nav>
-
-        {/* Login/Logout Button */}
-        <div className="px-4 pb-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            size="sm"
-            onClick={() => setLoginDialogOpen(true)}
-          >
-            로그인
-          </Button>
-        </div>
 
         {/* Footer - Legal & Version */}
         <div className="border-t border-border p-4">

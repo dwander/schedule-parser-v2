@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { useGoogleLogin } from '@react-oauth/google'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 interface LoginDialogProps {
   open: boolean
@@ -17,6 +18,7 @@ interface LoginDialogProps {
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const redirectUri = 'http://localhost:5173'
+  const { login } = useAuthStore()
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
@@ -32,7 +34,14 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
         console.log('백엔드 응답:', response.data)
 
-        // TODO: 사용자 정보 저장 및 인증 상태 업데이트
+        // 사용자 정보 저장 및 인증 상태 업데이트
+        login({
+          id: response.data.id,
+          email: response.data.email,
+          name: response.data.name,
+          picture: response.data.picture
+        })
+
         toast.success(`환영합니다, ${response.data.name}님!`)
         onOpenChange(false)
       } catch (error) {
