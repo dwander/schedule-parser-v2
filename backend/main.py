@@ -1970,6 +1970,7 @@ def get_schedules(
                 'price': schedule.price or 0,
                 'manager': schedule.manager or "",
                 'memo': schedule.memo or "",
+                'photoNote': schedule.photo_note,
                 'isDuplicate': schedule.needs_review,
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
                 'updatedAt': schedule.updated_at.isoformat() if schedule.updated_at else None,
@@ -2037,11 +2038,15 @@ def update_schedule(
 ):
     """Update a schedule"""
     try:
+        print(f"🔄 Update schedule {schedule_id}, keys: {schedule.keys()}")
+        if 'photoNote' in schedule:
+            print(f"📝 PhotoNote data: {schedule['photoNote']}")
+
         existing = db.query(Schedule).filter(
             Schedule.id == int(schedule_id),
             Schedule.user_id == user_id
         ).first()
-        
+
         if not existing:
             raise HTTPException(status_code=404, detail="Schedule not found")
         
@@ -2070,6 +2075,8 @@ def update_schedule(
             existing.manager = schedule['manager']
         if 'memo' in schedule:
             existing.memo = schedule['memo']
+        if 'photoNote' in schedule:
+            existing.photo_note = schedule['photoNote']
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
 
@@ -2094,6 +2101,7 @@ def update_schedule(
             'price': existing.price,
             'manager': existing.manager,
             'memo': existing.memo,
+            'photoNote': existing.photo_note,
             'isDuplicate': existing.needs_review,
             'createdAt': existing.created_at.isoformat() if existing.created_at else None,
             'updatedAt': existing.updated_at.isoformat() if existing.updated_at else None,

@@ -1,5 +1,48 @@
 export type Brand = 'K7' | 'B7' | 'A+' | 'Graphy' | '2ndFlow'
 
+export interface PhotoNote {
+  importantMemo?: string
+  makeupShop?: {
+    name?: string
+    departureTime?: string
+    arrivalTime?: string
+  }
+  dress?: {
+    type?: string
+    material?: string
+    company?: string
+  }
+  familyRelations?: {
+    groomFamily?: string
+    brideFamily?: string
+  }
+  ceremony?: {
+    host?: {
+      type?: 'professional' | 'acquaintance'
+      memo?: string
+    }
+    events?: {
+      blessing?: boolean
+      congratulatorySpeech?: boolean
+      congratulatorySong?: boolean
+      congratulatoryDance?: boolean
+      flowerGirl?: boolean
+      ringExchange?: boolean
+      videoPlay?: boolean
+      flashCut?: boolean
+      bouquetCut?: boolean
+      flowerShower?: boolean
+      memo?: string
+    }
+  }
+  subPhotographer?: {
+    videoDvd?: string
+    subIphoneSnap?: string
+  }
+  photoConceptMemo?: string
+  requestsMemo?: string
+}
+
 export interface Schedule {
   id: string
   date: string // ISO 8601
@@ -14,6 +57,7 @@ export interface Schedule {
   album?: string
   photographer?: string
   memo?: string
+  photoNote?: PhotoNote
   isDuplicate: boolean
   createdAt: string
   updatedAt: string

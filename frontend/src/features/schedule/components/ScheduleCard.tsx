@@ -4,6 +4,7 @@ import { MemoCell } from './MemoCell'
 import { DatePickerCell } from './DatePickerCell'
 import { TimePickerCell } from './TimePickerCell'
 import { TagSelectCell } from './TagSelectCell'
+import { PhotoNoteDialog } from './PhotoNoteDialog'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -320,6 +321,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           </div>
         )}
       </div>
+
+      {/* PhotoNote Dialog */}
+      <PhotoNoteDialog
+        open={photoNoteOpen}
+        onOpenChange={setPhotoNoteOpen}
+        schedule={schedule}
+      />
     </div>
   )
 }
