@@ -140,8 +140,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           isAdmin: response.data.is_admin || false
         }
 
-        // 익명 데이터 확인
-        const hasAnonymousData = await checkAnonymousData(user.id)
+        // 익명 데이터 확인 (DB에 저장된 형태로 전달: google_${id})
+        const hasAnonymousData = await checkAnonymousData(`google_${user.id}`)
 
         if (hasAnonymousData) {
           // 마이그레이션 다이얼로그 표시
