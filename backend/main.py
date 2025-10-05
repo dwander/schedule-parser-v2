@@ -27,7 +27,7 @@ load_dotenv()
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
 
 # Import database modules
-from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule
+from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag
 
 # --- App Initialization ---
 app = FastAPI()
