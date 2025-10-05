@@ -43,15 +43,28 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     }
 
     try {
-      // 익명 스케줄 데이터 확인
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const response = await axios.get(`${apiUrl}/api/schedules`, {
+
+      // 로그인 계정의 기존 스케줄 확인
+      const existingResponse = await axios.get(`${apiUrl}/api/schedules`, {
+        params: { user_id: newUserId }
+      })
+      const existingSchedules = existingResponse.data || []
+
+      // 로그인 계정에 이미 데이터가 있으면 마이그레이션 제안하지 않음
+      if (existingSchedules.length > 0) {
+        console.log(`로그인 계정에 이미 ${existingSchedules.length}개의 스케줄이 있어 마이그레이션을 건너뜁니다.`)
+        return false
+      }
+
+      // 익명 스케줄 데이터 확인
+      const anonymousResponse = await axios.get(`${apiUrl}/api/schedules`, {
         params: { user_id: anonymousId }
       })
 
-      const schedules = response.data || []
-      if (schedules.length > 0) {
-        setAnonymousScheduleCount(schedules.length)
+      const anonymousSchedules = anonymousResponse.data || []
+      if (anonymousSchedules.length > 0) {
+        setAnonymousScheduleCount(anonymousSchedules.length)
         return true
       }
 
