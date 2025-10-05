@@ -127,7 +127,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           id: response.data.id,
           email: response.data.email,
           name: response.data.name,
-          picture: response.data.picture
+          picture: response.data.picture,
+          isAdmin: response.data.is_admin || false
         }
 
         // 익명 데이터 확인

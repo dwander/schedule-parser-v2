@@ -27,7 +27,7 @@ load_dotenv()
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
 
 # Import database modules
-from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag
+from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User
 
 # --- App Initialization ---
 app = FastAPI()
@@ -118,6 +118,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # --- Google OAuth Configuration ---
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+DEV_ADMIN_ID = os.getenv('VITE_DEV_ADMIN_ID')  # 개발자 관리자 ID
 
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     raise ValueError("GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET 환경변수가 설정되지 않았습니다.")
@@ -880,7 +881,7 @@ def get_file_size_mb(file_path):
 # --- API Endpoints ---
 
 @app.post("/auth/google")
-async def google_auth(auth_request: GoogleAuthRequest):
+async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get_database)):
     """Exchange Google authorization code for user info."""
     try:
         # 프론트엔드에서 전달받은 redirect_uri 사용, 없으면 기본값 사용
@@ -924,12 +925,44 @@ async def google_auth(auth_request: GoogleAuthRequest):
 
         user_data = user_response.json()
 
+        # Save or update user in database
+        user_id = f"google_{user_data.get('id')}"
+        google_id = user_data.get('id')
+        is_admin = (google_id == DEV_ADMIN_ID) if DEV_ADMIN_ID else False
+
+        existing_user = db.query(User).filter(User.id == user_id).first()
+
+        if existing_user:
+            # Update existing user
+            existing_user.email = user_data.get("email")
+            existing_user.name = user_data.get("name")
+            existing_user.is_admin = is_admin  # 관리자 상태 업데이트
+            existing_user.last_login = func.now()
+            admin_badge = "🔑 [관리자]" if is_admin else ""
+            print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email}) {admin_badge}")
+        else:
+            # Create new user
+            new_user = User(
+                id=user_id,
+                auth_provider="google",
+                is_anonymous=False,
+                email=user_data.get("email"),
+                name=user_data.get("name"),
+                is_admin=is_admin
+            )
+            db.add(new_user)
+            admin_badge = "🔑 [관리자]" if is_admin else ""
+            print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email}) {admin_badge}")
+
+        db.commit()
+
         # Return user information
         return {
             "id": user_data.get("id"),
             "name": user_data.get("name"),
             "email": user_data.get("email"),
             "picture": user_data.get("picture"),
+            "is_admin": is_admin,
             "access_token": access_token,
             "refresh_token": refresh_token
         }

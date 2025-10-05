@@ -31,6 +31,9 @@ class User(Base):
     email = Column(String(255), nullable=True)
     name = Column(String(255), nullable=True)
 
+    # Admin flag
+    is_admin = Column(Boolean, nullable=False, default=False)
+
     # Sample data flag
     has_seen_sample_data = Column(Boolean, nullable=False, default=False)
 
@@ -46,6 +49,7 @@ class User(Base):
             'is_anonymous': self.is_anonymous,
             'email': self.email,
             'name': self.name,
+            'is_admin': self.is_admin,
             'has_seen_sample_data': self.has_seen_sample_data,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
