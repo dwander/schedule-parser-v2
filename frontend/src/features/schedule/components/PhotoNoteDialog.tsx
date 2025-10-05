@@ -292,7 +292,28 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
 
   const toggleEvent = (eventKey: string) => {
     const current = (noteData.ceremony?.events as any)?.[eventKey]
-    updateFieldLocal(`ceremony.events.${eventKey}`, !current)
+    const newValue = !current
+
+    // 새 데이터 객체 생성
+    const newData = {
+      ...noteData,
+      ceremony: {
+        ...noteData.ceremony,
+        events: {
+          ...noteData.ceremony?.events,
+          [eventKey]: newValue
+        }
+      }
+    }
+
+    setNoteData(newData)
+
+    // 새 데이터로 바로 저장
+    const trimmedData = trimPhotoNoteData(newData)
+    updateSchedule.mutate({
+      id: schedule.id,
+      photoNote: trimmedData
+    })
   }
 
   const getValue = (path: string): any => {
@@ -580,10 +601,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     <Checkbox
                       id={`event-${key}`}
                       checked={getValue(`ceremony.events.${key}`) === true}
-                      onCheckedChange={() => {
-                        toggleEvent(key)
-                        setTimeout(() => saveField(), 0)
-                      }}
+                      onCheckedChange={() => toggleEvent(key)}
                     />
                     <Label
                       htmlFor={`event-${key}`}
