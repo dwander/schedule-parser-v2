@@ -29,7 +29,7 @@ export function formatAnonymousUserId(uuid: string): string {
 
 /**
  * Get or create a unique user ID
- * For authenticated users: use Google/SNS ID
+ * For authenticated users: use SNS ID (already has prefix from backend)
  * For anonymous users: generate and store UUID in localStorage
  */
 export function getUserId(): string {
@@ -39,7 +39,8 @@ export function getUserId(): string {
     try {
       const authState = JSON.parse(authStorage)
       if (authState.state?.isLoggedIn && authState.state?.user?.id) {
-        return formatGoogleUserId(authState.state.user.id)
+        // 백엔드에서 이미 prefix를 붙여서 주므로 그대로 사용
+        return authState.state.user.id
       }
     } catch (e) {
       console.error('Failed to parse auth storage:', e)

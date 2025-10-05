@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useState } from 'react'
-import { getAnonymousUserId, clearAnonymousData, formatGoogleUserId } from '@/lib/utils/userUtils'
+import { getAnonymousUserId, clearAnonymousData } from '@/lib/utils/userUtils'
 import { migrateSchedules } from '@/features/schedule/api/scheduleApi'
 import { fetchSchedules } from '@/features/schedule/api/scheduleApi'
 import { MigrateDataDialog } from './MigrateDataDialog'
@@ -81,7 +81,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     const anonymousId = getAnonymousUserId()
     if (!anonymousId) return
 
-    const newUserId = formatGoogleUserId(pendingUser.id)
+    // 백엔드에서 이미 prefix가 붙어서 옴 (google_xxx, naver_xxx, kakao_xxx)
+    const newUserId = pendingUser.id
 
     try {
       await migrateSchedules(anonymousId, newUserId)
@@ -148,8 +149,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           isAdmin: response.data.is_admin || false
         }
 
-        // 익명 데이터 확인 (DB에 저장된 형태로 전달)
-        const hasAnonymousData = await checkAnonymousData(formatGoogleUserId(user.id))
+        // 익명 데이터 확인 (백엔드에서 이미 prefix가 붙어서 옴)
+        const hasAnonymousData = await checkAnonymousData(user.id)
 
         if (hasAnonymousData) {
           // 마이그레이션 다이얼로그 표시
