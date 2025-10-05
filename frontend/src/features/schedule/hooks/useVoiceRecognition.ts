@@ -7,13 +7,116 @@ interface UseVoiceRecognitionProps {
   onMatch: (itemText: string) => void
 }
 
+// 한글 유니코드 상수
+const HANGUL_START = 0xAC00  // '가'
+const HANGUL_END = 0xD7A3    // '힣'
+const CHOSUNG_COUNT = 19
+const JUNGSUNG_COUNT = 21
+const JONGSUNG_COUNT = 28
+
+// 초성 배열
+const CHOSUNG = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+const JUNGSUNG = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ']
+const JONGSUNG = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ']
+
+// 한글 자모 분리
+function decomposeHangul(char: string): [string, string, string] | null {
+  const code = char.charCodeAt(0)
+
+  if (code < HANGUL_START || code > HANGUL_END) {
+    return null  // 한글이 아님
+  }
+
+  const index = code - HANGUL_START
+  const chosungIndex = Math.floor(index / (JUNGSUNG_COUNT * JONGSUNG_COUNT))
+  const jungsungIndex = Math.floor((index % (JUNGSUNG_COUNT * JONGSUNG_COUNT)) / JONGSUNG_COUNT)
+  const jongsungIndex = index % JONGSUNG_COUNT
+
+  return [CHOSUNG[chosungIndex], JUNGSUNG[jungsungIndex], JONGSUNG[jongsungIndex]]
+}
+
+// 음운론적 유사도 (0~1, 1이 동일)
+const PHONETIC_SIMILARITY: { [key: string]: { [key: string]: number } } = {
+  // 초성 유사도
+  'ㄱ': { 'ㄱ': 1.0, 'ㄲ': 0.8, 'ㅋ': 0.7, 'ㄴ': 0.3 },
+  'ㄲ': { 'ㄲ': 1.0, 'ㄱ': 0.8, 'ㅋ': 0.6 },
+  'ㄴ': { 'ㄴ': 1.0, 'ㄷ': 0.5, 'ㅁ': 0.4, 'ㄹ': 0.3, 'ㄱ': 0.3 },
+  'ㄷ': { 'ㄷ': 1.0, 'ㄸ': 0.8, 'ㅌ': 0.7, 'ㄴ': 0.5, 'ㅈ': 0.4 },
+  'ㄸ': { 'ㄸ': 1.0, 'ㄷ': 0.8, 'ㅌ': 0.6 },
+  'ㄹ': { 'ㄹ': 1.0, 'ㄴ': 0.3 },
+  'ㅁ': { 'ㅁ': 1.0, 'ㅂ': 0.4, 'ㄴ': 0.4 },
+  'ㅂ': { 'ㅂ': 1.0, 'ㅃ': 0.8, 'ㅍ': 0.7, 'ㅁ': 0.4 },
+  'ㅃ': { 'ㅃ': 1.0, 'ㅂ': 0.8, 'ㅍ': 0.6 },
+  'ㅅ': { 'ㅅ': 1.0, 'ㅆ': 0.8, 'ㅈ': 0.5, 'ㅊ': 0.4 },
+  'ㅆ': { 'ㅆ': 1.0, 'ㅅ': 0.8 },
+  'ㅇ': { 'ㅇ': 1.0 },
+  'ㅈ': { 'ㅈ': 1.0, 'ㅉ': 0.8, 'ㅊ': 0.7, 'ㅅ': 0.5, 'ㄷ': 0.4 },
+  'ㅉ': { 'ㅉ': 1.0, 'ㅈ': 0.8, 'ㅊ': 0.6 },
+  'ㅊ': { 'ㅊ': 1.0, 'ㅈ': 0.7, 'ㅅ': 0.4 },
+  'ㅋ': { 'ㅋ': 1.0, 'ㄱ': 0.7, 'ㄲ': 0.6 },
+  'ㅌ': { 'ㅌ': 1.0, 'ㄷ': 0.7, 'ㄸ': 0.6 },
+  'ㅍ': { 'ㅍ': 1.0, 'ㅂ': 0.7, 'ㅃ': 0.6 },
+  'ㅎ': { 'ㅎ': 1.0, 'ㅇ': 0.3 },
+
+  // 중성 유사도
+  'ㅏ': { 'ㅏ': 1.0, 'ㅑ': 0.6, 'ㅓ': 0.4 },
+  'ㅐ': { 'ㅐ': 1.0, 'ㅔ': 0.8, 'ㅒ': 0.6, 'ㅖ': 0.5 },
+  'ㅑ': { 'ㅑ': 1.0, 'ㅏ': 0.6, 'ㅕ': 0.4 },
+  'ㅒ': { 'ㅒ': 1.0, 'ㅖ': 0.8, 'ㅐ': 0.6 },
+  'ㅓ': { 'ㅓ': 1.0, 'ㅕ': 0.6, 'ㅏ': 0.4, 'ㅗ': 0.3 },
+  'ㅔ': { 'ㅔ': 1.0, 'ㅐ': 0.8, 'ㅖ': 0.6 },
+  'ㅕ': { 'ㅕ': 1.0, 'ㅓ': 0.6, 'ㅛ': 0.4 },
+  'ㅖ': { 'ㅖ': 1.0, 'ㅒ': 0.8, 'ㅔ': 0.6 },
+  'ㅗ': { 'ㅗ': 1.0, 'ㅜ': 0.5, 'ㅛ': 0.6, 'ㅓ': 0.3 },
+  'ㅘ': { 'ㅘ': 1.0, 'ㅝ': 0.5 },
+  'ㅙ': { 'ㅙ': 1.0, 'ㅞ': 0.6 },
+  'ㅚ': { 'ㅚ': 1.0, 'ㅟ': 0.5, 'ㅔ': 0.4 },
+  'ㅛ': { 'ㅛ': 1.0, 'ㅗ': 0.6, 'ㅠ': 0.5 },
+  'ㅜ': { 'ㅜ': 1.0, 'ㅗ': 0.5, 'ㅠ': 0.6 },
+  'ㅝ': { 'ㅝ': 1.0, 'ㅘ': 0.5 },
+  'ㅞ': { 'ㅞ': 1.0, 'ㅙ': 0.6 },
+  'ㅟ': { 'ㅟ': 1.0, 'ㅚ': 0.5 },
+  'ㅠ': { 'ㅠ': 1.0, 'ㅜ': 0.6, 'ㅛ': 0.5 },
+  'ㅡ': { 'ㅡ': 1.0, 'ㅣ': 0.3 },
+  'ㅢ': { 'ㅢ': 1.0, 'ㅣ': 0.5 },
+  'ㅣ': { 'ㅣ': 1.0, 'ㅡ': 0.3, 'ㅢ': 0.5 },
+}
+
+// 두 자모의 유사도 계산
+function getPhoneticSimilarity(jamo1: string, jamo2: string): number {
+  if (jamo1 === jamo2) return 1.0
+  if (!jamo1 || !jamo2) return 0.0
+  return PHONETIC_SIMILARITY[jamo1]?.[jamo2] || 0.0
+}
+
+// 한글 발음 유사도 계산 (0~1)
+function calculatePhoneticSimilarity(char1: string, char2: string): number {
+  const decomposed1 = decomposeHangul(char1)
+  const decomposed2 = decomposeHangul(char2)
+
+  // 한글이 아니면 정확히 일치하는지만 확인
+  if (!decomposed1 || !decomposed2) {
+    return char1 === char2 ? 1.0 : 0.0
+  }
+
+  const [cho1, jung1, jong1] = decomposed1
+  const [cho2, jung2, jong2] = decomposed2
+
+  // 초성 40%, 중성 40%, 종성 20% 가중치
+  const choSimilarity = getPhoneticSimilarity(cho1, cho2) * 0.4
+  const jungSimilarity = getPhoneticSimilarity(jung1, jung2) * 0.4
+  const jongSimilarity = getPhoneticSimilarity(jong1, jong2) * 0.2
+
+  return choSimilarity + jungSimilarity + jongSimilarity
+}
+
 // 문자열 정규화 (띄어쓰기 제거, 소문자 변환)
 function normalizeText(text: string): string {
   return text.toLowerCase().replace(/\s+/g, '')
 }
 
-// Levenshtein Distance (편집 거리) 계산
-function levenshteinDistance(a: string, b: string): number {
+// 발음 기반 편집 거리 계산 (Levenshtein Distance 변형)
+function phoneticDistance(a: string, b: string): number {
   const matrix: number[][] = []
 
   // 첫 번째 행과 열 초기화
@@ -27,13 +130,21 @@ function levenshteinDistance(a: string, b: string): number {
   // 동적 프로그래밍으로 편집 거리 계산
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+      const char1 = a.charAt(j - 1)
+      const char2 = b.charAt(i - 1)
+
+      if (char1 === char2) {
+        // 완전히 일치
         matrix[i][j] = matrix[i - 1][j - 1]
       } else {
+        // 발음 유사도 기반 비용 계산
+        const phonSim = calculatePhoneticSimilarity(char1, char2)
+        const replaceCost = 1 - phonSim  // 유사도가 높을수록 비용 낮음
+
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // 교체
-          matrix[i][j - 1] + 1,     // 삽입
-          matrix[i - 1][j] + 1      // 삭제
+          matrix[i - 1][j - 1] + replaceCost, // 교체 (발음 유사도 반영)
+          matrix[i][j - 1] + 1,                // 삽입
+          matrix[i - 1][j] + 1                 // 삭제
         )
       }
     }
@@ -44,7 +155,7 @@ function levenshteinDistance(a: string, b: string): number {
 
 // 유사도 계산 (0~1, 1이 완전 일치)
 function calculateSimilarity(a: string, b: string): number {
-  const distance = levenshteinDistance(a, b)
+  const distance = phoneticDistance(a, b)
   const maxLength = Math.max(a.length, b.length)
   return maxLength === 0 ? 1 : 1 - distance / maxLength
 }
