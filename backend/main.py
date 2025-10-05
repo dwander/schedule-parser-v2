@@ -1130,6 +1130,11 @@ async def add_naver_calendar(request: NaverCalendarRequest):
             'schedule': json.dumps(schedule_data)
         }
 
+        print(f"📅 네이버 캘린더 요청 URL: {calendar_url}")
+        print(f"📅 요청 헤더: {headers}")
+        print(f"📅 요청 데이터: {data}")
+        print(f"📅 스케줄 JSON: {json.dumps(schedule_data, indent=2)}")
+
         response = requests.post(calendar_url, headers=headers, data=data)
 
         print(f"📅 네이버 캘린더 API 응답: {response.status_code}")
