@@ -392,7 +392,14 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-4 px-4 sm:px-0 flex-1 overflow-y-auto sm:flex-auto sm:overflow-visible">
+        <div
+          className="space-y-4 py-4 px-4 sm:px-0 flex-1 overflow-y-auto sm:flex-auto sm:overflow-visible"
+          onDoubleClick={() => {
+            if (!isEditMode) {
+              setIsEditMode(true)
+            }
+          }}
+        >
           {/* 중요 메모 */}
           <SectionCard icon={AlertCircle} title="중요 메모" show={isEditMode ? true : !!getValue('importantMemo')} isEditMode={isEditMode}>
             <Textarea
