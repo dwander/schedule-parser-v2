@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { useUsers } from '../hooks/useUsers'
 import { Badge } from '@/components/ui/badge'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 interface UserManagementDialogProps {
   open: boolean
@@ -14,7 +15,15 @@ interface UserManagementDialogProps {
 }
 
 export function UserManagementDialog({ open, onOpenChange }: UserManagementDialogProps) {
-  const { data: users = [], isLoading, error } = useUsers()
+  const { user } = useAuthStore()
+
+  // 권한 확인: 개발 환경 또는 관리자만 접근 가능
+  const hasAccess = import.meta.env.DEV || user?.isAdmin
+
+  // 권한이 있을 때만 데이터 조회
+  const { data: users = [], isLoading, error } = useUsers({
+    enabled: hasAccess
+  })
 
   // 날짜 포맷 함수 (한국 시간대 GMT+9)
   const formatDate = (dateString?: string) => {
@@ -48,25 +57,33 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
         </DialogHeader>
 
         <div className="mt-4">
-          {isLoading && (
+          {/* 권한 없음 */}
+          {!hasAccess && (
+            <div className="text-center py-8 text-destructive">
+              접근 권한이 없습니다. 관리자만 이용할 수 있습니다.
+            </div>
+          )}
+
+          {/* 권한 있음: 데이터 표시 */}
+          {hasAccess && isLoading && (
             <div className="text-center py-8 text-muted-foreground">
               불러오는 중...
             </div>
           )}
 
-          {error && (
+          {hasAccess && error && (
             <div className="text-center py-8 text-destructive">
               회원 목록을 불러오는데 실패했습니다.
             </div>
           )}
 
-          {!isLoading && !error && users.length === 0 && (
+          {hasAccess && !isLoading && !error && users.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               등록된 회원이 없습니다.
             </div>
           )}
 
-          {!isLoading && !error && users.length > 0 && (
+          {hasAccess && !isLoading && !error && users.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
