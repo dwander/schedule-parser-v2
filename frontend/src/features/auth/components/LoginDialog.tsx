@@ -180,8 +180,16 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   })
 
   const handleNaverLogin = () => {
-    console.log('네이버 로그인')
-    toast.info('네이버 로그인은 준비 중입니다')
+    const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID || 'ouNwx3uOzmpCyP21d9hT'
+    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
+    const STATE = Math.random().toString(36).substring(2, 15) // Random state
+
+    // Store state in sessionStorage for verification
+    sessionStorage.setItem('naver_state', STATE)
+
+    // Redirect to Naver login
+    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${STATE}`
+    window.location.href = naverLoginUrl
   }
 
   const handleKakaoLogin = () => {

@@ -115,7 +115,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-# --- Google OAuth Configuration ---
+# --- OAuth Configuration ---
+# Google
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 DEV_ADMIN_ID = os.getenv('VITE_DEV_ADMIN_ID')  # 개발자 관리자 ID
@@ -123,14 +124,20 @@ DEV_ADMIN_ID = os.getenv('VITE_DEV_ADMIN_ID')  # 개발자 관리자 ID
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     raise ValueError("GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET 환경변수가 설정되지 않았습니다.")
 
+# Naver
+NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
+NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
+
 # Railway 환경 자동 감지 및 redirect URI 설정
 if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
     # Railway 배포 환경 - GIS 리다이렉트 모드
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://your-app.railway.app')
     GOOGLE_REDIRECT_URI = f'{FRONTEND_URL}/auth/callback.html'
+    NAVER_REDIRECT_URI = f'{FRONTEND_URL}/auth/naver/callback'
 else:
     # 로컬 개발 환경 - GIS 리다이렉트 모드
     GOOGLE_REDIRECT_URI = 'http://localhost:5173/auth/callback.html'
+    NAVER_REDIRECT_URI = 'http://localhost:5173/auth/naver/callback'
 
 
 # --- Storage Configuration ---
@@ -141,6 +148,10 @@ ENABLE_LOCAL_BACKUP = os.getenv('ENABLE_LOCAL_BACKUP', 'false').lower() == 'true
 class GoogleAuthRequest(BaseModel):
     code: str
     redirect_uri: str = None  # 프론트엔드에서 사용한 redirect_uri를 받음
+
+class NaverAuthRequest(BaseModel):
+    code: str
+    state: str
 
 class SaveSchedulesRequest(BaseModel):
     schedules: Union[List[Dict], str]  # 압축된 문자열도 허용
@@ -969,6 +980,99 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
+
+@app.post("/auth/naver")
+async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_database)):
+    """Exchange Naver authorization code for user info."""
+    try:
+        if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
+            raise HTTPException(status_code=500, detail="Naver OAuth is not configured")
+
+        print(f"🔑 네이버 인증 코드: {auth_request.code[:20]}...")
+        print(f"🔑 네이버 state: {auth_request.state}")
+
+        # Step 1: Exchange authorization code for access token
+        token_url = "https://nid.naver.com/oauth2.0/token"
+        token_params = {
+            'grant_type': 'authorization_code',
+            'client_id': NAVER_CLIENT_ID,
+            'client_secret': NAVER_CLIENT_SECRET,
+            'code': auth_request.code,
+            'state': auth_request.state
+        }
+
+        token_response = requests.get(token_url, params=token_params)
+
+        print(f"📡 토큰 응답 상태: {token_response.status_code}")
+        if not token_response.ok:
+            print(f"❌ 토큰 에러: {token_response.text}")
+            raise HTTPException(status_code=400, detail=f"Token exchange failed: {token_response.text}")
+
+        token_json = token_response.json()
+        access_token = token_json.get('access_token')
+        refresh_token = token_json.get('refresh_token')
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="No access token received")
+
+        # Step 2: Get user info using access token
+        user_info_url = "https://openapi.naver.com/v1/nid/me"
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        user_response = requests.get(user_info_url, headers=headers)
+
+        if not user_response.ok:
+            raise HTTPException(status_code=400, detail=f"User info fetch failed: {user_response.text}")
+
+        user_data = user_response.json()
+
+        # 네이버 API 응답 구조: { "resultcode": "00", "message": "success", "response": { ... } }
+        if user_data.get('resultcode') != '00':
+            raise HTTPException(status_code=400, detail=f"Naver API error: {user_data.get('message')}")
+
+        naver_user = user_data.get('response', {})
+        naver_id = naver_user.get('id')
+
+        # Save or update user in database
+        user_id = f"naver_{naver_id}"
+
+        existing_user = db.query(User).filter(User.id == user_id).first()
+
+        if existing_user:
+            # Update existing user
+            existing_user.email = naver_user.get("email")
+            existing_user.name = naver_user.get("name") or naver_user.get("nickname")
+            existing_user.last_login = func.now()
+            print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email})")
+        else:
+            # Create new user
+            new_user = User(
+                id=user_id,
+                auth_provider="naver",
+                is_anonymous=False,
+                email=naver_user.get("email"),
+                name=naver_user.get("name") or naver_user.get("nickname"),
+                is_admin=False
+            )
+            db.add(new_user)
+            print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email})")
+
+        db.commit()
+
+        # Return user information
+        return {
+            "id": naver_id,
+            "name": naver_user.get("name") or naver_user.get("nickname"),
+            "email": naver_user.get("email"),
+            "picture": naver_user.get("profile_image"),
+            "is_admin": False,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Naver authentication failed: {str(e)}")
 
 @app.post("/auth/refresh")
 async def refresh_token(request: dict = Body(...)):

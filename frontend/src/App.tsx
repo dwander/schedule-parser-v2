@@ -15,6 +15,9 @@ import { useSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useState, useMemo, useEffect } from 'react'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
+import { useAuthStore } from '@/stores/useAuthStore'
+import axios from 'axios'
+import { toast } from 'sonner'
 
 function AppContent() {
   const [parserOpen, setParserOpen] = useState(false)
@@ -25,6 +28,57 @@ function AppContent() {
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
+  const { login } = useAuthStore()
+
+  // 네이버 로그인 callback 처리
+  useEffect(() => {
+    const handleNaverCallback = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      const state = params.get('state')
+      const path = window.location.pathname
+
+      if (path === '/auth/naver/callback' && code && state) {
+        const savedState = sessionStorage.getItem('naver_state')
+
+        if (state !== savedState) {
+          toast.error('인증 오류: state가 일치하지 않습니다')
+          window.history.replaceState({}, '', '/')
+          return
+        }
+
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const response = await axios.post(`${apiUrl}/auth/naver`, {
+            code,
+            state
+          })
+
+          const user = {
+            id: response.data.id,
+            email: response.data.email,
+            name: response.data.name,
+            picture: response.data.picture,
+            isAdmin: response.data.is_admin || false
+          }
+
+          login(user)
+          sessionStorage.removeItem('naver_state')
+          toast.success(`환영합니다, ${user.name}님!`)
+
+          // 홈으로 리다이렉트
+          window.history.replaceState({}, '', '/')
+          window.location.reload()
+        } catch (error) {
+          console.error('네이버 로그인 실패:', error)
+          toast.error('네이버 로그인에 실패했습니다')
+          window.history.replaceState({}, '', '/')
+        }
+      }
+    }
+
+    handleNaverCallback()
+  }, [])
 
   // fontSize를 html 루트에 적용 (모든 rem 단위에 영향)
   useEffect(() => {
