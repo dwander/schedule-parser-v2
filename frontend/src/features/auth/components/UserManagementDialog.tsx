@@ -19,15 +19,22 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
   // 날짜 포맷 함수 (한국 시간대 GMT+9)
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Seoul',
-    })
+
+    // UTC 시간임을 명시하기 위해 'Z' 추가 (없는 경우)
+    const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+    const date = new Date(utcString)
+
+    // 9시간 추가 (UTC → KST)
+    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000))
+
+    // YYYY-MM-DD HH:mm 형식으로 포맷
+    const year = kstDate.getUTCFullYear()
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(kstDate.getUTCDate()).padStart(2, '0')
+    const hours = String(kstDate.getUTCHours()).padStart(2, '0')
+    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`
   }
 
   return (
