@@ -2149,6 +2149,55 @@ def delete_schedule(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/schedules/migrate")
+def migrate_schedules(
+    from_user_id: str = Query(..., description="Anonymous user ID"),
+    to_user_id: str = Query(..., description="Target authenticated user ID"),
+    db: Session = Depends(get_database)
+):
+    """Migrate all schedules and tags from anonymous user to authenticated user"""
+    try:
+        print(f"🔄 Migrating data from {from_user_id} to {to_user_id}")
+
+        # Check if source user has any schedules
+        schedule_count = db.query(Schedule).filter(Schedule.user_id == from_user_id).count()
+        if schedule_count == 0:
+            return {
+                "success": True,
+                "message": "No schedules to migrate",
+                "migrated_schedules": 0,
+                "migrated_tags": 0
+            }
+
+        # Migrate schedules
+        db.query(Schedule).filter(Schedule.user_id == from_user_id).update(
+            {"user_id": to_user_id},
+            synchronize_session=False
+        )
+
+        # Migrate tags
+        tag_count = db.query(Tag).filter(Tag.user_id == from_user_id).count()
+        db.query(Tag).filter(Tag.user_id == from_user_id).update(
+            {"user_id": to_user_id},
+            synchronize_session=False
+        )
+
+        db.commit()
+
+        print(f"✅ Migration complete: {schedule_count} schedules, {tag_count} tags")
+
+        return {
+            "success": True,
+            "message": f"Successfully migrated {schedule_count} schedules and {tag_count} tags",
+            "migrated_schedules": schedule_count,
+            "migrated_tags": tag_count
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to migrate schedules: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/schedules/batch")
 def batch_create_schedules(
     schedules: List[Dict] = Body(..., embed=True),

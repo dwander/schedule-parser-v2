@@ -15,10 +15,18 @@ function generateUUID(): string {
  * For anonymous users: generate and store UUID in localStorage
  */
 export function getUserId(): string {
-  // TODO: 인증 시스템 구현 후 authState 확인
-  // if (authState.isAuthenticated && authState.user?.id) {
-  //   return `google_${authState.user.id}`
-  // }
+  // Check if user is authenticated
+  const authStorage = localStorage.getItem('auth-storage')
+  if (authStorage) {
+    try {
+      const authState = JSON.parse(authStorage)
+      if (authState.state?.isLoggedIn && authState.state?.user?.id) {
+        return `google_${authState.state.user.id}`
+      }
+    } catch (e) {
+      console.error('Failed to parse auth storage:', e)
+    }
+  }
 
   // For anonymous users, get or create UUID
   let anonymousId = localStorage.getItem('anonymous_user_id')
@@ -31,7 +39,15 @@ export function getUserId(): string {
 }
 
 /**
- * Clear anonymous user data (called when user logs in)
+ * Get anonymous user ID if it exists (without creating a new one)
+ */
+export function getAnonymousUserId(): string | null {
+  const anonymousId = localStorage.getItem('anonymous_user_id')
+  return anonymousId ? `anonymous_${anonymousId}` : null
+}
+
+/**
+ * Clear anonymous user data (called after migration)
  */
 export function clearAnonymousData() {
   localStorage.removeItem('anonymous_user_id')

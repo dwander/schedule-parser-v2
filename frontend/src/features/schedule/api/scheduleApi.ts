@@ -49,3 +49,18 @@ export async function addSchedules(schedules: NewSchedule[]): Promise<Schedule[]
   )
   return data
 }
+
+export async function migrateSchedules(fromUserId: string, toUserId: string): Promise<{
+  success: boolean
+  message: string
+  migrated_schedules: number
+  migrated_tags: number
+}> {
+  const { data } = await apiClient.post('/api/schedules/migrate', null, {
+    params: {
+      from_user_id: fromUserId,
+      to_user_id: toUserId
+    }
+  })
+  return data
+}
