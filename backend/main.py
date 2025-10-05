@@ -1224,7 +1224,16 @@ async def get_users(db: Session = Depends(get_database)):
     """Get all users (for admin panel)"""
     try:
         users = db.query(User).order_by(User.created_at.desc()).all()
-        return [user.to_dict() for user in users]
+
+        # 각 사용자의 스케줄 개수 추가
+        result = []
+        for user in users:
+            user_dict = user.to_dict()
+            schedule_count = db.query(Schedule).filter(Schedule.user_id == user.id).count()
+            user_dict['schedule_count'] = schedule_count
+            result.append(user_dict)
+
+        return result
     except Exception as e:
         logger.error(f"❌ Failed to get users: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get users: {str(e)}")

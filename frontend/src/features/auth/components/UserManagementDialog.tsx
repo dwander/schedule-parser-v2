@@ -88,12 +88,13 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-medium text-foreground">이름</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground">이메일</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground">SNS</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground">관리자</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground">가입일</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground">마지막 로그인</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">이름</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">이메일</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">SNS</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">관리자</th>
+                    <th className="text-right py-3 px-4 font-medium text-foreground whitespace-nowrap">스케줄</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">가입일</th>
+                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">마지막 로그인</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -102,14 +103,14 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
                       key={user.id}
                       className="border-b border-border hover:bg-accent/50 transition-colors"
                     >
-                      <td className="py-3 px-4 text-foreground">{user.name || '-'}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{user.email || '-'}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-foreground whitespace-nowrap">{user.name || '-'}</td>
+                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{user.email || '-'}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <Badge variant="outline" className="text-xs">
                           {user.auth_provider || 'unknown'}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         {user.is_admin ? (
                           <Badge variant="default" className="text-xs">
                             관리자
@@ -118,10 +119,13 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
                           <span className="text-muted-foreground text-xs">일반</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground text-xs">
+                      <td className="py-3 px-4 text-right text-muted-foreground whitespace-nowrap">
+                        {user.schedule_count?.toLocaleString() || 0}개
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground text-xs whitespace-nowrap">
                         {formatDate(user.created_at)}
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground text-xs">
+                      <td className="py-3 px-4 text-muted-foreground text-xs whitespace-nowrap">
                         {formatDate(user.last_login)}
                       </td>
                     </tr>

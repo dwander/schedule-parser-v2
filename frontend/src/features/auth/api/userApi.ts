@@ -13,6 +13,7 @@ export interface UserDetail {
   has_seen_sample_data: boolean
   created_at: string | null
   last_login: string | null
+  schedule_count?: number
 }
 
 /**
