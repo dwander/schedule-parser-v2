@@ -2,6 +2,7 @@ import { flexRender } from '@tanstack/react-table'
 import { useSchedules, useDeleteSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
+import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
 import { Trash2, Settings, Search, Calendar, CalendarOff } from 'lucide-react'
@@ -49,10 +50,17 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [flexWidth, setFlexWidth] = useState(0)
-  const [tableWidth, setTableWidth] = useState('100%')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { theme, setTheme, viewMode, setViewMode } = useSettingsStore()
+
+  // 가변폭 컬럼 크기 자동 계산 (memo 또는 spacer)
+  const { flexWidth, tableWidth } = useFlexColumnWidth(
+    containerRef,
+    table,
+    flexColumnId,
+    viewMode,
+    data
+  )
 
   // Grid virtualizer (card 모드일 때만)
   const gridContainerRef = useRef<HTMLDivElement>(null)
@@ -112,53 +120,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
     },
     measureElement: (el) => el.getBoundingClientRect().height + gap,
   })
-
-  // 가변폭 계산 함수
-  const calculateFlexWidth = () => {
-    if (!containerRef.current) return
-
-    // clientWidth는 border를 제외한 내부 너비 (offsetWidth - border)
-    const containerWidth = containerRef.current.clientWidth
-
-    // 보이는 컬럼만 필터링하여 계산
-    const fixedColumnsWidth = table
-      .getAllColumns()
-      .filter((col) => col.getIsVisible() && col.id !== 'memo' && col.id !== 'spacer')
-      .reduce((sum, col) => sum + col.getSize(), 0)
-
-    // 가변폭 계산 시 24px 패딩 고려
-    const availableWidth = Math.max(150, containerWidth - fixedColumnsWidth - 24)
-    setFlexWidth(availableWidth)
-
-    // 실제 필요한 테이블 폭 계산 (고정 + 가변 + 24px 보정)
-    const calculatedTableWidth = fixedColumnsWidth + availableWidth + 24
-    setTableWidth(`${calculatedTableWidth}px`)
-
-    // 가변폭 컬럼 크기 업데이트
-    const flexColumn = table.getAllColumns().find((col) => col.id === flexColumnId)
-    if (flexColumn) {
-      flexColumn.columnDef.size = availableWidth
-    }
-  }
-
-  // 가변폭 컬럼 크기 계산 (memo 또는 spacer)
-  useLayoutEffect(() => {
-    // 초기 계산 및 리사이즈 이벤트 등록
-    calculateFlexWidth()
-    window.addEventListener('resize', calculateFlexWidth)
-    return () => window.removeEventListener('resize', calculateFlexWidth)
-  }, [table, data, flexColumnId, table.getState().columnVisibility])
-
-  // 뷰모드 전환 시 강제 재계산
-  useEffect(() => {
-    if (viewMode === 'list') {
-      // DOM 업데이트 대기 후 재계산
-      const timeoutId = setTimeout(() => {
-        calculateFlexWidth()
-      }, 50)
-      return () => clearTimeout(timeoutId)
-    }
-  }, [viewMode])
 
   if (isLoading) {
     return (
