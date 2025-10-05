@@ -5,6 +5,7 @@ interface UseVoiceRecognitionProps {
   enabled: boolean
   trainingData: VoiceTrainingData
   onMatch: (itemText: string) => void
+  onCollect?: (phrase: string) => void  // 훈련 모드용
 }
 
 // 한글 유니코드 상수
@@ -187,13 +188,14 @@ function findBestMatchInSentence(sentence: string, keyword: string): number {
   return maxSimilarity
 }
 
-export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoiceRecognitionProps) {
+export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect }: UseVoiceRecognitionProps) {
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
   const recognitionRef = useRef<any>(null)
   const enabledRef = useRef(enabled)
   const trainingDataRef = useRef(trainingData)
   const onMatchRef = useRef(onMatch)
+  const onCollectRef = useRef(onCollect)
 
   // ref 업데이트
   useEffect(() => {
@@ -207,6 +209,10 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
   useEffect(() => {
     onMatchRef.current = onMatch
   }, [onMatch])
+
+  useEffect(() => {
+    onCollectRef.current = onCollect
+  }, [onCollect])
 
   // 음성 인식 인스턴스 생성 (한 번만)
   useEffect(() => {
@@ -255,6 +261,11 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch }: UseVoice
 
       // 최종 결과일 때만 매칭
       if (isFinal) {
+        // onCollect 콜백이 있으면 수집 (훈련 모드)
+        if (onCollectRef.current) {
+          onCollectRef.current(transcript)
+        }
+
         const normalizedTranscript = normalizeText(transcript)
         let bestMatch: { itemText: string; keyword: string; similarity: number } | null = null
 
