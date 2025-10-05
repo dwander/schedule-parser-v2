@@ -1107,7 +1107,8 @@ async def add_naver_calendar(request: NaverCalendarRequest):
         calendar_url = "https://openapi.naver.com/calendar/createSchedule.json"
 
         headers = {
-            'Authorization': f'Bearer {request.access_token}'
+            'Authorization': f'Bearer {request.access_token}',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
 
         # 날짜 형식 변환: 2025-10-11T04:30:00 → 20251011T043000
@@ -1120,12 +1121,7 @@ async def add_naver_calendar(request: NaverCalendarRequest):
         uid = str(uuid.uuid4())
         now = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
 
-        # URL 인코딩
-        subject = urllib.parse.quote(request.subject)
-        location = urllib.parse.quote(request.location) if request.location else ""
-        description = urllib.parse.quote(request.description) if request.description else ""
-
-        # iCalendar 형식 문자열 생성
+        # iCalendar 형식 문자열 생성 (인코딩 전 원본값 사용)
         ical_string = "BEGIN:VCALENDAR\n"
         ical_string += "VERSION:2.0\n"
         ical_string += "PRODID:Naver Calendar\n"
@@ -1146,21 +1142,25 @@ async def add_naver_calendar(request: NaverCalendarRequest):
         ical_string += f"UID:{uid}\n"
         ical_string += f"DTSTART;TZID=Asia/Seoul:{start_dt}\n"
         ical_string += f"DTEND;TZID=Asia/Seoul:{end_dt}\n"
-        ical_string += f"SUMMARY:{subject}\n"
-        if description:
-            ical_string += f"DESCRIPTION:{description}\n"
-        if location:
-            ical_string += f"LOCATION:{location}\n"
+        ical_string += f"SUMMARY:{request.subject}\n"
+        if request.description:
+            ical_string += f"DESCRIPTION:{request.description}\n"
+        if request.location:
+            ical_string += f"LOCATION:{request.location}\n"
         ical_string += f"CREATED:{now}\n"
         ical_string += f"LAST-MODIFIED:{now}\n"
         ical_string += f"DTSTAMP:{now}\n"
         ical_string += "END:VEVENT\n"
         ical_string += "END:VCALENDAR"
 
+        # 전체 iCalendar 문자열을 URL 인코딩
+        encoded_ical_string = urllib.parse.quote(ical_string)
+
         # form-data 형식으로 전송
-        data = f"calendarId=defaultCalendarId&scheduleIcalString={ical_string}"
+        data = f"calendarId=defaultCalendarId&scheduleIcalString={encoded_ical_string}"
 
         print(f"📅 네이버 캘린더 iCal String (처음 200자): {ical_string[:200]}")
+        print(f"📅 인코딩된 iCal String (처음 200자): {encoded_ical_string[:200]}")
 
         response = requests.post(calendar_url, headers=headers, data=data.encode('utf-8'))
 
