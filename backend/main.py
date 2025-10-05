@@ -948,20 +948,19 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         # Save or update user in database
         user_id = f"google_{user_data.get('id')}"
         google_id = user_data.get('id')
-        is_admin = (google_id == DEV_ADMIN_ID) if DEV_ADMIN_ID else False
 
         existing_user = db.query(User).filter(User.id == user_id).first()
 
         if existing_user:
-            # Update existing user
+            # Update existing user (is_admin 값은 유지)
             existing_user.email = user_data.get("email")
             existing_user.name = user_data.get("name")
-            existing_user.is_admin = is_admin  # 관리자 상태 업데이트
             existing_user.last_login = func.now()
-            admin_badge = "🔑 [관리자]" if is_admin else ""
+            admin_badge = "🔑 [관리자]" if existing_user.is_admin else ""
             print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email}) {admin_badge}")
         else:
-            # Create new user
+            # Create new user (신규 사용자만 DEV_ADMIN_ID 체크)
+            is_admin = (google_id == DEV_ADMIN_ID) if DEV_ADMIN_ID else False
             new_user = User(
                 id=user_id,
                 auth_provider="google",
@@ -1069,13 +1068,16 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
         db.commit()
 
+        # Get the final user object to return current is_admin value
+        final_user = db.query(User).filter(User.id == user_id).first()
+
         # Return user information
         return {
             "id": naver_id,
             "name": naver_user.get("name") or naver_user.get("nickname"),
             "email": naver_user.get("email"),
             "picture": naver_user.get("profile_image"),
-            "is_admin": False,
+            "is_admin": final_user.is_admin if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
@@ -1161,13 +1163,16 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
 
         db.commit()
 
+        # Get the final user object to return current is_admin value
+        final_user = db.query(User).filter(User.id == user_id).first()
+
         # Return user information
         return {
             "id": kakao_id,
             "name": profile.get("nickname"),
             "email": kakao_account.get("email"),
             "picture": profile.get("profile_image_url"),
-            "is_admin": False,
+            "is_admin": final_user.is_admin if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
