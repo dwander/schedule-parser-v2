@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserModal } from './features/parser/components/ParserModal'
@@ -134,13 +135,21 @@ function AppContent() {
 }
 
 function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+  if (!googleClientId) {
+    console.error('VITE_GOOGLE_CLIENT_ID is not defined')
+  }
+
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AppContent />
-        </QueryClientProvider>
-      </ThemeProvider>
+      <GoogleOAuthProvider clientId={googleClientId || ''}>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <AppContent />
+          </QueryClientProvider>
+        </ThemeProvider>
+      </GoogleOAuthProvider>
     </ErrorBoundary>
   )
 }

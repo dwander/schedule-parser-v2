@@ -886,6 +886,9 @@ async def google_auth(auth_request: GoogleAuthRequest):
         # 프론트엔드에서 전달받은 redirect_uri 사용, 없으면 기본값 사용
         redirect_uri = auth_request.redirect_uri or GOOGLE_REDIRECT_URI
 
+        print(f"🔑 받은 인증 코드: {auth_request.code[:20]}...")
+        print(f"🔗 사용할 redirect_uri: {redirect_uri}")
+
         # Step 1: Exchange authorization code for access token
         token_url = "https://oauth2.googleapis.com/token"
         token_data = {
@@ -897,6 +900,10 @@ async def google_auth(auth_request: GoogleAuthRequest):
         }
 
         token_response = requests.post(token_url, data=token_data)
+
+        print(f"📡 토큰 응답 상태: {token_response.status_code}")
+        if not token_response.ok:
+            print(f"❌ 토큰 에러: {token_response.text}")
 
         if not token_response.ok:
             raise HTTPException(status_code=400, detail=f"Token exchange failed: {token_response.text}")

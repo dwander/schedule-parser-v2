@@ -6,6 +6,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useGoogleLogin } from '@react-oauth/google'
+import { toast } from 'sonner'
+import axios from 'axios'
 
 interface LoginDialogProps {
   open: boolean
@@ -13,19 +16,46 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const handleGoogleLogin = () => {
-    console.log('구글 로그인')
-    // TODO: 구글 OAuth 로그인 구현
-  }
+  const redirectUri = 'http://localhost:5173'
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      console.log('구글 인증 코드 받음:', codeResponse)
+
+      try {
+        // 백엔드로 authorization code 전송
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+        const response = await axios.post(`${apiUrl}/auth/google`, {
+          code: codeResponse.code,
+          redirect_uri: redirectUri
+        })
+
+        console.log('백엔드 응답:', response.data)
+
+        // TODO: 사용자 정보 저장 및 인증 상태 업데이트
+        toast.success(`환영합니다, ${response.data.name}님!`)
+        onOpenChange(false)
+      } catch (error) {
+        console.error('백엔드 인증 실패:', error)
+        toast.error('로그인 처리 중 오류가 발생했습니다')
+      }
+    },
+    onError: (error) => {
+      console.error('구글 로그인 실패:', error)
+      toast.error('구글 로그인에 실패했습니다')
+    },
+    flow: 'auth-code',
+    redirect_uri: redirectUri
+  })
 
   const handleNaverLogin = () => {
     console.log('네이버 로그인')
-    // TODO: 네이버 로그인 구현
+    toast.info('네이버 로그인은 준비 중입니다')
   }
 
   const handleKakaoLogin = () => {
     console.log('카카오 로그인')
-    // TODO: 카카오 로그인 구현
+    toast.info('카카오 로그인은 준비 중입니다')
   }
 
   return (
@@ -43,7 +73,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           <Button
             variant="outline"
             className="w-full h-12 text-base"
-            onClick={handleGoogleLogin}
+            onClick={() => handleGoogleLogin()}
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
