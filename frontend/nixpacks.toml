@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs_20']
+nixPkgs = ['nodejs_22']
 
 [phases.install]
 cmds = [
@@ -10,4 +10,4 @@ cmds = [
 cmds = ['npm run build']
 
 [start]
-cmd = 'npx serve -s dist -l $PORT'
+cmd = 'npx serve -s dist -p $PORT'
