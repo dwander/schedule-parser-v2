@@ -5,7 +5,7 @@ import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
-import { Trash2, Settings, Search, Calendar, CalendarOff } from 'lucide-react'
+import { Trash2, Search, Calendar, CalendarOff, LayoutList, LayoutGrid } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -19,8 +19,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DateRangeFilterDialog } from './DateRangeFilterDialog'
@@ -51,7 +49,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const { theme, setTheme, viewMode, setViewMode } = useSettingsStore()
+  const { viewMode, setViewMode } = useSettingsStore()
 
   // 가변폭 컬럼 크기 자동 계산 (memo 또는 spacer)
   const { flexWidth, tableWidth } = useFlexColumnWidth(
@@ -281,37 +279,19 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <DropdownMenuLabel>보기 모드 전환</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as 'list' | 'card')}>
-                <DropdownMenuRadioItem value="list">리스트형</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="card">카드형</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>UI 테마</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}>
-                <DropdownMenuRadioItem value="light">라이트 모드</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">다크 모드</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="system">시스템 설정</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>섹션3</DropdownMenuLabel>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}
+            title={viewMode === 'list' ? '카드형으로 전환' : '리스트형으로 전환'}
+          >
+            {viewMode === 'list' ? (
+              <LayoutGrid className="h-4 w-4" />
+            ) : (
+              <LayoutList className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
