@@ -52,8 +52,7 @@ export function ParsedDataPreview({ parsedData, onSaved }: ParsedDataPreviewProp
               <tr>
                 <th className="px-4 py-2 text-left">날짜</th>
                 <th className="px-4 py-2 text-left">시간</th>
-                <th className="px-4 py-2 text-left">신랑</th>
-                <th className="px-4 py-2 text-left">신부</th>
+                <th className="px-4 py-2 text-left">신랑신부</th>
                 <th className="px-4 py-2 text-left">장소</th>
                 <th className="px-4 py-2 text-left">브랜드</th>
                 <th className="px-4 py-2 text-left">컷수</th>
@@ -64,8 +63,7 @@ export function ParsedDataPreview({ parsedData, onSaved }: ParsedDataPreviewProp
                 <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-2">{schedule.date}</td>
                   <td className="px-4 py-2">{schedule.time}</td>
-                  <td className="px-4 py-2">{schedule.groom}</td>
-                  <td className="px-4 py-2">{schedule.bride}</td>
+                  <td className="px-4 py-2">{schedule.couple}</td>
                   <td className="px-4 py-2">{schedule.location}</td>
                   <td className="px-4 py-2">{schedule.brand}</td>
                   <td className="px-4 py-2">{schedule.cuts}</td>

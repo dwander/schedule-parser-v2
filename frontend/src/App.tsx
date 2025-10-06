@@ -219,14 +219,12 @@ function AppContent() {
           schedule.date?.toLowerCase().includes(searchLower) ||
           schedule.time?.toLowerCase().includes(searchLower) ||
           schedule.location?.toLowerCase().includes(searchLower) ||
-          schedule.groom?.toLowerCase().includes(searchLower) ||
-          schedule.bride?.toLowerCase().includes(searchLower) ||
+          schedule.couple?.toLowerCase().includes(searchLower) ||
           schedule.brand?.toLowerCase().includes(searchLower) ||
           schedule.album?.toLowerCase().includes(searchLower) ||
           schedule.photographer?.toLowerCase().includes(searchLower) ||
           schedule.manager?.toLowerCase().includes(searchLower) ||
           schedule.memo?.toLowerCase().includes(searchLower) ||
-          schedule.folderName?.toLowerCase().includes(searchLower) ||
           schedule.contact?.toLowerCase().includes(searchLower) ||
           schedule.cuts?.toString().includes(searchLower) ||
           schedule.price?.toString().includes(searchLower)
