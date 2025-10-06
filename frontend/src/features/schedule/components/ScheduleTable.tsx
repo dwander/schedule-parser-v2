@@ -224,23 +224,25 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
           </Button>
 
         <div className="flex items-center gap-1 ml-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleDeleteClick}
-            disabled={!hasSelection}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {columnVisibility.select && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={handleDeleteClick}
+              disabled={!hasSelection}
+            >
+              <Trash2 className={`h-5 w-5 ${hasSelection ? 'text-destructive' : ''}`} />
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-9 w-9"
               >
-                <MixerHorizontalIcon className="h-4 w-4" />
+                <MixerHorizontalIcon className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
@@ -282,14 +284,14 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-9 w-9"
             onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}
             title={viewMode === 'list' ? '카드형으로 전환' : '리스트형으로 전환'}
           >
             {viewMode === 'list' ? (
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-5 w-5" />
             ) : (
-              <LayoutList className="h-4 w-4" />
+              <LayoutList className="h-5 w-5" />
             )}
           </Button>
         </div>
