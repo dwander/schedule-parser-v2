@@ -28,7 +28,7 @@ function AppContent() {
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
-  const { login } = useAuthStore()
+  const { login, updateNaverToken } = useAuthStore()
 
   // 네이버 로그인 callback 처리
   useEffect(() => {
@@ -119,6 +119,49 @@ function AppContent() {
     }
 
     handleKakaoCallback()
+  }, [])
+
+  // 네이버 캘린더 연동 callback 처리
+  useEffect(() => {
+    const handleNaverCalendarCallback = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      const state = params.get('state')
+      const path = window.location.pathname
+
+      if (path === '/auth/naver/calendar/callback' && code && state) {
+        const savedState = sessionStorage.getItem('naver_calendar_state')
+
+        if (state !== savedState) {
+          toast.error('인증 오류: state가 일치하지 않습니다')
+          window.history.replaceState({}, '', '/')
+          return
+        }
+
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const response = await axios.post(`${apiUrl}/auth/naver`, {
+            code,
+            state
+          })
+
+          // 로그인이 아닌 토큰만 저장
+          updateNaverToken(response.data.access_token, response.data.refresh_token)
+          sessionStorage.removeItem('naver_calendar_state')
+          toast.success('네이버 캘린더 연동이 완료되었습니다')
+
+          // 홈으로 리다이렉트
+          window.history.replaceState({}, '', '/')
+          window.location.reload()
+        } catch (error) {
+          console.error('네이버 캘린더 연동 실패:', error)
+          toast.error('네이버 캘린더 연동에 실패했습니다')
+          window.history.replaceState({}, '', '/')
+        }
+      }
+    }
+
+    handleNaverCalendarCallback()
   }, [])
 
   // fontSize를 html 루트에 적용 (모든 rem 단위에 영향)

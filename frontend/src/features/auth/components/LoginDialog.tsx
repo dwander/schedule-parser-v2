@@ -181,9 +181,14 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   })
 
   const handleNaverLogin = () => {
-    const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID || 'ouNwx3uOzmpCyP21d9hT'
+    const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID
     const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
     const STATE = Math.random().toString(36).substring(2, 15) // Random state
+
+    if (!NAVER_CLIENT_ID) {
+      toast.error('네이버 클라이언트 ID가 설정되지 않았습니다')
+      return
+    }
 
     // Store state in sessionStorage for verification
     sessionStorage.setItem('naver_state', STATE)
@@ -194,8 +199,13 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   }
 
   const handleKakaoLogin = () => {
-    const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || '22128eb4e8871df36806f59ddc27b65b'
+    const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY
     const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
+
+    if (!KAKAO_REST_API_KEY) {
+      toast.error('카카오 REST API 키가 설정되지 않았습니다')
+      return
+    }
 
     // Redirect to Kakao login
     const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`

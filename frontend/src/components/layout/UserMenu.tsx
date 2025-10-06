@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut } from 'lucide-react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Link, Unlink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -15,6 +15,8 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
+import { toast } from 'sonner'
 
 interface UserMenuProps {
   onFolderSyncClick?: () => void
@@ -22,7 +24,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuProps) {
-  const { user, logout } = useAuthStore()
+  const { user, logout, removeNaverToken } = useAuthStore()
   const { setTestPanelVisible } = useSettingsStore()
   const [loginOpen, setLoginOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -41,6 +43,18 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
     setTestPanelVisible(true)
   }
 
+  const handleNaverCalendarLink = () => {
+    startNaverCalendarLink()
+  }
+
+  const handleNaverCalendarUnlink = () => {
+    removeNaverToken()
+    toast.success('네이버 캘린더 연동이 해제되었습니다')
+  }
+
+  // 네이버 캘린더 연동 여부 확인
+  const isNaverCalendarLinked = !!user?.naverAccessToken
+
   // 드롭다운 메뉴 내용 (재사용)
   const renderMenuContent = () => (
     <>
@@ -57,6 +71,18 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
             테마 설정
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {isNaverCalendarLinked ? (
+            <DropdownMenuItem onClick={handleNaverCalendarUnlink}>
+              <Unlink className="mr-2 h-4 w-4" />
+              네이버 캘린더 연동 해제
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={handleNaverCalendarLink}>
+              <Link className="mr-2 h-4 w-4" />
+              네이버 캘린더 연동
+            </DropdownMenuItem>
+          )}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
 

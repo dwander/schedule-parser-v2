@@ -18,6 +18,8 @@ interface AuthState {
   // Actions
   login: (user: User) => void
   logout: () => void
+  updateNaverToken: (accessToken: string, refreshToken: string) => void
+  removeNaverToken: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -30,6 +32,18 @@ export const useAuthStore = create<AuthState>()(
       // Actions
       login: (user) => set({ user, isLoggedIn: true }),
       logout: () => set({ user: null, isLoggedIn: false }),
+      updateNaverToken: (accessToken, refreshToken) =>
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, naverAccessToken: accessToken, naverRefreshToken: refreshToken }
+            : null,
+        })),
+      removeNaverToken: () =>
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, naverAccessToken: undefined, naverRefreshToken: undefined }
+            : null,
+        })),
     }),
     {
       name: 'auth-storage', // localStorage key

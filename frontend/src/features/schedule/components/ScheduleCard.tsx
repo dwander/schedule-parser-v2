@@ -74,8 +74,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarClick = () => {
-    // 네이버 로그인 확인
-    if (!user?.naverAccessToken || !user?.id?.startsWith('naver_')) {
+    // 네이버 캘린더 연동 확인
+    if (!user?.naverAccessToken) {
       setNaverLoginPromptOpen(true)
       return
     }
@@ -572,12 +572,12 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         onConfirm={handleNaverCalendarConfirm}
       />
 
-      {/* Naver Login Prompt Dialog */}
+      {/* Naver Calendar Link Prompt Dialog */}
       <AlertDialog
         open={naverLoginPromptOpen}
         onOpenChange={setNaverLoginPromptOpen}
-        title="네이버 로그인 필요"
-        description="네이버 캘린더에 일정을 추가하려면 네이버 계정으로 로그인해주세요."
+        title="네이버 캘린더 연동 필요"
+        description="네이버 캘린더에 일정을 추가하려면 설정 메뉴에서 네이버 캘린더를 연동해주세요."
       />
     </div>
   )
