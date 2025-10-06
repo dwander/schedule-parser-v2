@@ -98,7 +98,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       fontSize: 16,
       priceMode: 'total',
-      testPanelVisible: true,
+      testPanelVisible: false,
       viewMode: 'list',
       // 리스트뷰 컬럼 가시성
       listColumnVisibility: {
