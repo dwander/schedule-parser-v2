@@ -77,12 +77,11 @@ if FRONTEND_URL:
 # Railway 환경에서는 모든 Railway 도메인 허용 (프로덕션, 테스트 등)
 if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
     origins.extend([
-        "https://kakaotalk-schedule-parser.up.railway.app",
-        "https://bs-snaper-test.up.railway.app",
-        "https://bs-snaper.up.railway.app",
+        "https://bs-snaper-frontend.up.railway.app",
+        "https://bs-snaper-backend.up.railway.app",
+        "https://bs-snaper-frontend-test.up.railway.app",
+        "https://bs-snaper-backend-test.up.railway.app",
 		"https://bssnaper.enfree.com",
-		"https://bonsiksched.enfree.com",
-		"https://schedule-parser-backend-test.up.railway.app"
     ])
 
 app.add_middleware(
