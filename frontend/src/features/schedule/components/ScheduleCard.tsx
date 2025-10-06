@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarPlus, Clock, MapPin, Phone, User, Camera, Image, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
+import { Calendar, CalendarPlus, Clock, MapPin, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -204,7 +204,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               className="font-medium text-base"
             />
           </div>
-          <div className="flex items-center text-xs text-muted-foreground -space-x-3">
+          <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <DatePickerCell
               value={schedule.date}
               onSave={(value) => {
@@ -352,7 +352,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {/* Cuts */}
             {columnVisibility.cuts && (
               <div className="flex items-center gap-2">
-                <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <FileDigit className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <EditableCell
                     value={schedule.cuts}
