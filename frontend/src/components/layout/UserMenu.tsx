@@ -40,22 +40,111 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
     setTestPanelVisible(true)
   }
 
-  // 로그인하지 않은 경우 - 로그인 버튼
+  // 드롭다운 메뉴 내용 (재사용)
+  const renderMenuContent = () => (
+    <>
+      {/* 설정 서브메뉴 */}
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>설정</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuItem onClick={() => setAppSettingsOpen(true)}>
+            앱 설정
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+            테마 설정
+          </DropdownMenuItem>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+
+      {/* 데이터 관리 서브메뉴 */}
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>
+          <Database className="mr-2 h-4 w-4" />
+          <span>데이터 관리</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuItem onClick={onFolderSyncClick}>
+            <FolderSync className="mr-2 h-4 w-4" />
+            폴더 동기화
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onBackupRestoreClick}>
+            <Database className="mr-2 h-4 w-4" />
+            데이터 백업 및 복원
+          </DropdownMenuItem>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+
+      {/* 개발자 도구 서브메뉴 (관리자만) */}
+      {user?.isAdmin && (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Code className="mr-2 h-4 w-4" />
+            <span>개발자 도구</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem onClick={handleUsersManagement}>
+              <Users className="mr-2 h-4 w-4" />
+              회원 관리
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleUITestPanel}>
+              <TestTube2 className="mr-2 h-4 w-4" />
+              UI 테스트 패널
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      )}
+
+      {/* 로그아웃 (로그인한 사용자만) */}
+      {user && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>로그아웃</span>
+          </DropdownMenuItem>
+        </>
+      )}
+    </>
+  )
+
+  // 로그인하지 않은 경우 - 설정 버튼 + 로그인 버튼
   if (!user) {
     return (
       <>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setLoginOpen(true)}
-          className="group transition-all hover:bg-accent"
-        >
-          <LogIn className="h-5 w-5 group-hover:scale-110 transition-transform" />
-          <span className="ml-0 max-w-0 overflow-hidden opacity-0 group-hover:ml-2 group-hover:max-w-[5rem] group-hover:opacity-100 transition-all duration-300">
-            로그인
-          </span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {renderMenuContent()}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLoginOpen(true)}
+            className="group transition-all hover:bg-accent"
+          >
+            <LogIn className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            <span className="ml-0 max-w-0 overflow-hidden opacity-0 group-hover:ml-2 group-hover:max-w-[5rem] group-hover:opacity-100 transition-all duration-300">
+              로그인
+            </span>
+          </Button>
+        </div>
         <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
       </>
     )
   }
@@ -84,66 +173,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {/* 설정 서브메뉴 */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>설정</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setAppSettingsOpen(true)}>
-                앱 설정
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                테마 설정
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          {/* 데이터 관리 서브메뉴 */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Database className="mr-2 h-4 w-4" />
-              <span>데이터 관리</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={onFolderSyncClick}>
-                <FolderSync className="mr-2 h-4 w-4" />
-                폴더 동기화
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onBackupRestoreClick}>
-                <Database className="mr-2 h-4 w-4" />
-                데이터 백업 및 복원
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          {/* 개발자 도구 서브메뉴 (관리자만) */}
-          {user.isAdmin && (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Code className="mr-2 h-4 w-4" />
-                <span>개발자 도구</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={handleUsersManagement}>
-                  <Users className="mr-2 h-4 w-4" />
-                  회원 관리
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleUITestPanel}>
-                  <TestTube2 className="mr-2 h-4 w-4" />
-                  UI 테스트 패널
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )}
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>로그아웃</span>
-          </DropdownMenuItem>
+          {renderMenuContent()}
         </DropdownMenuContent>
       </DropdownMenu>
 
