@@ -73,6 +73,10 @@ interface SettingsState {
   dateRangeFilter: { from: Date | null; to: Date | null }
   setDateRangeFilter: (range: { from: Date | null; to: Date | null }) => void
 
+  // 캘린더 연동 설정
+  enabledCalendars: { google: boolean; naver: boolean }
+  setEnabledCalendars: (calendars: { google: boolean; naver: boolean }) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -138,6 +142,7 @@ export const useSettingsStore = create<SettingsState>()(
         folderName: '폴더',
       },
       dateRangeFilter: { from: null, to: null },
+      enabledCalendars: { google: true, naver: true },
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -158,6 +163,7 @@ export const useSettingsStore = create<SettingsState>()(
           columnLabels: { ...state.columnLabels, [columnId]: label }
         })),
       setDateRangeFilter: (range) => set({ dateRangeFilter: range }),
+      setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
     }),
     {
       name: 'app-settings', // localStorage key

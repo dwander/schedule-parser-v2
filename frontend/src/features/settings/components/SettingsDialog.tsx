@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Settings, Palette, Type, LayoutGrid } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Settings, Palette, Type, Calendar } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface SettingsDialogProps {
@@ -27,8 +28,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setTheme,
     fontSize,
     setFontSize,
-    viewMode,
-    setViewMode,
+    enabledCalendars,
+    setEnabledCalendars,
   } = useSettingsStore()
 
   const getThemeLabel = () => {
@@ -41,17 +42,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         return '시스템 설정'
       default:
         return '시스템 설정'
-    }
-  }
-
-  const getViewModeLabel = () => {
-    switch (viewMode) {
-      case 'list':
-        return '테이블 뷰'
-      case 'card':
-        return '카드 뷰'
-      default:
-        return '테이블 뷰'
     }
   }
 
@@ -115,25 +105,45 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </div>
 
-          {/* 뷰 설정 */}
+          {/* 캘린더 연동 */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4" />
-              뷰 설정
+              <Calendar className="h-4 w-4" />
+              캘린더 연동
             </h3>
 
-            {/* 뷰 모드 */}
-            <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">뷰 모드</label>
-              <Select value={viewMode} onValueChange={setViewMode}>
-                <SelectTrigger className="w-full focus:ring-1 focus:ring-ring/30 focus:outline-none">
-                  <SelectValue>{getViewModeLabel()}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="list">테이블 뷰</SelectItem>
-                  <SelectItem value="card">카드 뷰</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* 캘린더 선택 */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="google-calendar"
+                  checked={enabledCalendars.google}
+                  onCheckedChange={(checked) =>
+                    setEnabledCalendars({ ...enabledCalendars, google: checked === true })
+                  }
+                />
+                <label
+                  htmlFor="google-calendar"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  구글 캘린더
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="naver-calendar"
+                  checked={enabledCalendars.naver}
+                  onCheckedChange={(checked) =>
+                    setEnabledCalendars({ ...enabledCalendars, naver: checked === true })
+                  }
+                />
+                <label
+                  htmlFor="naver-calendar"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  네이버 캘린더
+                </label>
+              </div>
             </div>
           </div>
 
