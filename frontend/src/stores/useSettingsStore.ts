@@ -57,9 +57,13 @@ interface SettingsState {
   viewMode: 'list' | 'card'
   setViewMode: (mode: 'list' | 'card') => void
 
-  // 테이블 컬럼 가시성
-  columnVisibility: ColumnVisibility
-  setColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
+  // 리스트뷰 컬럼 가시성
+  listColumnVisibility: ColumnVisibility
+  setListColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
+
+  // 카드뷰 컬럼 가시성
+  cardColumnVisibility: ColumnVisibility
+  setCardColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
 
   // 테이블 컬럼 라벨
   columnLabels: ColumnLabels
@@ -84,13 +88,31 @@ export const useSettingsStore = create<SettingsState>()(
       priceMode: 'total',
       testPanelVisible: true,
       viewMode: 'list',
-      columnVisibility: {
+      // 리스트뷰 컬럼 가시성
+      listColumnVisibility: {
         select: true,
         date: true,
         location: true,
         time: true,
         couple: true,
         contact: false,
+        brand: true,
+        album: true,
+        photographer: false,
+        cuts: true,
+        price: true,
+        manager: false,
+        memo: true,
+        folderName: true,
+      },
+      // 카드뷰 컬럼 가시성
+      cardColumnVisibility: {
+        select: true,
+        date: true,
+        location: true,
+        time: true,
+        couple: true,
+        contact: true,
         brand: true,
         album: true,
         photographer: false,
@@ -123,9 +145,13 @@ export const useSettingsStore = create<SettingsState>()(
       setPriceMode: (mode) => set({ priceMode: mode }),
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
       setViewMode: (mode) => set({ viewMode: mode }),
-      setColumnVisibility: (visibility) =>
+      setListColumnVisibility: (visibility) =>
         set((state) => ({
-          columnVisibility: { ...state.columnVisibility, ...visibility }
+          listColumnVisibility: { ...state.listColumnVisibility, ...visibility }
+        })),
+      setCardColumnVisibility: (visibility) =>
+        set((state) => ({
+          cardColumnVisibility: { ...state.cardColumnVisibility, ...visibility }
         })),
       setColumnLabel: (columnId, label) =>
         set((state) => ({

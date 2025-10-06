@@ -105,9 +105,15 @@ export function useScheduleTable(
     return { duplicateSchedules: duplicates, conflictSchedules: conflicts }
   }, [filteredData])
 
-  // 컬럼 가시성 설정 (zustand store에서 가져오기)
-  const columnVisibility = useSettingsStore((state) => state.columnVisibility)
-  const updateColumnVisibility = useSettingsStore((state) => state.setColumnVisibility)
+  // 뷰 모드에 따른 컬럼 가시성 설정 (zustand store에서 가져오기)
+  const viewMode = useSettingsStore((state) => state.viewMode)
+  const listColumnVisibility = useSettingsStore((state) => state.listColumnVisibility)
+  const cardColumnVisibility = useSettingsStore((state) => state.cardColumnVisibility)
+  const updateListColumnVisibility = useSettingsStore((state) => state.setListColumnVisibility)
+  const updateCardColumnVisibility = useSettingsStore((state) => state.setCardColumnVisibility)
+
+  // 현재 뷰 모드에 따른 컬럼 가시성 선택
+  const columnVisibility = viewMode === 'list' ? listColumnVisibility : cardColumnVisibility
 
   // 컬럼 라벨 설정
   const columnLabels = useSettingsStore((state) => state.columnLabels)
@@ -116,7 +122,12 @@ export function useScheduleTable(
   // TanStack Table용 setter (Record<string, boolean> 형식 받음)
   const setColumnVisibility = (updater: any) => {
     const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater
-    updateColumnVisibility(newVisibility)
+    // 현재 뷰 모드에 따라 적절한 setter 호출
+    if (viewMode === 'list') {
+      updateListColumnVisibility(newVisibility)
+    } else {
+      updateCardColumnVisibility(newVisibility)
+    }
   }
 
   // 가변폭 컬럼 ID (memo가 숨겨지면 spacer가 대신 사용됨)
