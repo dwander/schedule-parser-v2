@@ -99,7 +99,7 @@ export const useSettingsStore = create<SettingsState>()(
       fontSize: 16,
       priceMode: 'total',
       testPanelVisible: false,
-      viewMode: 'list',
+      viewMode: 'card',
       // 리스트뷰 컬럼 가시성
       listColumnVisibility: {
         select: false,
