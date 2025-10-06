@@ -31,7 +31,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -77,6 +77,12 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     // 네이버 캘린더 연동 확인
     if (!user?.naverAccessToken) {
       setNaverLoginPromptOpen(true)
+      return
+    }
+
+    // 설정에서 확인 다이얼로그를 건너뛰도록 설정되어 있으면 바로 실행
+    if (skipNaverCalendarConfirm) {
+      handleNaverCalendarConfirm()
       return
     }
 
@@ -576,6 +582,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         description={`이 일정을 네이버 캘린더에 추가하시겠습니까?\n추가된 일정은 네이버 캘린더 앱에서 확인하실 수 있습니다.`}
         confirmText="추가"
         onConfirm={handleNaverCalendarConfirm}
+        showDontAskAgain={true}
+        onDontAskAgainChange={setSkipNaverCalendarConfirm}
       />
 
       {/* Naver Calendar Link Prompt Dialog */}

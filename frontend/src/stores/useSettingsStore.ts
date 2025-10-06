@@ -77,6 +77,10 @@ interface SettingsState {
   enabledCalendars: { google: boolean; naver: boolean }
   setEnabledCalendars: (calendars: { google: boolean; naver: boolean }) => void
 
+  // 확인 다이얼로그 설정
+  skipNaverCalendarConfirm: boolean
+  setSkipNaverCalendarConfirm: (skip: boolean) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -143,6 +147,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       dateRangeFilter: { from: null, to: null },
       enabledCalendars: { google: true, naver: true },
+      skipNaverCalendarConfirm: false,
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -164,6 +169,7 @@ export const useSettingsStore = create<SettingsState>()(
         })),
       setDateRangeFilter: (range) => set({ dateRangeFilter: range }),
       setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
+      setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
     }),
     {
       name: 'app-settings', // localStorage key
