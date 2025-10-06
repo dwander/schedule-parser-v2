@@ -23,6 +23,7 @@ import { TimePickerCell } from '../components/TimePickerCell'
 import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
 import { useCreateTag, useDeleteTag, useTags } from './useTags'
+import { FolderCheck } from 'lucide-react'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -530,7 +531,63 @@ export function useScheduleTable(
         ),
         size: 60,
         enableSorting: false,
-        cell: () => '', // 나중에 구현
+        cell: (info) => {
+          const schedule = info.row.original
+
+          const handleFolderCopy = async () => {
+            // 브랜드 매핑
+            const brandMap: Record<string, string> = {
+              '세컨플로루': '세컨',
+              '더그라피': '더그',
+              'A 세븐스프리미엄': '세프',
+            }
+            const brandPrefix = brandMap[schedule.brand] || ''
+
+            // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
+            const [hours, minutes] = schedule.time.split(':')
+            const timeStr = minutes === '00' ? `${hours}시` : `${hours}시${minutes}분`
+
+            // 폴더명 구성
+            let folderName = ''
+            if (brandPrefix) {
+              folderName = `${brandPrefix} ${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
+            } else {
+              folderName = `${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
+            }
+
+            // 작가 정보 추가
+            if (schedule.photographer) {
+              if (schedule.cuts && schedule.cuts > 0) {
+                folderName += ` - ${schedule.photographer}(${schedule.cuts})`
+              } else {
+                folderName += ` - ${schedule.photographer}`
+              }
+            } else if (schedule.cuts && schedule.cuts > 0) {
+              folderName += ` - (${schedule.cuts})`
+            }
+
+            // 클립보드 복사
+            try {
+              await navigator.clipboard.writeText(folderName)
+              toast.success(`폴더명이 복사되었습니다.\n${folderName}`)
+            } catch (error) {
+              console.error('클립보드 복사 실패:', error)
+              toast.error('클립보드 복사에 실패했습니다')
+            }
+          }
+
+          return (
+            <div className="flex items-center justify-end pr-2">
+              <button
+                onClick={handleFolderCopy}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                title="폴더명 복사"
+              >
+                <FolderCheck className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            </div>
+          )
+        },
       },
       {
         id: 'spacer',
