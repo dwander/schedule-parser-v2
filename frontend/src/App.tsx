@@ -24,7 +24,7 @@ function AppContent() {
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
-  const { testPanelVisible, fontSize, dateRangeFilter } = useSettingsStore()
+  const { testPanelVisible, fontSize, dateRangeFilter, sortBy } = useSettingsStore()
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
@@ -176,7 +176,7 @@ function AppContent() {
     }
   }, [schedules, tags])
 
-  // 필터링된 스케줄 계산 (날짜 범위 + 전역 검색)
+  // 필터링된 스케줄 계산 (날짜 범위 + 전역 검색 + 정렬)
   const filteredSchedules = useMemo(() => {
     let filtered = schedules
 
@@ -216,8 +216,40 @@ function AppContent() {
       })
     }
 
-    return filtered
-  }, [schedules, dateRangeFilter, globalFilter])
+    // 정렬
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc': {
+          // 날짜+시간 최신순 (내림차순)
+          const dateTimeA = `${a.date || ''} ${a.time || ''}`
+          const dateTimeB = `${b.date || ''} ${b.time || ''}`
+          return dateTimeB.localeCompare(dateTimeA)
+        }
+        case 'date-asc': {
+          // 날짜+시간 오래된순 (오름차순)
+          const dateTimeA = `${a.date || ''} ${a.time || ''}`
+          const dateTimeB = `${b.date || ''} ${b.time || ''}`
+          return dateTimeA.localeCompare(dateTimeB)
+        }
+        case 'location-asc':
+          // 장소 오름차순 (A→Z)
+          return (a.location || '').localeCompare(b.location || '', 'ko')
+        case 'location-desc':
+          // 장소 내림차순 (Z→A)
+          return (b.location || '').localeCompare(a.location || '', 'ko')
+        case 'cuts-desc':
+          // 컷수 많은순 (내림차순)
+          return (b.cuts || 0) - (a.cuts || 0)
+        case 'cuts-asc':
+          // 컷수 적은순 (오름차순)
+          return (a.cuts || 0) - (b.cuts || 0)
+        default:
+          return 0
+      }
+    })
+
+    return sorted
+  }, [schedules, dateRangeFilter, globalFilter, sortBy])
 
   // 필터링된 데이터로 통계 계산
   const stats = useMemo(() => {

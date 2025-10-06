@@ -1,12 +1,10 @@
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table'
 import type {
   ColumnDef,
-  SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table'
 import { useState, useMemo } from 'react'
@@ -35,7 +33,6 @@ export function useScheduleTable(
   const { data: brandTags = [] } = useTags('brand')
   const { data: albumTags = [] } = useTags('album')
   const { brandOptions, albumOptions } = useTagOptions()
-  const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
   const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
@@ -606,19 +603,17 @@ export function useScheduleTable(
     data: filteredData,
     columns,
     state: {
-      sorting,
       columnFilters,
       rowSelection,
       columnVisibility,
     },
-    onSortingChange: setSorting,
+    enableSorting: false,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
     enableRowSelection: true,
     enableHiding: true,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   })
 

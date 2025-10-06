@@ -5,7 +5,7 @@ import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
 import { ScheduleCard } from './ScheduleCard'
 import { Button } from '@/components/ui/button'
-import { Trash2, Search, Calendar, CalendarOff, LayoutList, LayoutGrid } from 'lucide-react'
+import { Trash2, Search, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -36,13 +36,25 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
   const { isLoading, error } = useSchedules()
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
-  const { dateRangeFilter, setDateRangeFilter: setDateRange } = useSettingsStore()
+  const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
 
   // localStorage에서 불러온 문자열을 Date 객체로 변환
   const dateRange = {
     from: dateRangeFilter.from ? new Date(dateRangeFilter.from) : null,
     to: dateRangeFilter.to ? new Date(dateRangeFilter.to) : null,
   }
+
+  // 정렬 옵션 정의
+  const sortOptions = [
+    { value: 'date-desc', label: '날짜 최신순', icon: ArrowDown },
+    { value: 'date-asc', label: '날짜 오래된순', icon: ArrowUp },
+    { value: 'location-asc', label: '장소 오름차순', icon: ArrowUp },
+    { value: 'location-desc', label: '장소 내림차순', icon: ArrowDown },
+    { value: 'cuts-desc', label: '컷수 많은순', icon: ArrowDown },
+    { value: 'cuts-asc', label: '컷수 적은순', icon: ArrowUp },
+  ] as const
+
+  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || '날짜 최신순'
 
   const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
@@ -222,6 +234,37 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
                 : '전체기간'}
             </span>
           </Button>
+
+          {/* Sort Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-shrink-0 gap-2"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                <span className="hidden sm:inline">{currentSortLabel}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>정렬</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sortOptions.map((option) => {
+                const Icon = option.icon
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => setSortBy(option.value)}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {option.label}
+                    {sortBy === option.value && <Check className="ml-auto h-4 w-4" />}
+                  </DropdownMenuItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
         <div className="flex items-center gap-1 ml-auto">
           {columnVisibility.select && (
