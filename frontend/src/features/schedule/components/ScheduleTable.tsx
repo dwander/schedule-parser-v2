@@ -258,7 +258,14 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
               </DropdownMenuCheckboxItem>
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
+                .filter((column) => {
+                  if (!column.getCanHide()) return false
+                  // 날짜, 시간, 장소는 항상 제외
+                  if (['date', 'time', 'location'].includes(column.id)) return false
+                  // 카드뷰 모드일 때 브랜드, 앨범, 연락처, 폴더 제외
+                  if (viewMode === 'card' && ['brand', 'album', 'contact', 'folderName'].includes(column.id)) return false
+                  return true
+                })
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem

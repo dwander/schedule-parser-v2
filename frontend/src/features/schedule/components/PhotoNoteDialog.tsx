@@ -24,7 +24,8 @@ import {
   Palette,
   MessageSquare,
   AlertCircle,
-  FileText
+  FileText,
+  Phone
 } from 'lucide-react'
 
 interface PhotoNoteDialogProps {
@@ -373,8 +374,23 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                 <DialogTitle className="text-xl text-left">
                   {schedule.location} <span className="text-muted-foreground">·</span> {schedule.couple}
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                  {schedule.date} · {schedule.time}
+                <p className="text-sm text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                  <span>{schedule.date} · {schedule.time}</span>
+                  {schedule.contact && (
+                    <>
+                      <Phone className="h-3.5 w-3.5 ml-2" />
+                      {schedule.contact.includes('@') ? (
+                        <span>{schedule.contact}</span>
+                      ) : (
+                        <a
+                          href={`tel:${schedule.contact.replace(/\D/g, '')}`}
+                          className="hover:text-foreground hover:underline transition-colors"
+                        >
+                          {schedule.contact}
+                        </a>
+                      )}
+                    </>
+                  )}
                 </p>
               </div>
             </div>

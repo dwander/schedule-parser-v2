@@ -189,7 +189,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           />
         )}
 
-        {/* Center: Location + Date/Time */}
+        {/* Center: Location + Date/Time (카드뷰에서는 항상 표시) */}
         <div className="flex-1 min-w-0">
           <div className="mb-1">
             <EditableCell
@@ -226,7 +226,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           </div>
         </div>
 
-        {/* Right: Brand + Album */}
+        {/* Right: Brand + Album (카드뷰에서는 항상 표시) */}
         <div className="flex-shrink-0 space-y-1 text-right">
           <TagSelectCell
             value={schedule.brand}
@@ -267,140 +267,150 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           {/* Left: Fields */}
           <div className="flex-1 space-y-3 min-w-0">
             {/* Couple */}
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
+            {columnVisibility.couple && (
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                    <EditableCell
+                    value={schedule.couple}
+                    onSave={(value) => {
+                      updateSchedule.mutate({
+                        id: schedule.id,
+                        couple: value
+                      })
+                    }}
+                    placeholder="신랑신부"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Contact (카드뷰에서는 데이터가 있을 때만 표시) */}
+            {schedule.contact && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
                   <EditableCell
-                  value={schedule.couple}
+                    value={schedule.contact}
                   onSave={(value) => {
-                    updateSchedule.mutate({
-                      id: schedule.id,
-                      couple: value
-                    })
-                  }}
-                  placeholder="신랑신부"
-                />
-              </div>
-            </div>
-
-            {/* Contact */}
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <EditableCell
-                  value={schedule.contact}
-                onSave={(value) => {
-                  const isEmail = value.includes('@')
-                  if (isEmail) {
-                    updateSchedule.mutate({
-                      id: schedule.id,
-                      contact: value.trim()
-                    })
-                  } else {
-                    const numbers = value.replace(/\D/g, '')
-                    let formatted = numbers
-                    if (numbers.length === 11) {
-                      formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                    } else if (numbers.length === 10) {
-                      formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
+                    const isEmail = value.includes('@')
+                    if (isEmail) {
+                      updateSchedule.mutate({
+                        id: schedule.id,
+                        contact: value.trim()
+                      })
+                    } else {
+                      const numbers = value.replace(/\D/g, '')
+                      let formatted = numbers
+                      if (numbers.length === 11) {
+                        formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
+                      } else if (numbers.length === 10) {
+                        formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
+                      }
+                      updateSchedule.mutate({
+                        id: schedule.id,
+                        contact: formatted
+                      })
                     }
-                    updateSchedule.mutate({
-                      id: schedule.id,
-                      contact: formatted
-                    })
-                  }
-                }}
-                format={(val) => {
-                  const str = String(val)
-                  if (str.includes('@')) return str
-                  const numbers = str.replace(/\D/g, '')
-                  if (numbers.length === 11) {
-                    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                  } else if (numbers.length === 10) {
-                    return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
-                  }
-                  return str
-                }}
-                placeholder="연락처"
-              />
-            </div>
-          </div>
-
-          {/* Photographer */}
-          <div className="flex items-center gap-2">
-            <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-                <EditableCell
-                  value={schedule.photographer}
-                  onSave={(value) => {
-                    updateSchedule.mutate({
-                      id: schedule.id,
-                      photographer: value
-                    })
                   }}
-                  placeholder="작가"
+                  format={(val) => {
+                    const str = String(val)
+                    if (str.includes('@')) return str
+                    const numbers = str.replace(/\D/g, '')
+                    if (numbers.length === 11) {
+                      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
+                    } else if (numbers.length === 10) {
+                      return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
+                    }
+                    return str
+                  }}
+                  placeholder="연락처"
                 />
               </div>
             </div>
+            )}
+
+            {/* Photographer */}
+            {columnVisibility.photographer && (
+              <div className="flex items-center gap-2">
+                <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                    <EditableCell
+                      value={schedule.photographer}
+                      onSave={(value) => {
+                        updateSchedule.mutate({
+                          id: schedule.id,
+                          photographer: value
+                        })
+                      }}
+                      placeholder="작가"
+                    />
+                  </div>
+              </div>
+            )}
 
             {/* Cuts */}
-            <div className="flex items-center gap-2">
-              <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <EditableCell
-                  value={schedule.cuts}
-                  onSave={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    if (!isNaN(num)) {
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        cuts: num
-                      })
-                    }
-                  }}
-                  validate={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    return !isNaN(num) && num >= 0
-                  }}
-                  format={(val) => {
-                    const num = Number(val)
-                    return num > 0 ? num.toLocaleString() : ''
-                  }}
-                  placeholder="컷수"
-                />
+            {columnVisibility.cuts && (
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <EditableCell
+                    value={schedule.cuts}
+                    onSave={(value) => {
+                      const num = parseInt(value.replace(/\D/g, ''))
+                      if (!isNaN(num)) {
+                        updateSchedule.mutate({
+                          id: schedule.id,
+                          cuts: num
+                        })
+                      }
+                    }}
+                    validate={(value) => {
+                      const num = parseInt(value.replace(/\D/g, ''))
+                      return !isNaN(num) && num >= 0
+                    }}
+                    format={(val) => {
+                      const num = Number(val)
+                      return num > 0 ? num.toLocaleString() : ''
+                    }}
+                    placeholder="컷수"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Price */}
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <EditableCell
-                  value={schedule.price}
-                  onSave={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    if (!isNaN(num)) {
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        price: num
-                      })
-                    }
-                  }}
-                  validate={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    return !isNaN(num) && num >= 0
-                  }}
-                  format={(val) => {
-                    const num = Number(val)
-                    return num > 0 ? num.toLocaleString() : ''
-                  }}
-                  placeholder="촬영비"
-                />
+            {columnVisibility.price && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <EditableCell
+                    value={schedule.price}
+                    onSave={(value) => {
+                      const num = parseInt(value.replace(/\D/g, ''))
+                      if (!isNaN(num)) {
+                        updateSchedule.mutate({
+                          id: schedule.id,
+                          price: num
+                        })
+                      }
+                    }}
+                    validate={(value) => {
+                      const num = parseInt(value.replace(/\D/g, ''))
+                      return !isNaN(num) && num >= 0
+                    }}
+                    format={(val) => {
+                      const num = Number(val)
+                      return num > 0 ? num.toLocaleString() : ''
+                    }}
+                    placeholder="촬영비"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Manager */}
-            {schedule.manager && (
+            {columnVisibility.manager && schedule.manager && (
               <div className="flex items-center gap-2">
                 <UserCog className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -468,7 +478,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         </div>
 
         {/* Memo - Full width */}
-        {schedule.memo && (
+        {columnVisibility.memo && schedule.memo && (
           <div className="pt-2 border-t border-border">
             <MemoCell
               value={schedule.memo}
