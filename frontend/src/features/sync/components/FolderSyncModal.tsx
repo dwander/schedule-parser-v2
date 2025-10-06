@@ -514,7 +514,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
 }
 
 interface FolderItemProps {
-  folder: FolderAnalysis
+  folder: FolderAnalysisResult
   onClick: () => void
   selected: boolean
 }

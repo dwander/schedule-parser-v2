@@ -96,9 +96,12 @@ export function BackupRestoreDialog({ open, onOpenChange }: BackupRestoreDialogP
       const newSchedules = backupData.schedules
         .filter(schedule => !existingIds.has(schedule.id))
         .map(schedule => {
-          // id, createdAt, updatedAt, isDuplicate 제외
-          const { id, createdAt, updatedAt, isDuplicate, ...scheduleData } = schedule
-          return scheduleData
+          // id, createdAt, updatedAt 제외
+          const { id, createdAt, updatedAt, ...scheduleData } = schedule
+          return {
+            ...scheduleData,
+            isDuplicate: scheduleData.isDuplicate || false
+          }
         })
 
       if (newSchedules.length === 0) {

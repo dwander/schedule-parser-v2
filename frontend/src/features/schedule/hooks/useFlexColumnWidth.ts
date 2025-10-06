@@ -12,7 +12,7 @@ import type { Schedule } from '../types/schedule'
  * @param containerRef - 테이블 컨테이너 DOM 참조
  * @param table - TanStack Table 인스턴스
  * @param flexColumnId - 가변폭을 적용할 컬럼 ID ('memo' 또는 'spacer')
- * @param viewMode - 현재 뷰 모드 ('list' 또는 'grid')
+ * @param viewMode - 현재 뷰 모드 ('list' 또는 'card')
  * @param data - 스케줄 데이터 배열
  * @returns flexWidth: 계산된 가변폭, tableWidth: 계산된 전체 테이블 폭
  */
@@ -20,7 +20,7 @@ export function useFlexColumnWidth(
   containerRef: RefObject<HTMLDivElement>,
   table: Table<Schedule>,
   flexColumnId: string,
-  viewMode: 'list' | 'grid',
+  viewMode: 'list' | 'card',
   data: Schedule[]
 ) {
   const [flexWidth, setFlexWidth] = useState(0)
