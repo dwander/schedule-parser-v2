@@ -30,6 +30,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
 
   const handleLogout = () => {
     logout()
+    window.location.reload()
   }
 
   const handleUsersManagement = () => {
