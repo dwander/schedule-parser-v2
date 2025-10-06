@@ -489,7 +489,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all relative"
+                className="h-9 w-9 rounded-full transition-all relative"
                 onClick={() => setPhotoNoteOpen(true)}
                 title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
               >
@@ -499,7 +499,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+              className="h-9 w-9 rounded-full transition-all"
               onClick={() => setPhotoSequenceOpen(true)}
               title="원판순서"
             >
@@ -511,7 +511,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+                    className="h-9 w-9 rounded-full transition-all"
                     onClick={handleGoogleCalendar}
                     title="구글 캘린더"
                   >
@@ -522,7 +522,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+                    className="h-9 w-9 rounded-full transition-all"
                     onClick={handleNaverCalendarClick}
                     title="네이버 캘린더"
                   >
@@ -534,7 +534,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+              className="h-9 w-9 rounded-full transition-all"
               onClick={handleFolderCopy}
               title="폴더명 복사"
             >
