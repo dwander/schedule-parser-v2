@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { DialogTestPanel } from '@/components/dev/DialogTestPanel'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { LandingPage } from '@/components/landing/LandingPage'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
@@ -28,7 +29,11 @@ function AppContent() {
   const { data: schedules = [] } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
-  const { login, updateNaverToken } = useAuthStore()
+  const { user, login, updateNaverToken } = useAuthStore()
+  const [showLanding, setShowLanding] = useState(() => {
+    // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
+    return !user && !localStorage.getItem('skipLanding')
+  })
 
   // 네이버 로그인 callback 처리
   useEffect(() => {
@@ -164,6 +169,13 @@ function AppContent() {
     handleNaverCalendarCallback()
   }, [])
 
+  // 로그인 시 랜딩 페이지 숨기기
+  useEffect(() => {
+    if (user) {
+      setShowLanding(false)
+    }
+  }, [user])
+
   // fontSize를 html 루트에 적용 (모든 rem 단위에 영향)
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`
@@ -175,6 +187,12 @@ function AppContent() {
       syncTags.mutate()
     }
   }, [schedules, tags])
+
+  // 익명으로 계속하기 핸들러
+  const handleContinueAnonymous = () => {
+    localStorage.setItem('skipLanding', 'true')
+    setShowLanding(false)
+  }
 
   // 필터링된 스케줄 계산 (날짜 범위 + 전역 검색 + 정렬)
   const filteredSchedules = useMemo(() => {
@@ -259,6 +277,11 @@ function AppContent() {
       totalPrice: filteredSchedules.reduce((sum, s) => sum + (s.price || 0), 0)
     }
   }, [filteredSchedules])
+
+  // 랜딩 페이지 표시
+  if (showLanding) {
+    return <LandingPage onContinueAnonymous={handleContinueAnonymous} />
+  }
 
   return (
     <>

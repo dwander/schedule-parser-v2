@@ -32,6 +32,8 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
 
   const handleLogout = () => {
     logout()
+    // 랜딩 페이지로 돌아가기 위해 skipLanding 플래그 제거
+    localStorage.removeItem('skipLanding')
     window.location.reload()
   }
 
