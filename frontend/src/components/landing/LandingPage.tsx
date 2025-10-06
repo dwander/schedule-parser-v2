@@ -5,6 +5,7 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useConfigStore } from '@/stores/useConfigStore'
 
 interface LandingPageProps {
   onContinueAnonymous: () => void
@@ -12,6 +13,7 @@ interface LandingPageProps {
 
 export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
   const { login } = useAuthStore()
+  const { config } = useConfigStore()
   const redirectUri = 'http://localhost:5173'
 
   const features = [
@@ -58,30 +60,28 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
   })
 
   const handleNaverLogin = () => {
-    const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
-    const STATE = Math.random().toString(36).substring(2, 15)
-
-    if (!NAVER_CLIENT_ID) {
+    if (!config?.naver_client_id) {
       toast.error('네이버 클라이언트 ID가 설정되지 않았습니다')
       return
     }
 
+    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
+    const STATE = Math.random().toString(36).substring(2, 15)
+
     sessionStorage.setItem('naver_state', STATE)
-    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${STATE}&scope=calendar`
+    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${config.naver_client_id}&redirect_uri=${REDIRECT_URI}&state=${STATE}&scope=calendar`
     window.location.href = naverLoginUrl
   }
 
   const handleKakaoLogin = () => {
-    const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
-
-    if (!KAKAO_REST_API_KEY) {
+    if (!config?.kakao_rest_api_key) {
       toast.error('카카오 REST API 키가 설정되지 않았습니다')
       return
     }
 
-    const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`
+    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
+
+    const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${config.kakao_rest_api_key}&redirect_uri=${REDIRECT_URI}&response_type=code`
     window.location.href = kakaoLoginUrl
   }
 

@@ -1,8 +1,16 @@
+import { useConfigStore } from '@/stores/useConfigStore'
+
 /**
  * 네이버 캘린더 연동을 위한 OAuth 인증 시작
  */
 export function startNaverCalendarLink() {
-  const clientId = import.meta.env.VITE_NAVER_CLIENT_ID
+  const config = useConfigStore.getState().config
+  const clientId = config?.naver_client_id
+
+  if (!clientId) {
+    throw new Error('네이버 클라이언트 ID가 설정되지 않았습니다')
+  }
+
   const redirectUri = `${window.location.origin}/auth/naver/calendar/callback`
   const state = Math.random().toString(36).substring(7)
 

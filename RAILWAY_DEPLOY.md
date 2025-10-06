@@ -69,16 +69,9 @@ Variables 탭에서 다음 환경변수 추가:
 ```bash
 # Backend API URL (backend 서비스의 도메인 사용)
 VITE_API_URL=https://your-backend-url.up.railway.app
-
-# Google OAuth Client ID
-VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-
-# Naver OAuth Client ID
-VITE_NAVER_CLIENT_ID=your-naver-client-id
-
-# Kakao OAuth REST API Key
-VITE_KAKAO_REST_API_KEY=your-kakao-rest-api-key
 ```
+
+**참고**: OAuth Client ID는 이제 Backend에서만 관리됩니다. Frontend는 `/api/config` 엔드포인트에서 런타임에 가져옵니다.
 
 #### 4-3. Settings 설정
 - **Root Directory**: `/frontend`

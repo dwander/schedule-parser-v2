@@ -908,6 +908,19 @@ def get_file_size_mb(file_path):
 
 # --- API Endpoints ---
 
+@app.get("/api/config")
+async def get_config():
+    """
+    공개 설정 반환 (OAuth Client ID 등)
+    Frontend에서 앱 시작 시 이 값들을 가져와서 사용
+    """
+    return {
+        "google_client_id": GOOGLE_CLIENT_ID,
+        "naver_client_id": NAVER_CLIENT_ID,
+        "kakao_rest_api_key": KAKAO_REST_API_KEY,
+        "frontend_url": FRONTEND_URL if FRONTEND_URL else "http://localhost:5173"
+    }
+
 @app.post("/auth/google")
 async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get_database)):
     """Exchange Google authorization code for user info."""

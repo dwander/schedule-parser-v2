@@ -17,6 +17,8 @@ import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useState, useMemo, useEffect } from 'react'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useConfigStore } from '@/stores/useConfigStore'
+import { fetchConfig } from '@/lib/api/config'
 import axios from 'axios'
 import { toast } from 'sonner'
 
@@ -326,15 +328,35 @@ function AppContent() {
 }
 
 function App() {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const { config, isLoaded, setConfig } = useConfigStore()
 
-  if (!googleClientId) {
-    console.error('VITE_GOOGLE_CLIENT_ID is not defined')
+  // 앱 시작 시 Backend에서 설정 가져오기
+  useEffect(() => {
+    fetchConfig()
+      .then((config) => {
+        setConfig(config)
+      })
+      .catch((error) => {
+        console.error('Failed to load config:', error)
+        toast.error('설정을 불러오는데 실패했습니다.')
+      })
+  }, [setConfig])
+
+  // Config 로딩 중
+  if (!isLoaded || !config) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">설정을 불러오는 중...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <ErrorBoundary>
-      <GoogleOAuthProvider clientId={googleClientId || ''}>
+      <GoogleOAuthProvider clientId={config.google_client_id}>
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
             <AppContent />
