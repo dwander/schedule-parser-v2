@@ -430,7 +430,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           </div>
 
           {/* Right: FAB Buttons */}
-          <div className="flex flex-col gap-2 flex-shrink-0">
+          <div className="flex flex-col gap-2 flex-shrink-0 items-end">
             <div className="relative">
               {hasPhotoNoteData && (
                 <span className="absolute inset-0 animate-gentle-ping">
@@ -456,24 +456,26 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <ListTodo className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
-              onClick={handleGoogleCalendar}
-              title="구글 캘린더"
-            >
-              <Calendar className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
-              onClick={handleNaverCalendarClick}
-              title="네이버 캘린더"
-            >
-              <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+                onClick={handleGoogleCalendar}
+                title="구글 캘린더"
+              >
+                <Calendar className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full shadow-md hover:shadow-lg transition-all"
+                onClick={handleNaverCalendarClick}
+                title="네이버 캘린더"
+              >
+                <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
+              </Button>
+            </div>
           </div>
         </div>
 
