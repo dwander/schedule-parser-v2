@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
+import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface UserMenuProps {
@@ -27,6 +28,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [loginOpen, setLoginOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
+  const [userManagementOpen, setUserManagementOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -34,7 +36,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   }
 
   const handleUsersManagement = () => {
-    window.location.href = '/users'
+    setUserManagementOpen(true)
   }
 
   const handleUITestPanel = () => {
@@ -146,6 +148,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
+        <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
       </>
     )
   }
@@ -181,6 +184,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       {/* 설정 다이얼로그 */}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
+      <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
     </>
   )
 }
