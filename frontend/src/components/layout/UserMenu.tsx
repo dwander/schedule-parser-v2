@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut } from 'lucide-react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ interface UserMenuProps {
 
 export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuProps) {
   const { user, logout } = useAuthStore()
-  const { setTestPanelVisible } = useSettingsStore()
+  const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
   const [loginOpen, setLoginOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
@@ -40,7 +40,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   }
 
   const handleUITestPanel = () => {
-    setTestPanelVisible(true)
+    setTestPanelVisible(!testPanelVisible)
   }
 
   // 드롭다운 메뉴 내용 (재사용)
@@ -95,6 +95,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             <DropdownMenuItem onClick={handleUITestPanel}>
               <TestTube2 className="mr-2 h-4 w-4" />
               UI 테스트 패널
+              {testPanelVisible && <Check className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
