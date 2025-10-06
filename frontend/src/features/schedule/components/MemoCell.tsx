@@ -53,6 +53,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           className={`cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors text-muted-foreground text-sm ${
             isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
           }`}
+          style={!isExpanded ? { maxHeight: 'calc(2 * 1.5em - 2px)' } : undefined}
         >
           {value || '클릭하여 입력'}
         </div>
