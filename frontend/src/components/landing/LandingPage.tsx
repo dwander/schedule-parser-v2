@@ -14,7 +14,7 @@ interface LandingPageProps {
 export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
   const { login } = useAuthStore()
   const { config } = useConfigStore()
-  const redirectUri = 'http://localhost:5173'
+  const redirectUri = window.location.origin
 
   const features = [
     '카카오톡 메시지 붙여넣기로 빠른 스케줄 등록',
@@ -65,7 +65,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
       return
     }
 
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
+    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/naver/callback`)
     const STATE = Math.random().toString(36).substring(2, 15)
 
     sessionStorage.setItem('naver_state', STATE)
@@ -79,7 +79,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
       return
     }
 
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
+    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/kakao/callback`)
 
     const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${config.kakao_rest_api_key}&redirect_uri=${REDIRECT_URI}&response_type=code`
     window.location.href = kakaoLoginUrl

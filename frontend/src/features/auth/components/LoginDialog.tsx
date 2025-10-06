@@ -24,7 +24,7 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const redirectUri = 'http://localhost:5173'
+  const redirectUri = window.location.origin
   const { login } = useAuthStore()
   const { config } = useConfigStore()
   const queryClient = useQueryClient()
@@ -188,7 +188,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       return
     }
 
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/naver/callback')
+    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/naver/callback`)
     const STATE = Math.random().toString(36).substring(2, 15) // Random state
 
     // Store state in sessionStorage for verification
@@ -205,7 +205,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       return
     }
 
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/auth/kakao/callback')
+    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/kakao/callback`)
 
     // Redirect to Kakao login
     const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${config.kakao_rest_api_key}&redirect_uri=${REDIRECT_URI}&response_type=code`
