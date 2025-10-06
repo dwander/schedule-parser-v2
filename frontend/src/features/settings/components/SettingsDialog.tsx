@@ -14,8 +14,12 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Settings, Palette, Type, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Settings, Palette, Type, Calendar, Link, Unlink } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
+import { toast } from 'sonner'
 
 interface SettingsDialogProps {
   open: boolean
@@ -31,6 +35,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     enabledCalendars,
     setEnabledCalendars,
   } = useSettingsStore()
+  const { user, removeNaverToken } = useAuthStore()
 
   const getThemeLabel = () => {
     switch (theme) {
@@ -45,6 +50,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     }
   }
 
+  const handleNaverCalendarLink = () => {
+    startNaverCalendarLink()
+  }
+
+  const handleNaverCalendarUnlink = () => {
+    removeNaverToken()
+    toast.success('네이버 캘린더 연동이 해제되었습니다')
+  }
+
+  const isNaverCalendarLinked = !!user?.naverAccessToken
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -57,6 +73,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             앱 설정을 관리합니다
           </DialogDescription>
         </DialogHeader>
+
+        <div className="border-t" />
 
         <div className="space-y-6 py-4">
           {/* 외관 */}
@@ -105,6 +123,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </div>
 
+          <div className="border-t" />
+
           {/* 캘린더 연동 */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -129,20 +149,43 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   구글 캘린더
                 </label>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="naver-calendar"
-                  checked={enabledCalendars.naver}
-                  onCheckedChange={(checked) =>
-                    setEnabledCalendars({ ...enabledCalendars, naver: checked === true })
-                  }
-                />
-                <label
-                  htmlFor="naver-calendar"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  네이버 캘린더
-                </label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="naver-calendar"
+                    checked={enabledCalendars.naver}
+                    onCheckedChange={(checked) =>
+                      setEnabledCalendars({ ...enabledCalendars, naver: checked === true })
+                    }
+                  />
+                  <label
+                    htmlFor="naver-calendar"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    네이버 캘린더
+                  </label>
+                </div>
+                {isNaverCalendarLinked ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleNaverCalendarUnlink}
+                  >
+                    <Unlink className="mr-2 h-4 w-4" />
+                    네이버 캘린더 연동 해제
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleNaverCalendarLink}
+                  >
+                    <Link className="mr-2 h-4 w-4" />
+                    네이버 캘린더 연동
+                  </Button>
+                )}
               </div>
             </div>
           </div>
