@@ -102,7 +102,7 @@ export const useSettingsStore = create<SettingsState>()(
       viewMode: 'list',
       // 리스트뷰 컬럼 가시성
       listColumnVisibility: {
-        select: true,
+        select: false,
         date: true,
         location: true,
         time: true,
@@ -119,7 +119,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       // 카드뷰 컬럼 가시성
       cardColumnVisibility: {
-        select: true,
+        select: false,
         date: true,
         location: true,
         time: true,
