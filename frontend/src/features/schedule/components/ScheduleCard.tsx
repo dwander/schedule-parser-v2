@@ -544,10 +544,10 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         </div>
 
         {/* Memo - Full width */}
-        {columnVisibility.memo && schedule.memo && (
+        {columnVisibility.memo && (
           <div className="pt-2 border-t border-border">
             <MemoCell
-              value={schedule.memo}
+              value={schedule.memo || ''}
               onSave={(value) => {
                 updateSchedule.mutate({
                   id: schedule.id,

@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { DatePickerCell } from '@/features/schedule/components/DatePickerCell'
+import { TimePickerCell } from '@/features/schedule/components/TimePickerCell'
 import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react'
 import { parseText, parseFile } from '../api/parserApi'
 import { addSchedules } from '@/features/schedule/api/scheduleApi'
@@ -21,8 +26,20 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [isParsing, setIsParsing] = useState(false)
   const [parsedData, setParsedData] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('text')
   const queryClient = useQueryClient()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 직접 입력 폼 상태
+  const [manualForm, setManualForm] = useState({
+    date: '',
+    time: '',
+    location: '',
+    groom: '',
+    bride: '',
+    contact: '',
+    memo: ''
+  })
 
   const handleParse = async (input: string) => {
     if (!input.trim()) {
@@ -179,22 +196,66 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   }, [existingSchedules])
 
   const handleSave = async () => {
-    if (!parsedData || parsedData.length === 0) return
+    if (activeTab === 'manual') {
+      // 직접 입력 모드
+      if (!manualForm.date || !manualForm.time || !manualForm.location) {
+        toast.error('날짜, 시간, 장소는 필수 입력 항목입니다')
+        return
+      }
 
-    setIsParsing(true)
-    try {
-      await addSchedules(parsedData as NewSchedule[])
-      queryClient.invalidateQueries({ queryKey: ['schedules'] })
-      toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
-      onOpenChange(false)
-      // 리셋
-      setText('')
-      setParsedData(null)
-      setError(null)
-    } catch (err) {
-      toast.error('스케줄 저장 중 오류가 발생했습니다')
-    } finally {
-      setIsParsing(false)
+      setIsParsing(true)
+      try {
+        // 신랑신부 합치기
+        const couple = [manualForm.groom, manualForm.bride].filter(Boolean).join(' ')
+
+        const newSchedule = {
+          date: manualForm.date,
+          time: manualForm.time,
+          location: manualForm.location,
+          couple: couple,
+          contact: manualForm.contact || undefined,
+          memo: manualForm.memo || undefined,
+          isDuplicate: false,
+        } as NewSchedule
+
+        await addSchedules([newSchedule])
+        queryClient.invalidateQueries({ queryKey: ['schedules'] })
+        toast.success('스케줄이 추가되었습니다')
+        onOpenChange(false)
+        // 리셋
+        setManualForm({
+          date: '',
+          time: '',
+          location: '',
+          groom: '',
+          bride: '',
+          contact: '',
+          memo: ''
+        })
+      } catch (err) {
+        toast.error('스케줄 저장 중 오류가 발생했습니다')
+      } finally {
+        setIsParsing(false)
+      }
+    } else {
+      // 파싱 모드
+      if (!parsedData || parsedData.length === 0) return
+
+      setIsParsing(true)
+      try {
+        await addSchedules(parsedData as NewSchedule[])
+        queryClient.invalidateQueries({ queryKey: ['schedules'] })
+        toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
+        onOpenChange(false)
+        // 리셋
+        setText('')
+        setParsedData(null)
+        setError(null)
+      } catch (err) {
+        toast.error('스케줄 저장 중 오류가 발생했습니다')
+      } finally {
+        setIsParsing(false)
+      }
     }
   }
 
@@ -208,6 +269,15 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setText('')
     setParsedData(null)
     setError(null)
+    setManualForm({
+      date: '',
+      time: '',
+      location: '',
+      groom: '',
+      bride: '',
+      contact: '',
+      memo: ''
+    })
     onOpenChange(false)
   }
 
@@ -216,13 +286,15 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">스케줄 가져오기</DialogTitle>
-          <DialogDescription>
-            카카오톡 메시지 또는 파일에서 스케줄 정보를 자동으로 추출합니다
-          </DialogDescription>
+          {activeTab !== 'manual' && (
+            <DialogDescription>
+              카카오톡 메시지 또는 파일에서 스케줄 정보를 자동으로 추출합니다
+            </DialogDescription>
+          )}
         </DialogHeader>
 
-        <Tabs defaultValue="text" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="text" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="text" className="gap-2">
               <FileText className="h-4 w-4" />
               텍스트 입력
@@ -230,6 +302,10 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             <TabsTrigger value="file" className="gap-2">
               <Upload className="h-4 w-4" />
               파일 업로드
+            </TabsTrigger>
+            <TabsTrigger value="manual" className="gap-2">
+              <FileText className="h-4 w-4" />
+              직접 입력
             </TabsTrigger>
           </TabsList>
 
@@ -294,6 +370,83 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
               </label>
             </div>
           </TabsContent>
+
+          <TabsContent value="manual" className="flex-1 flex flex-col gap-4 overflow-auto mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>날짜</Label>
+                <DatePickerCell
+                  value={manualForm.date}
+                  onSave={(value) => setManualForm(prev => ({ ...prev, date: value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>시간</Label>
+                <TimePickerCell
+                  value={manualForm.time}
+                  onSave={(value) => setManualForm(prev => ({ ...prev, time: value }))}
+                />
+              </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="manual-location">장소</Label>
+                <Input
+                  id="manual-location"
+                  value={manualForm.location}
+                  onChange={(e) => setManualForm(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="예: 서울 강남구 웨딩홀"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manual-groom">신랑</Label>
+                <Input
+                  id="manual-groom"
+                  value={manualForm.groom}
+                  onChange={(e) => setManualForm(prev => ({ ...prev, groom: e.target.value }))}
+                  placeholder="신랑 이름"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="manual-bride">신부</Label>
+                <Input
+                  id="manual-bride"
+                  value={manualForm.bride}
+                  onChange={(e) => setManualForm(prev => ({ ...prev, bride: e.target.value }))}
+                  placeholder="신부 이름"
+                />
+              </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="manual-contact">연락처</Label>
+                <Input
+                  id="manual-contact"
+                  value={manualForm.contact}
+                  onChange={(e) => setManualForm(prev => ({ ...prev, contact: e.target.value }))}
+                  placeholder="예: 010-1234-5678"
+                />
+              </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="manual-memo">전달사항</Label>
+                <Textarea
+                  id="manual-memo"
+                  value={manualForm.memo}
+                  onChange={(e) => {
+                    setManualForm(prev => ({ ...prev, memo: e.target.value }))
+                    // 자동 높이 조절
+                    e.target.style.height = 'auto'
+                    e.target.style.height = e.target.scrollHeight + 'px'
+                  }}
+                  placeholder="전달사항을 입력하세요"
+                  rows={3}
+                  className="resize-none overflow-hidden"
+                />
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* 결과 영역 */}
@@ -320,21 +473,31 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
 
         {/* 액션 버튼 */}
         <div className="flex gap-2 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="flex-1 gap-2"
-            disabled={!text.trim()}
-          >
-            <RotateCcw className="h-4 w-4" />
-            입력된 텍스트 초기화
-          </Button>
+          {activeTab === 'text' && (
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="flex-1 gap-2"
+              disabled={!text.trim()}
+            >
+              <RotateCcw className="h-4 w-4" />
+              입력된 텍스트 초기화
+            </Button>
+          )}
           <Button
             onClick={handleSave}
-            disabled={!parsedData || parsedData.length === 0 || isParsing}
+            disabled={
+              activeTab === 'manual'
+                ? !manualForm.date || !manualForm.time || !manualForm.location || isParsing
+                : !parsedData || parsedData.length === 0 || isParsing
+            }
             className="flex-1"
           >
-            {parsedData ? `${parsedData.length}개 추가하기` : '추가하기'}
+            {activeTab === 'manual'
+              ? '추가하기'
+              : parsedData
+              ? `${parsedData.length}개 추가하기`
+              : '추가하기'}
           </Button>
         </div>
       </DialogContent>
