@@ -342,7 +342,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div ref={containerRef} className="border border-border rounded-md overflow-x-auto overflow-y-hidden w-full">
+        <div ref={containerRef} className="overflow-x-auto overflow-y-hidden w-full">
           <div ref={tableRef} style={{ minWidth: tableWidth }}>
             <div
               style={{
@@ -352,7 +352,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
               }}
             >
               <table style={{ tableLayout: 'fixed', width: '100%' }}>
-                <thead className="bg-muted">
+                <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
