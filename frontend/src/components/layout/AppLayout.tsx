@@ -1,8 +1,7 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode } from 'react'
 import { AppHeader } from './AppHeader'
-import { AppSidebar } from './AppSidebar'
+// import { AppSidebar } from './AppSidebar' // 사이드바 컴포넌트는 나중을 위해 유지
 import { AppFooter } from './AppFooter'
-import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -17,38 +16,14 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-
   return (
     <div className="relative min-h-screen bg-background">
       {/* Floating Header */}
       <AppHeader
-        onMenuClick={() => setSidebarOpen(true)}
         onAddClick={onAddClick}
         onFolderSyncClick={onFolderSyncClick}
+        onBackupRestoreClick={onBackupRestoreClick}
       />
-
-      {/* Sidebar */}
-      <AppSidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onSettingsClick={() => {
-          setSettingsOpen(true)
-          setSidebarOpen(false)
-        }}
-        onFolderSyncClick={() => {
-          onFolderSyncClick?.()
-          setSidebarOpen(false)
-        }}
-        onBackupRestoreClick={() => {
-          onBackupRestoreClick?.()
-          setSidebarOpen(false)
-        }}
-      />
-
-      {/* Settings Dialog */}
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Main Content */}
       <main>

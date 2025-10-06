@@ -1,29 +1,25 @@
-import { PanelLeft, ListPlus, FolderSync } from 'lucide-react'
+import { ListPlus, FolderSync } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { UserMenu } from './UserMenu'
 
 interface AppHeaderProps {
-  onMenuClick: () => void
   onAddClick?: () => void
   onFolderSyncClick?: () => void
+  onBackupRestoreClick?: () => void
 }
 
-export function AppHeader({ onMenuClick, onAddClick, onFolderSyncClick }: AppHeaderProps) {
+export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40">
       {/* Safe area for mobile status bar */}
       <div className="h-[env(safe-area-inset-top)]" />
 
       <div className="flex h-14 items-center justify-between px-[0.625rem]">
-        {/* Left: Sidebar Panel Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onMenuClick}
-          aria-label="사이드패널 열기"
-          className="-ml-[0.9375rem] bg-background/50 backdrop-blur-sm"
-        >
-          <PanelLeft className="h-[1.25rem] w-[1.25rem]" />
-        </Button>
+        {/* Left: User Menu */}
+        <UserMenu
+          onFolderSyncClick={onFolderSyncClick}
+          onBackupRestoreClick={onBackupRestoreClick}
+        />
 
         {/* Right: Buttons */}
         <div className="flex items-center gap-2">
