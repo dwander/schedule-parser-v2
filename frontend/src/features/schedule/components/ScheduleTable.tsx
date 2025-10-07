@@ -4,9 +4,10 @@ import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
 import { ScheduleCard } from './ScheduleCard'
+import { SearchInput } from './SearchInput'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
-import { Trash2, Search, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react'
+import { Trash2, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -35,7 +36,6 @@ interface ScheduleTableProps {
 
 export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: ScheduleTableProps) {
   const { isLoading, error } = useSchedules()
-  const [searchExpanded, setSearchExpanded] = useState(false)
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
 
@@ -132,28 +132,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
     measureElement: (el) => el.getBoundingClientRect().height + gap,
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" text="스케줄을 불러오는 중..." />
-      </div>
-    )
-  }
-
-  if (error) {
-    return <ErrorFallback error={error as Error} />
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <EmptyState
-        icon={CalendarOff}
-        title="스케줄이 없습니다"
-        description="새로운 스케줄을 추가하거나 카카오톡 메시지를 파싱해보세요"
-      />
-    )
-  }
-
   const rows = table.getRowModel().rows
   const selectedCount = Object.keys(rowSelection).length
   const hasSelection = selectedCount > 0
@@ -196,30 +174,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
       <div className="space-y-4 w-full">
         {/* Search and Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Expandable Search */}
-          <div
-            className={`flex items-center border border-input rounded-md bg-background overflow-hidden transition-all duration-300 ease-in-out ${
-              searchExpanded ? 'w-full sm:w-64' : 'w-10'
-            }`}
-          >
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchExpanded(!searchExpanded)}
-              className="flex-shrink-0 hover:bg-transparent h-8 w-8 p-0"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-            <input
-              value={globalFilter ?? ''}
-              onChange={(e) => onGlobalFilterChange(e.target.value)}
-              placeholder="검색..."
-              className={`px-2 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
-                searchExpanded ? 'w-full opacity-100' : 'w-0 opacity-0'
-              }`}
-              autoFocus={searchExpanded}
-            />
-          </div>
+          {/* Search Input Component */}
+          <SearchInput value={globalFilter} onChange={onGlobalFilterChange} />
 
           {/* Date Range Filter Button */}
           <Button
@@ -341,8 +297,23 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
         </div>
       </div>
 
-      {/* List View */}
-      {viewMode === 'list' && (
+      {/* Content Area - Conditional Rendering */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="lg" text="스케줄을 불러오는 중..." />
+        </div>
+      ) : error ? (
+        <ErrorFallback error={error as Error} />
+      ) : !data || data.length === 0 ? (
+        <EmptyState
+          icon={CalendarOff}
+          title="스케줄이 없습니다"
+          description={globalFilter ? "검색 결과가 없습니다" : "새로운 스케줄을 추가하거나 카카오톡 메시지를 파싱해보세요"}
+        />
+      ) : (
+        <>
+          {/* List View */}
+          {viewMode === 'list' && (
         <div ref={containerRef} className="overflow-x-auto overflow-y-hidden w-full bg-card border border-border rounded-lg">
           <div ref={tableRef} style={{ minWidth: tableWidth }}>
             <div
@@ -448,8 +419,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
         </div>
       )}
 
-      {/* Grid View */}
-      {viewMode === 'card' && (
+          {/* Grid View */}
+          {viewMode === 'card' && (
         <div ref={gridContainerRef} className="w-full">
           <div
             style={{
@@ -504,6 +475,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
             })}
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* Date Range Filter Dialog */}

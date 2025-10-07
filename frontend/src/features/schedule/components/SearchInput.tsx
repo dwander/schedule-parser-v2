@@ -1,0 +1,70 @@
+import { useState, useEffect, useRef, memo } from 'react'
+import { Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+interface SearchInputProps {
+  value: string
+  onChange: (value: string) => void
+}
+
+export const SearchInput = memo(function SearchInput({ value, onChange }: SearchInputProps) {
+  const [expanded, setExpanded] = useState(false)
+  const [localValue, setLocalValue] = useState(value)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // 확장 시 포커스
+  useEffect(() => {
+    if (expanded && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [expanded])
+
+  // 디바운싱된 변경 전파
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localValue !== value) {
+        onChange(localValue)
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [localValue, onChange, value])
+
+  // 외부 value 변경 시 동기화 (초기값만)
+  useEffect(() => {
+    if (!expanded && value !== localValue) {
+      setLocalValue(value)
+    }
+  }, [value])
+
+  return (
+    <div
+      className={`flex items-center border border-input rounded-md bg-background overflow-hidden transition-all duration-300 ease-in-out ${
+        expanded ? 'w-full sm:w-64' : 'w-10'
+      }`}
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setExpanded(!expanded)}
+        className="flex-shrink-0 hover:bg-transparent h-8 w-8 p-0"
+      >
+        <Search className="h-4 w-4" />
+      </Button>
+      <input
+        ref={inputRef}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => {
+          if (localValue === '') {
+            setExpanded(false)
+          }
+        }}
+        placeholder="검색..."
+        className={`px-2 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
+          expanded ? 'w-full opacity-100' : 'w-0 opacity-0'
+        }`}
+      />
+    </div>
+  )
+})
