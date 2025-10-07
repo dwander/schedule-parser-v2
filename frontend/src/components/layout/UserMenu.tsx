@@ -60,8 +60,8 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   // 모바일 서브메뉴 펼침 상태
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     localStorage.removeItem('skipLanding')
     window.location.reload()
   }

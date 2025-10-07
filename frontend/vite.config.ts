@@ -54,6 +54,11 @@ export default defineConfig({
         navigateFallback: null,
         runtimeCaching: [
           {
+            // 인증 관련 API는 절대 캐시하지 않음 (항상 네트워크에서 가져오기)
+            urlPattern: /^https?:\/\/.*\/api\/(auth|login|logout|user|google|naver|kakao).*/i,
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {

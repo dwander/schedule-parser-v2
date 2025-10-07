@@ -31,7 +31,22 @@ export const useAuthStore = create<AuthState>()(
 
       // Actions
       login: (user) => set({ user, isLoggedIn: true }),
-      logout: () => set({ user: null, isLoggedIn: false }),
+      logout: async () => {
+        // 서비스워커 캐시 클리어
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys()
+            await Promise.all(
+              cacheNames.map(cacheName => caches.delete(cacheName))
+            )
+            console.log('Service Worker 캐시가 클리어되었습니다')
+          } catch (error) {
+            console.error('캐시 클리어 실패:', error)
+          }
+        }
+
+        set({ user: null, isLoggedIn: false })
+      },
       updateNaverToken: (accessToken, refreshToken) =>
         set((state) => ({
           user: state.user

@@ -23,8 +23,8 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
   const [loginDialogOpen, setLoginDialogOpen] = useState(false)
   const [userManagementOpen, setUserManagementOpen] = useState(false)
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     toast.success('로그아웃되었습니다')
     // 페이지 새로고침하여 스케줄 데이터 초기화
     setTimeout(() => {
