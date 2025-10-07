@@ -61,6 +61,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
   const [showTrainingManager, setShowTrainingManager] = useState(false)
   const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
+  const [showRecognizedText, setShowRecognizedText] = useState(false)
+  const [displayedText, setDisplayedText] = useState('')
 
   // 모달이 열릴 때만 초기화
   useEffect(() => {
@@ -245,6 +247,20 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     }
   }, [voiceEnabled])
 
+  // 인식된 텍스트 표시 및 자동 페이드 아웃
+  useEffect(() => {
+    if (lastRecognized) {
+      setDisplayedText(lastRecognized)
+      setShowRecognizedText(true)
+
+      const timer = setTimeout(() => {
+        setShowRecognizedText(false)
+      }, 3000) // 3초 후 페이드 아웃
+
+      return () => clearTimeout(timer)
+    }
+  }, [lastRecognized])
+
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -320,7 +336,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               variant="ghost"
               size="icon"
               onClick={toggleLock}
-              className="h-9 w-9"
+              className={`h-9 w-9 ${!isLocked ? 'opacity-50' : ''}`}
               title={isLocked ? "잠금 해제" : "잠금"}
             >
               {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
@@ -380,7 +396,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         </div>
 
         {/* 삭제된 항목 배지 */}
-        {deletedItems.length > 0 && (
+        {!isLocked && deletedItems.length > 0 && (
           <div className="mx-4 mb-3 flex-shrink-0">
             <div className="flex flex-wrap gap-2">
               {deletedItems.map((item) => (
@@ -403,45 +419,47 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           </div>
         )}
 
-        {/* 음성 인식 상태 */}
-        {voiceEnabled && (isListening || lastRecognized) && (
-          <div className="mx-4 mb-2 flex-shrink-0">
-            <div className="px-3 py-2 rounded-lg bg-muted/50 flex items-center gap-2 text-sm">
-              {isListening && (
-                <span className="flex items-center gap-1.5">
-                  <Mic className="h-3.5 w-3.5 text-red-500 animate-pulse" />
-                  <span className="text-muted-foreground">듣는 중...</span>
-                </span>
-              )}
-              {lastRecognized && (
-                <span className="text-muted-foreground flex-1 truncate">
-                  &ldquo;{lastRecognized}&rdquo;
-                </span>
-              )}
+        {/* 인식된 텍스트 크게 표시 (페이드 아웃) */}
+        {voiceEnabled && displayedText && (
+          <div className={`mx-4 mb-3 flex-shrink-0 text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="text-xl font-semibold text-primary">
+              &ldquo;{displayedText}&rdquo;
             </div>
           </div>
         )}
 
-        {/* 항목 추가 */}
-        <div className="px-4 py-3 flex-shrink-0">
-          <div className="flex gap-2">
-            <Input
-              placeholder="항목 추가..."
-              value={newItemText}
-              onChange={(e) => setNewItemText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addItem()
-                }
-              }}
-              className="flex-1"
-            />
-            <Button onClick={addItem} size="icon" variant="outline" className="flex-shrink-0">
-              <Plus className="h-4 w-4" />
-            </Button>
+        {/* 음성 인식 상태 (듣는 중만) */}
+        {voiceEnabled && isListening && (
+          <div className="mx-4 flex-shrink-0 text-center" style={{ marginTop: '-1rem', marginBottom: '1rem' }}>
+            <span className="flex items-center justify-center gap-1.5 text-base">
+              <Mic className="h-4 w-4 text-red-500 animate-pulse" />
+              <span className="text-muted-foreground">듣는 중...</span>
+            </span>
           </div>
-        </div>
+        )}
+
+        {/* 항목 추가 */}
+        {!isLocked && (
+          <div className="px-4 py-3 flex-shrink-0">
+            <div className="flex gap-2">
+              <Input
+                placeholder="항목 추가..."
+                value={newItemText}
+                onChange={(e) => setNewItemText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addItem()
+                  }
+                }}
+                className="flex-1"
+              />
+              <Button onClick={addItem} size="icon" variant="outline" className="flex-shrink-0">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
 
