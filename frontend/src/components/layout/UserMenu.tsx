@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,6 +11,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
@@ -24,6 +29,23 @@ interface UserMenuProps {
   onBackupRestoreClick?: () => void
 }
 
+// 메뉴 항목 타입 정의
+interface MenuItem {
+  id: string
+  label: string
+  icon: LucideIcon
+  action: () => void
+  badge?: React.ReactNode
+}
+
+interface MenuSection {
+  id: string
+  label: string
+  icon: LucideIcon
+  items: MenuItem[]
+  adminOnly?: boolean
+}
+
 export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuProps) {
   const { user, logout } = useAuthStore()
   const { testPanelVisible, setTestPanelVisible } = useSettingsStore()
@@ -33,89 +55,140 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [userManagementOpen, setUserManagementOpen] = useState(false)
   const [pricingRuleOpen, setPricingRuleOpen] = useState(false)
   const [statsAlertOpen, setStatsAlertOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // 모바일 서브메뉴 펼침 상태
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
   const handleLogout = () => {
     logout()
-    // 랜딩 페이지로 돌아가기 위해 skipLanding 플래그 제거
     localStorage.removeItem('skipLanding')
     window.location.reload()
   }
 
   const handleUsersManagement = () => {
     setUserManagementOpen(true)
+    setMobileMenuOpen(false)
   }
 
   const handleUITestPanel = () => {
     setTestPanelVisible(!testPanelVisible)
   }
 
-  // 드롭다운 메뉴 내용 (재사용)
-  const renderMenuContent = () => (
+  const handleMenuItemClick = (action: () => void) => {
+    action()
+    setMobileMenuOpen(false)
+  }
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }))
+  }
+
+  // 메뉴 데이터 정의
+  const menuSections: MenuSection[] = useMemo(() => [
+    {
+      id: 'settings',
+      label: '설정',
+      icon: Settings,
+      items: [
+        {
+          id: 'app-settings',
+          label: '앱 설정',
+          icon: Settings,
+          action: () => setAppSettingsOpen(true)
+        },
+        {
+          id: 'theme-settings',
+          label: '테마 설정',
+          icon: Settings,
+          action: () => setSettingsOpen(true)
+        }
+      ]
+    },
+    {
+      id: 'data',
+      label: '데이터 관리',
+      icon: Database,
+      items: [
+        {
+          id: 'folder-sync',
+          label: '폴더 동기화',
+          icon: FolderSync,
+          action: () => onFolderSyncClick?.()
+        },
+        {
+          id: 'backup-restore',
+          label: '데이터 백업 및 복원',
+          icon: Database,
+          action: () => onBackupRestoreClick?.()
+        },
+        {
+          id: 'pricing-calc',
+          label: '촬영비 계산',
+          icon: Calculator,
+          action: () => setPricingRuleOpen(true)
+        },
+        {
+          id: 'pricing-stats',
+          label: '촬영 통계',
+          icon: ChartBar,
+          action: () => setStatsAlertOpen(true)
+        }
+      ]
+    },
+    {
+      id: 'dev',
+      label: '개발자 도구',
+      icon: Code,
+      adminOnly: true,
+      items: [
+        {
+          id: 'user-management',
+          label: '회원 관리',
+          icon: Users,
+          action: handleUsersManagement
+        },
+        {
+          id: 'ui-test',
+          label: 'UI 테스트 패널',
+          icon: TestTube2,
+          action: handleUITestPanel,
+          badge: testPanelVisible ? <Check className="ml-auto h-4 w-4" /> : undefined
+        }
+      ]
+    }
+  ], [onFolderSyncClick, onBackupRestoreClick, testPanelVisible])
+
+  // 관리자 전용 섹션 필터링
+  const visibleSections = useMemo(() =>
+    menuSections.filter(section => !section.adminOnly || user?.isAdmin),
+    [menuSections, user?.isAdmin]
+  )
+
+  // 데스크탑 드롭다운 메뉴
+  const renderDesktopMenuContent = () => (
     <>
-      {/* 설정 서브메뉴 */}
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>설정</span>
-        </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent>
-          <DropdownMenuItem onClick={() => setAppSettingsOpen(true)}>
-            앱 설정
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-            테마 설정
-          </DropdownMenuItem>
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
-
-      {/* 데이터 관리 서브메뉴 */}
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger>
-          <Database className="mr-2 h-4 w-4" />
-          <span>데이터 관리</span>
-        </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent>
-          <DropdownMenuItem onClick={onFolderSyncClick}>
-            <FolderSync className="mr-2 h-4 w-4" />
-            폴더 동기화
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onBackupRestoreClick}>
-            <Database className="mr-2 h-4 w-4" />
-            데이터 백업 및 복원
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setPricingRuleOpen(true)}>
-            <Calculator className="mr-2 h-4 w-4" />
-            촬영비 계산
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatsAlertOpen(true)}>
-            <ChartBar className="mr-2 h-4 w-4" />
-            촬영 통계
-          </DropdownMenuItem>
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
-
-      {/* 개발자 도구 서브메뉴 (관리자만) */}
-      {user?.isAdmin && (
-        <DropdownMenuSub>
+      {visibleSections.map(section => (
+        <DropdownMenuSub key={section.id}>
           <DropdownMenuSubTrigger>
-            <Code className="mr-2 h-4 w-4" />
-            <span>개발자 도구</span>
+            <section.icon className="mr-2 h-4 w-4" />
+            <span>{section.label}</span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuItem onClick={handleUsersManagement}>
-              <Users className="mr-2 h-4 w-4" />
-              회원 관리
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleUITestPanel}>
-              <TestTube2 className="mr-2 h-4 w-4" />
-              UI 테스트 패널
-              {testPanelVisible && <Check className="ml-auto h-4 w-4" />}
-            </DropdownMenuItem>
+            {section.items.map(item => (
+              <DropdownMenuItem key={item.id} onClick={item.action}>
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+                {item.badge}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-      )}
+      ))}
 
-      {/* 로그아웃 (로그인한 사용자만) */}
       {user && (
         <>
           <DropdownMenuSeparator />
@@ -128,25 +201,111 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
     </>
   )
 
-  // 로그인하지 않은 경우 - 설정 버튼 + 로그인 버튼
+  // 모바일 Sheet 메뉴
+  const renderMobileMenuContent = () => (
+    <div className="space-y-2 py-4">
+      {visibleSections.map(section => (
+        <div key={section.id}>
+          <button
+            onClick={() => toggleSection(section.id)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent rounded-md transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <section.icon className="h-5 w-5" />
+              <span className="font-medium">{section.label}</span>
+            </div>
+            {expandedSections[section.id] ? (
+              <ChevronDown className="h-5 w-5" />
+            ) : (
+              <ChevronRight className="h-5 w-5" />
+            )}
+          </button>
+          {expandedSections[section.id] && (
+            <div className="pl-12 pr-4 py-2 space-y-1">
+              {section.items.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => handleMenuItemClick(item.action)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                  {item.badge}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {user && (
+        <>
+          <div className="border-t my-2" />
+          <button
+            onClick={() => handleMenuItemClick(handleLogout)}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent rounded-md transition-colors text-destructive"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="font-medium">로그아웃</span>
+          </button>
+        </>
+      )}
+    </div>
+  )
+
+  // 로그인하지 않은 경우
   if (!user) {
     return (
       <>
         <div className="flex items-center gap-2">
+          {/* 데스크탑 드롭다운 */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="hidden md:flex h-9 w-9"
               >
                 <Settings className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {renderMenuContent()}
+              {renderDesktopMenuContent()}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* 모바일 Sheet */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 md:hidden"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] p-0"
+              hideClose
+            >
+              {/* 커스텀 헤더 */}
+              <div className="flex items-center h-14 px-4 border-b">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="h-9 w-9"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
+                {renderMobileMenuContent()}
+              </div>
+            </SheetContent>
+          </Sheet>
 
           <Button
             variant="ghost"
@@ -160,6 +319,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             </span>
           </Button>
         </div>
+
         <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
@@ -177,14 +337,15 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
     )
   }
 
-  // 로그인한 경우 - 프로필 드롭다운
+  // 로그인한 경우
   return (
     <>
+      {/* 데스크탑 드롭다운 */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 px-2"
+            className="hidden md:flex items-center gap-2 px-2"
           >
             {user.picture ? (
               <img
@@ -201,9 +362,52 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {renderMenuContent()}
+          {renderDesktopMenuContent()}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* 모바일 Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 px-2 md:hidden"
+          >
+            {user.picture ? (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="h-8 w-8 rounded-full"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="text-sm font-medium">{user.name}</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] p-0"
+          hideClose
+        >
+          {/* 커스텀 헤더 */}
+          <div className="flex items-center h-14 px-4 border-b">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(false)}
+              className="h-9 w-9"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
+            {renderMobileMenuContent()}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* 설정 다이얼로그 */}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
