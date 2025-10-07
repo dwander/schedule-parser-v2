@@ -255,15 +255,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             : 'border-border bg-card'
         }
       `}
+      onDoubleClick={handleHeaderDoubleClick}
+      onPointerDown={handleHeaderPointerDown}
+      onPointerUp={handleHeaderPointerUp}
+      onPointerLeave={handleHeaderPointerUp}
     >
       {/* Header */}
-      <div
-        className="flex items-start gap-3 p-4 pb-3"
-        onDoubleClick={handleHeaderDoubleClick}
-        onPointerDown={handleHeaderPointerDown}
-        onPointerUp={handleHeaderPointerUp}
-        onPointerLeave={handleHeaderPointerUp}
-      >
+      <div className="flex items-start gap-3 p-4 pb-3">
         {/* Left: Checkbox */}
         {columnVisibility.select && (
           <input
