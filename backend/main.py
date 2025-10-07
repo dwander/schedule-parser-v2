@@ -82,6 +82,11 @@ if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
         "https://bs-snaper-frontend-test.up.railway.app",
         "https://bs-snaper-backend-test.up.railway.app",
 		"https://bssnaper.enfree.com",
+		"https://sched.enfree.com",
+		"https://enfree.com",
+		"https://4to.app",
+		"https://sched.4to.app",
+		"https://first.4to.app",
     ])
 
 app.add_middleware(
