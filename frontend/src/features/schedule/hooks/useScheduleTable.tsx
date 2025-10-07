@@ -21,7 +21,7 @@ import { TimePickerCell } from '../components/TimePickerCell'
 import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
 import { useCreateTag, useDeleteTag, useTags } from './useTags'
-import { FolderCheck } from 'lucide-react'
+import { FolderCheck, Clipboard } from 'lucide-react'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -520,11 +520,9 @@ export function useScheduleTable(
       {
         id: 'folderName',
         header: () => (
-          <EditableCell
-            doubleClick
-            value={columnLabels.folderName}
-            onSave={(value) => setColumnLabel('folderName', value)}
-          />
+          <div className="flex items-center justify-end pr-2">
+            <Clipboard className="h-4 w-4 text-muted-foreground" />
+          </div>
         ),
         size: 60,
         enableSorting: false,
@@ -589,10 +587,10 @@ export function useScheduleTable(
       {
         id: 'spacer',
         header: '',
-        size: 0, // 숨겨진 컬럼 대비 예비 공간 (나중에 컬럼 ON/OFF 기능 구현 시 사용)
+        size: 0, // memo 컬럼이 숨겨질 때 활성화되는 가변폭 컬럼
         enableSorting: false,
         enableColumnFilter: false,
-        enableHiding: false,
+        enableHiding: true,
         cell: () => null,
       },
     ],
