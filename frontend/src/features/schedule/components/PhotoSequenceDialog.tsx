@@ -63,6 +63,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
   const [showRecognizedText, setShowRecognizedText] = useState(false)
   const [displayedText, setDisplayedText] = useState('')
+  const [matchedItemText, setMatchedItemText] = useState('')
 
   // 모달이 열릴 때만 초기화
   useEffect(() => {
@@ -221,6 +222,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       const matchedItem = items.find(item => !item.deleted && item.text === itemText)
       if (matchedItem && !matchedItem.completed) {
         toggleComplete(matchedItem.id)
+        // 매칭된 카드 제목 저장
+        setMatchedItemText(matchedItem.text)
       }
     }
   }
@@ -255,11 +258,20 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
       const timer = setTimeout(() => {
         setShowRecognizedText(false)
+        setMatchedItemText('') // 페이드 아웃 후 초기화
       }, 3000) // 3초 후 페이드 아웃
 
       return () => clearTimeout(timer)
     }
   }, [lastRecognized])
+
+  // 매칭된 카드 제목 표시 (즉시)
+  useEffect(() => {
+    if (matchedItemText) {
+      setDisplayedText(`✓ ${matchedItemText}`)
+      setShowRecognizedText(true)
+    }
+  }, [matchedItemText])
 
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
@@ -422,8 +434,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         {/* 인식된 텍스트 크게 표시 (페이드 아웃) */}
         {voiceEnabled && displayedText && (
           <div className={`mx-4 mb-3 flex-shrink-0 text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="text-xl font-semibold text-primary">
-              &ldquo;{displayedText}&rdquo;
+            <div className={`text-xl font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
+              {displayedText}
             </div>
           </div>
         )}
