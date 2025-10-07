@@ -147,7 +147,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           email: response.data.email,
           name: response.data.name,
           picture: response.data.picture,
-          isAdmin: response.data.is_admin || false
+          isAdmin: response.data.is_admin || false,
+          hasSeenSampleData: response.data.has_seen_sample_data || false
         }
 
         // 익명 데이터 확인 (백엔드에서 이미 prefix가 붙어서 옴)

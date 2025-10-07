@@ -7,6 +7,7 @@ export interface User {
   name: string
   picture?: string
   isAdmin?: boolean
+  hasSeenSampleData?: boolean
   naverAccessToken?: string
   naverRefreshToken?: string
 }

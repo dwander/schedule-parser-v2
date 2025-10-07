@@ -12,9 +12,11 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { LandingPage } from '@/components/landing/LandingPage'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { useSchedules } from '@/features/schedule/hooks/useSchedules'
+import { useSchedules, useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useState, useMemo, useEffect } from 'react'
+import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedules'
+import { markSampleDataSeen } from '@/lib/api/sampleData'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
@@ -28,9 +30,10 @@ function AppContent() {
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
   const { testPanelVisible, fontSize, dateRangeFilter, sortBy } = useSettingsStore()
-  const { data: schedules = [] } = useSchedules()
+  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
+  const batchAddSchedules = useBatchAddSchedules()
   const { user, login, updateNaverToken } = useAuthStore()
   const [showLanding, setShowLanding] = useState(() => {
     // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
@@ -67,6 +70,7 @@ function AppContent() {
             name: response.data.name,
             picture: response.data.picture,
             isAdmin: response.data.is_admin || false,
+            hasSeenSampleData: response.data.has_seen_sample_data || false,
             naverAccessToken: response.data.access_token,
             naverRefreshToken: response.data.refresh_token
           }
@@ -108,7 +112,8 @@ function AppContent() {
             email: response.data.email,
             name: response.data.name,
             picture: response.data.picture,
-            isAdmin: response.data.is_admin || false
+            isAdmin: response.data.is_admin || false,
+            hasSeenSampleData: response.data.has_seen_sample_data || false
           }
 
           login(user)
@@ -189,6 +194,49 @@ function AppContent() {
       syncTags.mutate()
     }
   }, [schedules, tags])
+
+  // 앱을 처음 사용하는 경우 예제 데이터 추가
+  useEffect(() => {
+    // 로딩 중이거나 이미 스케줄이 있으면 스킵
+    if (schedulesLoading || schedules.length > 0) {
+      return
+    }
+
+    // 예제 데이터를 본 적이 있는지 확인
+    // 로그인 사용자: user.hasSeenSampleData 확인
+    // 익명 사용자: localStorage 확인
+    const hasSeenExamples = user
+      ? user.hasSeenSampleData
+      : localStorage.getItem('hasSeenExamples') === 'true'
+
+    if (hasSeenExamples) {
+      return
+    }
+
+    // 예제 데이터 추가
+    batchAddSchedules.mutate(EXAMPLE_SCHEDULES, {
+      onSuccess: async () => {
+        // 로그인 사용자: 백엔드에 기록
+        if (user) {
+          try {
+            await markSampleDataSeen(user.id)
+            // 사용자 정보 업데이트 (hasSeenSampleData = true)
+            login({ ...user, hasSeenSampleData: true })
+          } catch (error) {
+            console.error('예제 데이터 표시 기록 실패:', error)
+          }
+        } else {
+          // 익명 사용자: localStorage에 기록
+          localStorage.setItem('hasSeenExamples', 'true')
+        }
+
+        toast.success('🎉 환영합니다! 예제 데이터가 추가되었습니다.')
+      },
+      onError: (error) => {
+        console.error('예제 데이터 추가 실패:', error)
+      }
+    })
+  }, [schedulesLoading, schedules, user])
 
   // 익명으로 계속하기 핸들러
   const handleContinueAnonymous = () => {

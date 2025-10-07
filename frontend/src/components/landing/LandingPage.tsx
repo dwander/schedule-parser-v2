@@ -37,7 +37,8 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           email: response.data.email,
           name: response.data.name,
           picture: response.data.picture,
-          isAdmin: response.data.is_admin || false
+          isAdmin: response.data.is_admin || false,
+          hasSeenSampleData: response.data.has_seen_sample_data || false
         }
 
         login(user)
