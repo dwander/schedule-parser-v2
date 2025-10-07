@@ -37,7 +37,7 @@ function ThemeSynchronizer() {
     if (!resolvedTheme) return
 
     const metaThemeColor = document.querySelector('meta[name="theme-color"]')
-    const themeColor = resolvedTheme === 'dark' ? '#1c1e26' : '#ffffff'
+    const themeColor = resolvedTheme === 'dark' ? '#101419' : '#fcfcfc'
 
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', themeColor)
