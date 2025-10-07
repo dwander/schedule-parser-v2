@@ -72,19 +72,46 @@ export function useFlexColumnWidth(
 
   // 초기 계산 및 리사이즈 이벤트 등록
   useLayoutEffect(() => {
-    calculateFlexWidth()
-    window.addEventListener('resize', calculateFlexWidth)
-    return () => window.removeEventListener('resize', calculateFlexWidth)
+    if (!containerRef.current) return
+
+    // 초기 측정 (RAF로 레이아웃 완료 대기)
+    const rafId = requestAnimationFrame(() => {
+      calculateFlexWidth()
+    })
+
+    // ResizeObserver로 컨테이너 크기 변경 감지
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(calculateFlexWidth)
+    })
+
+    resizeObserver.observe(containerRef.current)
+
+    // 윈도우 리사이즈도 함께 처리
+    const handleResize = () => {
+      requestAnimationFrame(calculateFlexWidth)
+    }
+    window.addEventListener('resize', handleResize)
+
+    // 폰트 로딩 완료 대기
+    document.fonts.ready.then(() => {
+      calculateFlexWidth()
+    })
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
   }, [table, data, flexColumnId, table.getState().columnVisibility])
 
   // 뷰모드 전환 시 강제 재계산
   useEffect(() => {
     if (viewMode === 'list') {
-      // DOM 업데이트 대기 후 재계산
-      const timeoutId = setTimeout(() => {
+      // RAF로 DOM 업데이트 대기 후 재계산
+      const rafId = requestAnimationFrame(() => {
         calculateFlexWidth()
-      }, 50)
-      return () => clearTimeout(timeoutId)
+      })
+      return () => cancelAnimationFrame(rafId)
     }
   }, [viewMode])
 
