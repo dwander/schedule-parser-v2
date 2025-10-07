@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check } from 'lucide-react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -78,6 +78,14 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           <DropdownMenuItem onClick={onBackupRestoreClick}>
             <Database className="mr-2 h-4 w-4" />
             데이터 백업 및 복원
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => console.log('촬영비 계산 클릭')}>
+            <Calculator className="mr-2 h-4 w-4" />
+            촬영비 계산
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => console.log('촬영비 통계 클릭')}>
+            <ChartBar className="mr-2 h-4 w-4" />
+            촬영비 통계
           </DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
