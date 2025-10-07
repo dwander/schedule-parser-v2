@@ -463,7 +463,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
                             isSelected={row.getIsSelected()}
                             isDuplicate={isDuplicate}
                             isConflict={isConflict}
-                            onToggleSelect={() => row.toggleSelected()}
+                            onToggleSelect={() => setColumnVisibility({ ...columnVisibility, select: !columnVisibility.select })}
                             onDeleteTag={handleDeleteTag}
                           />
                         </div>

@@ -14,7 +14,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
 
@@ -36,6 +36,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
   const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // 구글 캘린더 URL 생성 함수
   const generateGoogleCalendarUrl = () => {
@@ -184,6 +185,34 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     }
   }
 
+  // 헤더 더블클릭 핸들러 (체크박스 토글)
+  const handleHeaderDoubleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onToggleSelect()
+  }
+
+  // 헤더 롱프레스 핸들러 (체크박스 토글)
+  const handleHeaderPointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement
+
+    // EditableCell 내부 input이나 버튼 클릭은 제외 (체크박스는 허용)
+    if (target.closest('button, [role="button"]') ||
+        (target.tagName === 'INPUT' && target.getAttribute('type') !== 'checkbox')) {
+      return
+    }
+
+    longPressTimerRef.current = setTimeout(() => {
+      onToggleSelect()
+    }, 500) // 500ms 롱프레스
+  }
+
+  const handleHeaderPointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
   // 촬영노트 데이터 존재 여부 확인
   const hasPhotoNoteData = useMemo(() => {
     const note = schedule.photoNote
@@ -228,7 +257,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       `}
     >
       {/* Header */}
-      <div className="flex items-start gap-3 p-4 pb-3">
+      <div
+        className="flex items-start gap-3 p-4 pb-3"
+        onDoubleClick={handleHeaderDoubleClick}
+        onPointerDown={handleHeaderPointerDown}
+        onPointerUp={handleHeaderPointerUp}
+        onPointerLeave={handleHeaderPointerUp}
+      >
         {/* Left: Checkbox */}
         {columnVisibility.select && (
           <input
@@ -240,20 +275,18 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         )}
 
         {/* Center: Location + Date/Time (카드뷰에서는 항상 표시) */}
-        <div className="flex-1 min-w-0">
-          <div className="mb-1">
-            <EditableCell
-              value={schedule.location}
-              onSave={(value) => {
-                updateSchedule.mutate({
-                  id: schedule.id,
-                  location: value
-                })
-              }}
-              placeholder="장소"
-              className="font-medium text-base"
-            />
-          </div>
+        <div className="flex-1 min-w-0 flex flex-col items-start">
+          <EditableCell
+            value={schedule.location}
+            onSave={(value) => {
+              updateSchedule.mutate({
+                id: schedule.id,
+                location: value
+              })
+            }}
+            placeholder="장소"
+            className="font-medium text-base !w-auto mb-1"
+          />
           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <DatePickerCell
               value={schedule.date}
@@ -320,18 +353,17 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {columnVisibility.couple && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                    <EditableCell
-                    value={schedule.couple}
-                    onSave={(value) => {
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        couple: value
-                      })
-                    }}
-                    placeholder="신랑신부"
-                  />
-                </div>
+                <EditableCell
+                  value={schedule.couple}
+                  onSave={(value) => {
+                    updateSchedule.mutate({
+                      id: schedule.id,
+                      couple: value
+                    })
+                  }}
+                  placeholder="신랑신부"
+                  className="!w-auto"
+                />
               </div>
             )}
 
@@ -339,9 +371,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {schedule.contact && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <EditableCell
-                    value={schedule.contact}
+                <EditableCell
+                  value={schedule.contact}
                   onSave={(value) => {
                     const isEmail = value.includes('@')
                     if (isEmail) {
@@ -375,27 +406,26 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     return str
                   }}
                   placeholder="연락처"
+                  className="!w-auto"
                 />
               </div>
-            </div>
             )}
 
             {/* Photographer */}
             {columnVisibility.photographer && (
               <div className="flex items-center gap-2">
                 <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                    <EditableCell
-                      value={schedule.photographer}
-                      onSave={(value) => {
-                        updateSchedule.mutate({
-                          id: schedule.id,
-                          photographer: value || ''
-                        })
-                      }}
-                      placeholder="작가"
-                    />
-                  </div>
+                <EditableCell
+                  value={schedule.photographer}
+                  onSave={(value) => {
+                    updateSchedule.mutate({
+                      id: schedule.id,
+                      photographer: value || ''
+                    })
+                  }}
+                  placeholder="작가"
+                  className="!w-auto"
+                />
               </div>
             )}
 
@@ -403,29 +433,28 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {columnVisibility.cuts && (
               <div className="flex items-center gap-2">
                 <FileDigit className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <EditableCell
-                    value={schedule.cuts}
-                    onSave={(value) => {
-                      const num = parseInt(value.replace(/\D/g, ''))
-                      if (!isNaN(num)) {
-                        updateSchedule.mutate({
-                          id: schedule.id,
-                          cuts: num
-                        })
-                      }
-                    }}
-                    validate={(value) => {
-                      const num = parseInt(value.replace(/\D/g, ''))
-                      return !isNaN(num) && num >= 0
-                    }}
-                    format={(val) => {
-                      const num = Number(val)
-                      return num > 0 ? num.toLocaleString() : ''
-                    }}
-                    placeholder="컷수"
-                  />
-                </div>
+                <EditableCell
+                  value={schedule.cuts}
+                  onSave={(value) => {
+                    const num = parseInt(value.replace(/\D/g, ''))
+                    if (!isNaN(num)) {
+                      updateSchedule.mutate({
+                        id: schedule.id,
+                        cuts: num
+                      })
+                    }
+                  }}
+                  validate={(value) => {
+                    const num = parseInt(value.replace(/\D/g, ''))
+                    return !isNaN(num) && num >= 0
+                  }}
+                  format={(val) => {
+                    const num = Number(val)
+                    return num > 0 ? num.toLocaleString() : ''
+                  }}
+                  placeholder="컷수"
+                  className="!w-auto"
+                />
               </div>
             )}
 
@@ -433,29 +462,28 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {columnVisibility.price && (
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <EditableCell
-                    value={schedule.price}
-                    onSave={(value) => {
-                      const num = parseInt(value.replace(/\D/g, ''))
-                      if (!isNaN(num)) {
-                        updateSchedule.mutate({
-                          id: schedule.id,
-                          price: num
-                        })
-                      }
-                    }}
-                    validate={(value) => {
-                      const num = parseInt(value.replace(/\D/g, ''))
-                      return !isNaN(num) && num >= 0
-                    }}
-                    format={(val) => {
-                      const num = Number(val)
-                      return num > 0 ? num.toLocaleString() : ''
-                    }}
-                    placeholder="촬영비"
-                  />
-                </div>
+                <EditableCell
+                  value={schedule.price}
+                  onSave={(value) => {
+                    const num = parseInt(value.replace(/\D/g, ''))
+                    if (!isNaN(num)) {
+                      updateSchedule.mutate({
+                        id: schedule.id,
+                        price: num
+                      })
+                    }
+                  }}
+                  validate={(value) => {
+                    const num = parseInt(value.replace(/\D/g, ''))
+                    return !isNaN(num) && num >= 0
+                  }}
+                  format={(val) => {
+                    const num = Number(val)
+                    return num > 0 ? num.toLocaleString() : ''
+                  }}
+                  placeholder="촬영비"
+                  className="!w-auto"
+                />
               </div>
             )}
 
@@ -463,18 +491,17 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             {columnVisibility.manager && schedule.manager && (
               <div className="flex items-center gap-2">
                 <UserCog className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <EditableCell
-                    value={schedule.manager}
-                    onSave={(value) => {
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        manager: value
-                      })
-                    }}
-                    placeholder="계약자"
-                  />
-                </div>
+                <EditableCell
+                  value={schedule.manager}
+                  onSave={(value) => {
+                    updateSchedule.mutate({
+                      id: schedule.id,
+                      manager: value
+                    })
+                  }}
+                  placeholder="계약자"
+                  className="!w-auto"
+                />
               </div>
             )}
           </div>
