@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { FolderSyncModal } from '@/features/sync/components/FolderSyncModal'
 import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sun, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function DialogTestPanel() {
@@ -24,12 +24,54 @@ export function DialogTestPanel() {
   const [syncOpen, setSyncOpen] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
   const [name, setName] = useState('')
+  const [swEnabled, setSwEnabled] = useState(false)
   const { theme, setTheme } = useSettingsStore()
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
     toast.success(`${newTheme === 'dark' ? '다크' : '라이트'} 모드로 전환`)
+  }
+
+  // 서비스워커 상태 확인
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        setSwEnabled(!!registration)
+      })
+    }
+  }, [])
+
+  const toggleServiceWorker = async () => {
+    if (!('serviceWorker' in navigator)) {
+      toast.error('이 브라우저는 Service Worker를 지원하지 않습니다')
+      return
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+
+      if (registration) {
+        // 서비스워커 해제
+        await registration.unregister()
+        setSwEnabled(false)
+        toast.success('Service Worker가 해제되었습니다')
+        // 캐시 삭제
+        if ('caches' in window) {
+          const cacheNames = await caches.keys()
+          await Promise.all(cacheNames.map(name => caches.delete(name)))
+          toast.info('캐시가 모두 삭제되었습니다')
+        }
+      } else {
+        // 서비스워커 등록
+        // 페이지 새로고침으로 자동 등록되도록 안내
+        toast.info('Service Worker 등록을 위해 페이지를 새로고침합니다')
+        setTimeout(() => window.location.reload(), 1000)
+      }
+    } catch (error) {
+      console.error('Service Worker toggle error:', error)
+      toast.error('Service Worker 전환 중 오류가 발생했습니다')
+    }
   }
 
   return (
@@ -42,7 +84,7 @@ export function DialogTestPanel() {
       <Button
         variant="outline"
         size="sm"
-        className="w-full mb-3"
+        className="w-full mb-2"
         onClick={toggleTheme}
       >
         {theme === 'dark' ? (
@@ -54,6 +96,26 @@ export function DialogTestPanel() {
           <>
             <Moon className="h-4 w-4 mr-2" />
             다크 모드
+          </>
+        )}
+      </Button>
+
+      {/* 서비스워커 토글 (전체 너비) */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full mb-3"
+        onClick={toggleServiceWorker}
+      >
+        {swEnabled ? (
+          <>
+            <PowerOff className="h-4 w-4 mr-2" />
+            SW 비활성화
+          </>
+        ) : (
+          <>
+            <Power className="h-4 w-4 mr-2" />
+            SW 활성화
           </>
         )}
       </Button>

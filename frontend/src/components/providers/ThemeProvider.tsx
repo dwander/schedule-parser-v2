@@ -8,7 +8,7 @@ interface ThemeProviderProps {
 
 // useSettingsStore <-> next-themes 양방향 동기화
 function ThemeSynchronizer() {
-  const { theme: nextTheme, setTheme: setNextTheme } = useTheme()
+  const { theme: nextTheme, setTheme: setNextTheme, resolvedTheme } = useTheme()
   const { theme: storeTheme, setTheme: setStoreTheme } = useSettingsStore()
   const isSyncingRef = useRef(false)
 
@@ -31,6 +31,18 @@ function ThemeSynchronizer() {
       setTimeout(() => { isSyncingRef.current = false }, 0)
     }
   }, [nextTheme, storeTheme, setStoreTheme])
+
+  // 테마 변경 시 OS 상태바 색상 업데이트
+  useEffect(() => {
+    if (!resolvedTheme) return
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    const themeColor = resolvedTheme === 'dark' ? '#1c1e26' : '#ffffff'
+
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', themeColor)
+    }
+  }, [resolvedTheme])
 
   return null
 }

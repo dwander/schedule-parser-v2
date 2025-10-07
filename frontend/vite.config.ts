@@ -46,7 +46,11 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff,woff2}'],
+        // index.html과 manifest는 캐시에서 제외 (항상 최신 버전 사용)
+        globIgnores: ['**/index.html', '**/manifest.webmanifest'],
+        // 네비게이션 요청(HTML)은 항상 네트워크에서 가져오기
+        navigateFallback: null,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -70,6 +74,22 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // API 요청은 NetworkFirst (네트워크 우선, 실패시 캐시)
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5 // 5분
               },
               cacheableResponse: {
                 statuses: [0, 200]
