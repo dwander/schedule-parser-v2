@@ -343,7 +343,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div ref={containerRef} className="overflow-x-auto overflow-y-hidden w-full">
+        <div ref={containerRef} className="overflow-x-auto overflow-y-hidden w-full bg-card border border-border rounded-lg">
           <div ref={tableRef} style={{ minWidth: tableWidth }}>
             <div
               style={{
