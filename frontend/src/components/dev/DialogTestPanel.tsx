@@ -10,6 +10,8 @@ import { LoadingOverlay } from '@/components/common/LoadingOverlay'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
 import { FolderSyncModal } from '@/features/sync/components/FolderSyncModal'
+import { useSettingsStore } from '@/stores/useSettingsStore'
+import { Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function DialogTestPanel() {
@@ -21,88 +23,115 @@ export function DialogTestPanel() {
   const [emptyOpen, setEmptyOpen] = useState(false)
   const [syncOpen, setSyncOpen] = useState(false)
   const [name, setName] = useState('')
+  const { theme, setTheme } = useSettingsStore()
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    toast.success(`${newTheme === 'dark' ? '다크' : '라이트'} 모드로 전환`)
+  }
 
   return (
-    <div className="fixed bottom-4 right-4 p-4 bg-card border border-border rounded-lg shadow-lg space-y-2 max-h-[90vh] overflow-y-auto">
-      <div className="text-sm font-semibold text-muted-foreground mb-2">
+    <div className="fixed bottom-4 right-4 p-4 bg-card border border-border rounded-lg shadow-lg max-h-[90vh] overflow-y-auto w-[340px]">
+      <div className="text-sm font-semibold text-muted-foreground mb-3">
         UI 테스트 패널
       </div>
 
+      {/* 테마 전환 (전체 너비) */}
       <Button
         variant="outline"
         size="sm"
-        className="w-full"
-        onClick={() => toast.success('토스트 테스트!')}
+        className="w-full mb-3"
+        onClick={toggleTheme}
       >
-        토스트
+        {theme === 'dark' ? (
+          <>
+            <Sun className="h-4 w-4 mr-2" />
+            라이트 모드
+          </>
+        ) : (
+          <>
+            <Moon className="h-4 w-4 mr-2" />
+            다크 모드
+          </>
+        )}
       </Button>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setAlertOpen(true)}
-      >
-        알림 모달
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        {/* 좌측 컬럼 - 다이얼로그 */}
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground mb-1">다이얼로그</div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => toast.success('토스트 테스트!')}
+          >
+            토스트
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setAlertOpen(true)}
+          >
+            알림 모달
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setConfirmOpen(true)}
+          >
+            확인 모달
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setFormOpen(true)}
+          >
+            폼 모달
+          </Button>
+        </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setConfirmOpen(true)}
-      >
-        확인 모달
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setFormOpen(true)}
-      >
-        폼 모달
-      </Button>
-
-      <div className="border-t border-border my-2" />
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setLoadingOpen(true)}
-      >
-        로딩 상태
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setErrorOpen(true)}
-      >
-        에러 상태
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setEmptyOpen(true)}
-      >
-        빈 상태
-      </Button>
-
-      <div className="border-t border-border my-2" />
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setSyncOpen(true)}
-      >
-        폴더 동기화
-      </Button>
+        {/* 우측 컬럼 - 상태 & 기능 */}
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground mb-1">상태 & 기능</div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setLoadingOpen(true)}
+          >
+            로딩 상태
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setErrorOpen(true)}
+          >
+            에러 상태
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setEmptyOpen(true)}
+          >
+            빈 상태
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setSyncOpen(true)}
+          >
+            폴더 동기화
+          </Button>
+        </div>
+      </div>
 
       {/* Alert Dialog */}
       <AlertDialog
