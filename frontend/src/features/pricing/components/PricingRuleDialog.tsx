@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, X, AlertCircle, Calculator, Upload } from 'lucide-react'
+import { Plus, Trash2, Save, X, AlertCircle, Calculator, Upload, ArrowLeft } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -358,22 +358,38 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)] md:max-w-3xl md:max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            촬영비 단가 설정
-          </DialogTitle>
-          <DialogDescription>
-            조건별 촬영 단가를 설정하고 기존 스케줄에 일괄 적용할 수 있습니다.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent
+        className="max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)] md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
+        hideClose
+      >
+        {/* 커스텀 헤더 */}
+        <div className="sticky top-0 bg-background border-b z-10">
+          <div className="flex items-center gap-3 px-3 py-4 md:px-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-9 w-9 -ml-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <DialogTitle className="text-left">촬영비 단가 설정</DialogTitle>
+              <DialogDescription className="text-left">
+                조건별 촬영 단가를 설정하고 기존 스케줄에 일괄 적용할 수 있습니다.
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
-        <div className="space-y-6">
+        <div className="px-[5px] pb-[5px] md:px-6 md:pb-6">
+
+        <div className="space-y-4 md:space-y-6">
           {/* 단가 규칙 입력 폼 */}
-          <Card className="p-4">
+          <Card className="max-md:border-0 max-md:shadow-none max-md:bg-transparent max-md:px-2 max-md:py-4 md:p-4">
             <div className="grid gap-4">
-              <div className="grid grid-cols-3 gap-4">
+              {/* 지역/장소/홀 - 모바일 2열, 데스크탑 3열 */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="location">지역</Label>
                   <Input
@@ -381,6 +397,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                     value={currentRule.location || ''}
                     onChange={(e) => setCurrentRule({ ...currentRule, location: e.target.value })}
                     placeholder="예: 서울, 경기, 부산 .."
+                    className="text-base"
                   />
                 </div>
                 <div>
@@ -390,152 +407,157 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                     value={currentRule.venue || ''}
                     onChange={(e) => setCurrentRule({ ...currentRule, venue: e.target.value })}
                     placeholder="예: 신라호텔"
+                    className="text-base"
                   />
                 </div>
-                <div>
+                <div className="col-span-2 md:col-span-1">
                   <Label htmlFor="hall">홀</Label>
                   <Input
                     id="hall"
                     value={currentRule.hall || ''}
                     onChange={(e) => setCurrentRule({ ...currentRule, hall: e.target.value })}
                     placeholder="예: 컨벤션, 체플 .."
+                    className="text-base"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* 기간/브랜드/앨범 - 모바일 2열, 데스크탑 4열 */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <Label>기간</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex gap-1">
-                      <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'flex-1 justify-start text-left font-normal',
-                              !currentRule.startDate && 'text-muted-foreground'
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {currentRule.startDate
-                              ? format(currentRule.startDate, 'yyyy.MM.dd', { locale: ko })
-                              : '시작'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={currentRule.startDate}
-                            onSelect={(date) => {
-                              setCurrentRule({ ...currentRule, startDate: date || undefined })
-                              setStartDateOpen(false)
-                            }}
-                            defaultMonth={currentRule.startDate}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {currentRule.startDate && (
+                  <Label>기간 시작</Label>
+                  <div className="flex gap-1">
+                    <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                      <PopoverTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-5"
-                          onClick={() => setCurrentRule({ ...currentRule, startDate: undefined })}
+                          variant="outline"
+                          className={cn(
+                            'flex-1 justify-start text-left font-normal text-base',
+                            !currentRule.startDate && 'text-muted-foreground'
+                          )}
                         >
-                          <X className="h-3 w-3" />
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {currentRule.startDate
+                            ? format(currentRule.startDate, 'yyyy.MM.dd', { locale: ko })
+                            : '시작'}
                         </Button>
-                      )}
-                    </div>
-
-                    <div className="flex-1 flex gap-1">
-                      <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'flex-1 justify-start text-left font-normal',
-                              !currentRule.endDate && 'text-muted-foreground'
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {currentRule.endDate
-                              ? format(currentRule.endDate, 'yyyy.MM.dd', { locale: ko })
-                              : '종료'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={currentRule.endDate}
-                            onSelect={(date) => {
-                              setCurrentRule({ ...currentRule, endDate: date || undefined })
-                              setEndDateOpen(false)
-                            }}
-                            disabled={(date) =>
-                              currentRule.startDate ? date < currentRule.startDate : false
-                            }
-                            defaultMonth={currentRule.endDate}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {currentRule.endDate && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-5"
-                          onClick={() => setCurrentRule({ ...currentRule, endDate: undefined })}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={currentRule.startDate}
+                          onSelect={(date) => {
+                            setCurrentRule({ ...currentRule, startDate: date || undefined })
+                            setStartDateOpen(false)
+                          }}
+                          defaultMonth={currentRule.startDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {currentRule.startDate && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-5"
+                        onClick={() => setCurrentRule({ ...currentRule, startDate: undefined })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="brand">브랜드</Label>
-                    <Select
-                      value={currentRule.brand || 'all'}
-                      onValueChange={(value) => setCurrentRule({ ...currentRule, brand: value === 'all' ? undefined : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">전체</SelectItem>
-                        {brandTags.map(tag => (
-                          <SelectItem key={tag.id} value={tag.tag_value}>
-                            {tag.tag_value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+
+                <div>
+                  <Label>기간 종료</Label>
+                  <div className="flex gap-1">
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'flex-1 justify-start text-left font-normal text-base',
+                            !currentRule.endDate && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {currentRule.endDate
+                            ? format(currentRule.endDate, 'yyyy.MM.dd', { locale: ko })
+                            : '종료'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={currentRule.endDate}
+                          onSelect={(date) => {
+                            setCurrentRule({ ...currentRule, endDate: date || undefined })
+                            setEndDateOpen(false)
+                          }}
+                          disabled={(date) =>
+                            currentRule.startDate ? date < currentRule.startDate : false
+                          }
+                          defaultMonth={currentRule.endDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {currentRule.endDate && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-5"
+                        onClick={() => setCurrentRule({ ...currentRule, endDate: undefined })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
-                  <div>
-                    <Label htmlFor="album">앨범종류</Label>
-                    <Select
-                      value={currentRule.album || 'all'}
-                      onValueChange={(value) => setCurrentRule({ ...currentRule, album: value === 'all' ? undefined : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">전체</SelectItem>
-                        {albumTags.map(tag => (
-                          <SelectItem key={tag.id} value={tag.tag_value}>
-                            {tag.tag_value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="brand">브랜드</Label>
+                  <Select
+                    value={currentRule.brand || 'all'}
+                    onValueChange={(value) => setCurrentRule({ ...currentRule, brand: value === 'all' ? undefined : value })}
+                  >
+                    <SelectTrigger className="text-base">
+                      <SelectValue placeholder="선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      {brandTags.map(tag => (
+                        <SelectItem key={tag.id} value={tag.tag_value}>
+                          {tag.tag_value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="album">앨범종류</Label>
+                  <Select
+                    value={currentRule.album || 'all'}
+                    onValueChange={(value) => setCurrentRule({ ...currentRule, album: value === 'all' ? undefined : value })}
+                  >
+                    <SelectTrigger className="text-base">
+                      <SelectValue placeholder="선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      {albumTags.map(tag => (
+                        <SelectItem key={tag.id} value={tag.tag_value}>
+                          {tag.tag_value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* 단가/메모 - 모바일 1열, 데스크탑 2열 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="price">단가 *</Label>
                   <Input
@@ -546,6 +568,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                     onChange={(e) => setCurrentRule({ ...currentRule, price: parseInt(e.target.value) || 0 })}
                     placeholder="0"
                     required
+                    className="text-base"
                   />
                 </div>
                 <div>
@@ -555,6 +578,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                     value={currentRule.description || ''}
                     onChange={(e) => setCurrentRule({ ...currentRule, description: e.target.value })}
                     placeholder="예: 평일 촬영, 추가 금액"
+                    className="text-base"
                   />
                 </div>
               </div>
@@ -577,7 +601,8 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                       className="flex-1"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      새 규칙으로 저장
+                      <span className="max-md:hidden">새 규칙으로 저장</span>
+                      <span className="md:hidden">새로 저장</span>
                     </Button>
                     <Button variant="outline" onClick={handleNewRule} disabled={loading}>
                       <X className="mr-2 h-4 w-4" />
@@ -591,7 +616,8 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                     className="flex-1"
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    단가 규칙 추가
+                    <span className="max-md:hidden">단가 규칙 추가</span>
+                    <span className="md:hidden">추가</span>
                   </Button>
                 )}
               </div>
@@ -688,6 +714,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
               </Button>
             )}
           </div>
+        </div>
         </div>
       </DialogContent>
 
