@@ -102,6 +102,7 @@ class PricingRule(Base):
     # 조건 필드 (NULL이면 전체 적용)
     location = Column(String(255), nullable=True, index=True)  # 지역
     venue = Column(String(255), nullable=True)                  # 장소(예식장)
+    hall = Column(String(255), nullable=True)                   # 홀
     start_date = Column(String(10), nullable=True)             # 기간 시작 (YYYY.MM.DD)
     end_date = Column(String(10), nullable=True)               # 기간 끝 (YYYY.MM.DD)
     brand = Column(String(255), nullable=True, index=True)     # 브랜드
@@ -128,6 +129,7 @@ class PricingRule(Base):
             'user_id': self.user_id,
             'location': self.location,
             'venue': self.venue,
+            'hall': self.hall,
             'start_date': self.start_date,
             'end_date': self.end_date,
             'brand': self.brand,

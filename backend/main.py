@@ -27,7 +27,7 @@ load_dotenv()
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
 
 # Import database modules
-from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User
+from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User, PricingRule
 
 # --- App Initialization ---
 app = FastAPI()
@@ -2877,6 +2877,7 @@ async def sync_tags_from_schedules(user_id: str):
 class PricingRuleCreate(BaseModel):
     location: Optional[str] = None
     venue: Optional[str] = None
+    hall: Optional[str] = None
     start_date: Optional[str] = None  # YYYY.MM.DD 형식
     end_date: Optional[str] = None    # YYYY.MM.DD 형식
     brand: Optional[str] = None
@@ -2889,6 +2890,7 @@ class PricingRuleCreate(BaseModel):
 class PricingRuleUpdate(BaseModel):
     location: Optional[str] = None
     venue: Optional[str] = None
+    hall: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     brand: Optional[str] = None
@@ -2928,6 +2930,7 @@ async def create_pricing_rule(
         priority = 0
         if rule_data.location: priority += 1
         if rule_data.venue: priority += 1
+        if rule_data.hall: priority += 1
         if rule_data.brand: priority += 1
         if rule_data.album: priority += 1
         if rule_data.start_date and rule_data.end_date: priority += 2
@@ -2937,6 +2940,7 @@ async def create_pricing_rule(
             user_id=user_id,
             location=rule_data.location,
             venue=rule_data.venue,
+            hall=rule_data.hall,
             start_date=rule_data.start_date,
             end_date=rule_data.end_date,
             brand=rule_data.brand,
@@ -2987,6 +2991,7 @@ async def update_pricing_rule(
         priority = 0
         if rule.location: priority += 1
         if rule.venue: priority += 1
+        if rule.hall: priority += 1
         if rule.brand: priority += 1
         if rule.album: priority += 1
         if rule.start_date and rule.end_date: priority += 2
@@ -3071,10 +3076,12 @@ async def apply_pricing_rules(
             for rule in rules:
                 match = True
 
-                # 각 조건 체크
-                if rule.location and schedule.location != rule.location:
+                # 각 조건 체크 (키워드 매칭)
+                if rule.location and rule.location not in (schedule.location or ''):
                     match = False
                 if rule.venue and rule.venue not in (schedule.location or ''):
+                    match = False
+                if rule.hall and rule.hall not in (schedule.location or ''):
                     match = False
                 if rule.brand and schedule.brand != rule.brand:
                     match = False

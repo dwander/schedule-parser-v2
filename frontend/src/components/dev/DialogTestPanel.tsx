@@ -10,6 +10,7 @@ import { LoadingOverlay } from '@/components/common/LoadingOverlay'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
 import { FolderSyncModal } from '@/features/sync/components/FolderSyncModal'
+import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,6 +23,7 @@ export function DialogTestPanel() {
   const [errorOpen, setErrorOpen] = useState(false)
   const [emptyOpen, setEmptyOpen] = useState(false)
   const [syncOpen, setSyncOpen] = useState(false)
+  const [pricingOpen, setPricingOpen] = useState(false)
   const [name, setName] = useState('')
   const { theme, setTheme } = useSettingsStore()
 
@@ -130,6 +132,14 @@ export function DialogTestPanel() {
           >
             폴더 동기화
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setPricingOpen(true)}
+          >
+            촬영비 계산
+          </Button>
         </div>
       </div>
 
@@ -234,6 +244,9 @@ export function DialogTestPanel() {
 
       {/* Folder Sync Modal */}
       <FolderSyncModal open={syncOpen} onOpenChange={setSyncOpen} />
+
+      {/* Pricing Rule Dialog */}
+      <PricingRuleDialog open={pricingOpen} onOpenChange={setPricingOpen} />
     </div>
   )
 }
