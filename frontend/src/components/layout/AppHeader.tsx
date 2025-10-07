@@ -14,7 +14,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick 
       {/* Safe area for mobile status bar */}
       <div className="h-[env(safe-area-inset-top)]" />
 
-      <div className="flex h-14 items-center justify-between px-[0.625rem]">
+      <div className="flex h-14 items-center justify-between px-[0.625rem] bg-background/60 backdrop-blur-sm">
         {/* Left: User Menu */}
         <UserMenu
           onFolderSyncClick={onFolderSyncClick}
