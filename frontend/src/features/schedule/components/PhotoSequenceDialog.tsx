@@ -163,7 +163,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 잠금 토글
   const toggleLock = () => {
-    setIsLocked(prev => {
+    setIsLocked((prev: boolean) => {
       const newValue = !prev
       localStorage.setItem('photoSequenceLocked', JSON.stringify(newValue))
       return newValue
@@ -178,7 +178,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       return
     }
 
-    setVoiceEnabled(prev => {
+    setVoiceEnabled((prev: boolean) => {
       const newValue = !prev
       localStorage.setItem('photoSequenceVoiceEnabled', JSON.stringify(newValue))
       return newValue

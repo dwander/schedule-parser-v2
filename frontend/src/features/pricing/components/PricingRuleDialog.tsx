@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, X, AlertCircle, Calculator, Upload, ArrowLeft } from 'lucide-react'
+import { Plus, Trash2, Save, X, AlertCircle, Upload, ArrowLeft } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'

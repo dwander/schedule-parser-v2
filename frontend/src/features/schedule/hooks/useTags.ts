@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchTags, createTag, deleteTag, syncTagsFromSchedules } from '../api/tagApi'
-import type { CreateTagRequest } from '../api/tagApi'
 
 export function useTags(tagType?: 'brand' | 'album') {
   return useQuery({

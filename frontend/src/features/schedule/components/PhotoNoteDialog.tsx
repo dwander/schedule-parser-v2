@@ -17,7 +17,6 @@ import type { Schedule, PhotoNote } from '../types/schedule'
 import { cn } from '@/lib/utils'
 import {
   Scissors,
-  Clock,
   Users,
   Sparkles,
   Camera,

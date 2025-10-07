@@ -1,5 +1,5 @@
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query'
-import { fetchUsers, type UserDetail } from '../api/userApi'
+import { useQuery } from '@tanstack/react-query'
+import { fetchUsers } from '../api/userApi'
 
 interface UseUsersOptions {
   enabled?: boolean

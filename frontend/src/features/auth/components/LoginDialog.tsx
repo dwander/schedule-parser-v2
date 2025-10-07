@@ -14,7 +14,6 @@ import { useConfigStore } from '@/stores/useConfigStore'
 import { useState } from 'react'
 import { getAnonymousUserId, clearAnonymousData } from '@/lib/utils/userUtils'
 import { migrateSchedules } from '@/features/schedule/api/scheduleApi'
-import { fetchSchedules } from '@/features/schedule/api/scheduleApi'
 import { MigrateDataDialog } from './MigrateDataDialog'
 import { useQueryClient } from '@tanstack/react-query'
 

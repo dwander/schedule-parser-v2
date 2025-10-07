@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import { toast } from 'sonner'

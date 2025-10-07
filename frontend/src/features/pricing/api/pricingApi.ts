@@ -2,6 +2,8 @@ import { apiClient } from '@/lib/api/client'
 import type { PricingRule } from '../components/PricingRuleDialog'
 
 export interface PricingRuleResponse extends PricingRule {
+  start_date?: string  // 백엔드 응답 필드 (snake_case)
+  end_date?: string    // 백엔드 응답 필드 (snake_case)
   created_at?: string
   updated_at?: string
   priority: number

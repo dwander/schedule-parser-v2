@@ -25,7 +25,7 @@ import {
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DateRangeFilterDialog } from './DateRangeFilterDialog'
 import { toast } from 'sonner'
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface ScheduleTableProps {
@@ -108,7 +108,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
     estimateSize: () => 400,
     overscan: 3,
     scrollMargin: gridContainerRef.current?.offsetTop ?? 0,
-    observeElementRect: (instance, cb) => {
+    observeElementRect: (_instance, cb) => {
       const handler = () => {
         cb({
           width: window.innerWidth,
@@ -120,7 +120,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
       window.addEventListener('resize', handler)
       return () => window.removeEventListener('resize', handler)
     },
-    observeElementOffset: (instance, cb) => {
+    observeElementOffset: (_instance, cb) => {
       const handler = () => {
         cb(window.scrollY)
       }

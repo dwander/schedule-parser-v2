@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { useAddSchedule } from '@/features/schedule/hooks/useSchedules'
 import { convertParsedDataToSchedules } from '../utils/convertParsedData'
-import type { NewSchedule } from '@/features/schedule/types/schedule'
 
 interface ParsedDataPreviewProps {
   parsedData: any[]

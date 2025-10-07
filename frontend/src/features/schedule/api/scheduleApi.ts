@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/api/client'
 import type { Schedule, NewSchedule, UpdateSchedule } from '../types/schedule'
-import { mockSchedules } from '@/lib/api/mockData'
 import { getUserId } from '@/lib/utils/userUtils'
 
 export async function fetchSchedules(): Promise<Schedule[]> {

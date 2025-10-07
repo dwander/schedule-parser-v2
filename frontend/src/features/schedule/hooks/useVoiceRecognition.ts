@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { VoiceTrainingData } from '../types/voiceRecognition'
 
 interface UseVoiceRecognitionProps {
@@ -11,7 +11,6 @@ interface UseVoiceRecognitionProps {
 // 한글 유니코드 상수
 const HANGUL_START = 0xAC00  // '가'
 const HANGUL_END = 0xD7A3    // '힣'
-const CHOSUNG_COUNT = 19
 const JUNGSUNG_COUNT = 21
 const JONGSUNG_COUNT = 28
 

@@ -20,14 +20,13 @@ import { DatePickerCell } from '../components/DatePickerCell'
 import { TimePickerCell } from '../components/TimePickerCell'
 import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
-import { useCreateTag, useDeleteTag, useTags } from './useTags'
+import { useDeleteTag, useTags } from './useTags'
 import { FolderCheck, Clipboard } from 'lucide-react'
 
 export function useScheduleTable(
   data: Schedule[] = []
 ) {
   const updateSchedule = useUpdateSchedule()
-  const createTag = useCreateTag()
   const deleteTagMutation = useDeleteTag()
   const { data: allSchedules = [] } = useSchedules()
   const { data: brandTags = [] } = useTags('brand')
@@ -140,8 +139,6 @@ export function useScheduleTable(
       toast.error('태그를 찾을 수 없습니다')
       return
     }
-
-    const affectedCount = allSchedules.filter(s => s[field] === tagValue).length
     setDeleteConfirm({ tagId: tag.id, tagValue, field })
   }
 
