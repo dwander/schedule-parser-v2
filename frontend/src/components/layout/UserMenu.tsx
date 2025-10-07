@@ -16,6 +16,7 @@ import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
 import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
+import { AlertDialog } from '@/components/common/AlertDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface UserMenuProps {
@@ -31,6 +32,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
   const [userManagementOpen, setUserManagementOpen] = useState(false)
   const [pricingRuleOpen, setPricingRuleOpen] = useState(false)
+  const [statsAlertOpen, setStatsAlertOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -85,9 +87,9 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             <Calculator className="mr-2 h-4 w-4" />
             촬영비 계산
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => console.log('촬영비 통계 클릭')}>
+          <DropdownMenuItem onClick={() => setStatsAlertOpen(true)}>
             <ChartBar className="mr-2 h-4 w-4" />
-            촬영비 통계
+            촬영 통계
           </DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
@@ -163,6 +165,14 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
         <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
         <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
+        <AlertDialog
+          open={statsAlertOpen}
+          onOpenChange={setStatsAlertOpen}
+          title="준비중인 기능입니다"
+          description="촬영비 통계 기능은 현재 개발 중입니다."
+          confirmText="확인"
+          onConfirm={() => setStatsAlertOpen(false)}
+        />
       </>
     )
   }
@@ -200,6 +210,14 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
       <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
       <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
+      <AlertDialog
+        open={statsAlertOpen}
+        onOpenChange={setStatsAlertOpen}
+        title="준비중인 기능입니다"
+        description="촬영 통계 기능은 현재 개발 중입니다."
+        confirmText="확인"
+        onConfirm={() => setStatsAlertOpen(false)}
+      />
     </>
   )
 }
