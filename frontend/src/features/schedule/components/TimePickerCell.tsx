@@ -76,7 +76,7 @@ export function TimePickerCell({ value, onSave }: TimePickerCellProps) {
         <Button
           variant="ghost"
           className={cn(
-            'w-full justify-start text-left font-normal px-2 py-1 h-auto hover:bg-accent/50',
+            'w-full justify-start text-left font-normal px-2 py-1 h-auto hover:bg-accent/50 border border-input',
             !value && 'text-muted-foreground'
           )}
         >
