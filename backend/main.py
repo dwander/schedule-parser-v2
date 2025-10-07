@@ -2933,7 +2933,8 @@ async def create_pricing_rule(
         if rule_data.hall: priority += 1
         if rule_data.brand: priority += 1
         if rule_data.album: priority += 1
-        if rule_data.start_date and rule_data.end_date: priority += 2
+        if rule_data.start_date: priority += 1
+        if rule_data.end_date: priority += 1
 
         # 규칙 생성
         new_rule = PricingRule(
@@ -2994,7 +2995,8 @@ async def update_pricing_rule(
         if rule.hall: priority += 1
         if rule.brand: priority += 1
         if rule.album: priority += 1
-        if rule.start_date and rule.end_date: priority += 2
+        if rule.start_date: priority += 1
+        if rule.end_date: priority += 1
         rule.priority = priority
 
         db_session.commit()
@@ -3043,31 +3045,42 @@ async def delete_pricing_rule(
         db_session.close()
 
 
+class ApplyPricingRulesRequest(BaseModel):
+    rule_ids: Optional[List[int]] = None
+    schedule_ids: Optional[List[int]] = None
+
+
 @app.post("/api/pricing/apply")
 async def apply_pricing_rules(
-    schedule_ids: Optional[List[int]] = Body(default=None),
+    request: ApplyPricingRulesRequest = Body(...),
     user_id: str = Query(...)
 ):
     """
     단가 규칙을 스케줄에 적용
-    schedule_ids가 제공되면 해당 스케줄만, 없으면 모든 스케줄에 적용
+    rule_ids: 적용할 규칙 ID 목록 (없으면 모든 활성 규칙)
+    schedule_ids: 대상 스케줄 ID 목록 (없으면 모든 스케줄)
     """
     db_session = SessionLocal()
     try:
-        # 활성화된 규칙 가져오기
-        rules = db_session.query(PricingRule).filter(
+        # 규칙 가져오기
+        query = db_session.query(PricingRule).filter(
             PricingRule.user_id == user_id,
             PricingRule.is_active == True
-        ).order_by(PricingRule.priority.desc()).all()
+        )
+
+        if request.rule_ids:
+            query = query.filter(PricingRule.id.in_(request.rule_ids))
+
+        rules = query.order_by(PricingRule.priority.desc()).all()
 
         if not rules:
             raise HTTPException(status_code=400, detail="적용할 단가 규칙이 없습니다.")
 
         # 대상 스케줄 가져오기
-        query = db_session.query(Schedule).filter(Schedule.user_id == user_id)
-        if schedule_ids:
-            query = query.filter(Schedule.id.in_(schedule_ids))
-        schedules = query.all()
+        schedule_query = db_session.query(Schedule).filter(Schedule.user_id == user_id)
+        if request.schedule_ids:
+            schedule_query = schedule_query.filter(Schedule.id.in_(request.schedule_ids))
+        schedules = schedule_query.all()
 
         updated_count = 0
 
@@ -3088,11 +3101,20 @@ async def apply_pricing_rules(
                 if rule.album and schedule.album != rule.album:
                     match = False
 
-                # 날짜 범위 체크
-                if rule.start_date and rule.end_date and schedule.date:
-                    # YYYY.MM.DD 형식 비교
-                    if not (rule.start_date <= schedule.date <= rule.end_date):
-                        match = False
+                # 날짜 범위 체크 (한쪽만 있는 경우도 처리)
+                if schedule.date:
+                    if rule.start_date and not rule.end_date:
+                        # 시작일만 설정: 해당 날짜 이후만 매칭
+                        if schedule.date < rule.start_date:
+                            match = False
+                    elif rule.end_date and not rule.start_date:
+                        # 종료일만 설정: 해당 날짜 이전만 매칭
+                        if schedule.date > rule.end_date:
+                            match = False
+                    elif rule.start_date and rule.end_date:
+                        # 시작일과 종료일 모두 설정: 범위 내만 매칭
+                        if not (rule.start_date <= schedule.date <= rule.end_date):
+                            match = False
 
                 if match:
                     # 가격 업데이트

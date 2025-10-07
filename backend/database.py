@@ -321,6 +321,24 @@ def run_migrations():
         # 이미 모델이 정의되어 있으므로 create_all()로 마이그레이션 처리
         Base.metadata.create_all(bind=engine)
 
+        # Manual migrations for adding new columns
+        db = SessionLocal()
+        try:
+            # Add 'hall' column to pricing_rules table if not exists
+            db.execute(text("""
+                SELECT hall FROM pricing_rules LIMIT 1
+            """))
+        except Exception:
+            # Column doesn't exist, add it
+            logger.info("Adding 'hall' column to pricing_rules table...")
+            db.execute(text("""
+                ALTER TABLE pricing_rules ADD COLUMN hall VARCHAR(255)
+            """))
+            db.commit()
+            logger.info("✅ Added 'hall' column to pricing_rules table")
+        finally:
+            db.close()
+
         logger.info("ℹ️  Database schema synchronized using SQLAlchemy ORM")
 
     except Exception as e:

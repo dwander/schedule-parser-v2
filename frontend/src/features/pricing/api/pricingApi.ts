@@ -39,8 +39,8 @@ export async function updatePricingRule(
 ): Promise<PricingRuleResponse> {
   const response = await apiClient.put(`/api/pricing/rules/${ruleId}`, {
     ...rule,
-    start_date: rule.startDate ? formatDate(rule.startDate) : undefined,
-    end_date: rule.endDate ? formatDate(rule.endDate) : undefined,
+    start_date: rule.startDate ? formatDate(rule.startDate) : null,
+    end_date: rule.endDate ? formatDate(rule.endDate) : null,
   }, {
     params: { user_id: userId }
   })
@@ -60,9 +60,13 @@ export async function deletePricingRule(
 // 스케줄에 단가 규칙 적용
 export async function applyPricingRules(
   userId: string,
+  ruleIds?: number[],
   scheduleIds?: number[]
 ): Promise<{ message: string; updated_count: number }> {
-  const response = await apiClient.post(`/api/pricing/apply`, scheduleIds || null, {
+  const response = await apiClient.post(`/api/pricing/apply`, {
+    rule_ids: ruleIds,
+    schedule_ids: scheduleIds
+  }, {
     params: { user_id: userId }
   })
   return response.data

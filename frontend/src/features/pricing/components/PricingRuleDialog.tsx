@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, X, AlertCircle, Calculator } from 'lucide-react'
+import { Plus, Trash2, Save, X, AlertCircle, Calculator, Upload } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -78,6 +78,11 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const [loading, setLoading] = useState(false)
   const [applying, setApplying] = useState(false)
   const [confirmApplyOpen, setConfirmApplyOpen] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
+
+  // 선택된 규칙 ID 목록
+  const [selectedRuleIds, setSelectedRuleIds] = useState<number[]>([])
 
   // 편집 모드 (새 규칙 or 수정)
   const [editMode, setEditMode] = useState<'new' | 'edit'>('new')
@@ -120,17 +125,31 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const handleSaveRule = async () => {
     if (!user) return
 
-    // 중복 체크
-    const isDuplicate = rules.some(rule =>
-      rule.id !== editingId && // 수정 중인 항목 제외
-      rule.location === currentRule.location &&
-      rule.venue === currentRule.venue &&
-      rule.hall === currentRule.hall &&
-      rule.brand === currentRule.brand &&
-      rule.album === currentRule.album &&
-      rule.startDate?.getTime() === currentRule.startDate?.getTime() &&
-      rule.endDate?.getTime() === currentRule.endDate?.getTime()
-    )
+    // 값 정규화 함수 (undefined와 빈 문자열을 동일하게 취급)
+    const normalize = (val: string | undefined) => val || undefined
+
+    // 중복 체크 (단가 제외)
+    const isDuplicate = rules.some(rule => {
+      // 수정 중인 항목은 제외
+      if (rule.id === editingId) return false
+
+      const locationMatch = normalize(rule.location) === normalize(currentRule.location)
+      const venueMatch = normalize(rule.venue) === normalize(currentRule.venue)
+      const hallMatch = normalize(rule.hall) === normalize(currentRule.hall)
+      const brandMatch = normalize(rule.brand) === normalize(currentRule.brand)
+      const albumMatch = normalize(rule.album) === normalize(currentRule.album)
+
+      // 날짜 비교: 둘 다 없거나, 둘 다 있고 같거나 (한쪽만 있으면 다름)
+      const startDateMatch = (!rule.startDate && !currentRule.startDate) ||
+                             (rule.startDate && currentRule.startDate &&
+                              rule.startDate.getTime() === currentRule.startDate.getTime())
+      const endDateMatch = (!rule.endDate && !currentRule.endDate) ||
+                           (rule.endDate && currentRule.endDate &&
+                            rule.endDate.getTime() === currentRule.endDate.getTime())
+
+      return locationMatch && venueMatch && hallMatch && brandMatch && albumMatch &&
+             startDateMatch && endDateMatch
+    })
 
     if (isDuplicate) {
       toast.error('동일한 조건의 단가 규칙이 이미 존재합니다.')
@@ -166,16 +185,28 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const handleSaveAsNew = async () => {
     if (!user) return
 
-    // 중복 체크 (모든 규칙과 비교)
-    const isDuplicate = rules.some(rule =>
-      rule.location === currentRule.location &&
-      rule.venue === currentRule.venue &&
-      rule.hall === currentRule.hall &&
-      rule.brand === currentRule.brand &&
-      rule.album === currentRule.album &&
-      rule.startDate?.getTime() === currentRule.startDate?.getTime() &&
-      rule.endDate?.getTime() === currentRule.endDate?.getTime()
-    )
+    // 값 정규화 함수 (undefined와 빈 문자열을 동일하게 취급)
+    const normalize = (val: string | undefined) => val || undefined
+
+    // 중복 체크 (모든 규칙과 비교, 단가 제외)
+    const isDuplicate = rules.some(rule => {
+      const locationMatch = normalize(rule.location) === normalize(currentRule.location)
+      const venueMatch = normalize(rule.venue) === normalize(currentRule.venue)
+      const hallMatch = normalize(rule.hall) === normalize(currentRule.hall)
+      const brandMatch = normalize(rule.brand) === normalize(currentRule.brand)
+      const albumMatch = normalize(rule.album) === normalize(currentRule.album)
+
+      // 날짜 비교: 둘 다 없거나, 둘 다 있고 같거나 (한쪽만 있으면 다름)
+      const startDateMatch = (!rule.startDate && !currentRule.startDate) ||
+                             (rule.startDate && currentRule.startDate &&
+                              rule.startDate.getTime() === currentRule.startDate.getTime())
+      const endDateMatch = (!rule.endDate && !currentRule.endDate) ||
+                           (rule.endDate && currentRule.endDate &&
+                            rule.endDate.getTime() === currentRule.endDate.getTime())
+
+      return locationMatch && venueMatch && hallMatch && brandMatch && albumMatch &&
+             startDateMatch && endDateMatch
+    })
 
     if (isDuplicate) {
       toast.error('동일한 조건의 단가 규칙이 이미 존재합니다.')
@@ -225,18 +256,27 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   }
 
   // 규칙 삭제
-  const handleDeleteRule = async (id: number) => {
-    if (!user) return
+  // 삭제 확인 다이얼로그 열기
+  const handleDeleteRule = (id: number) => {
+    setDeleteTargetId(id)
+    setConfirmDeleteOpen(true)
+  }
 
-    if (!confirm('이 단가 규칙을 삭제하시겠습니까?')) return
+  // 실제 삭제 실행
+  const confirmDeleteRule = async () => {
+    if (!user || !deleteTargetId) return
 
     setLoading(true)
     try {
-      await deletePricingRule(user.id, id)
+      await deletePricingRule(user.id, deleteTargetId)
       toast.success('단가 규칙이 삭제되었습니다.')
 
       // 목록 새로고침
       await loadRules()
+
+      // 다이얼로그 닫기
+      setConfirmDeleteOpen(false)
+      setDeleteTargetId(null)
     } catch (error) {
       console.error('Failed to delete pricing rule:', error)
       toast.error('단가 규칙 삭제에 실패했습니다.')
@@ -254,22 +294,44 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const confirmApplyToSchedules = async () => {
     if (!user) return
 
+    if (selectedRuleIds.length === 0) {
+      toast.error('적용할 단가 규칙을 선택해주세요.')
+      return
+    }
+
     setApplying(true)
     try {
-      const result = await applyPricingRules(user.id)
+      const result = await applyPricingRules(user.id, selectedRuleIds)
       toast.success(result.message)
 
       // 스케줄 데이터 새로고침
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
 
-      // 다이얼로그 닫기
+      // 확인 다이얼로그만 닫기 (메인 다이얼로그는 유지)
       setConfirmApplyOpen(false)
-      onOpenChange(false)
     } catch (error) {
       console.error('Failed to apply pricing rules:', error)
       toast.error('단가 규칙 적용에 실패했습니다.')
     } finally {
       setApplying(false)
+    }
+  }
+
+  // 규칙 선택 토글
+  const toggleRuleSelection = (ruleId: number) => {
+    setSelectedRuleIds(prev =>
+      prev.includes(ruleId)
+        ? prev.filter(id => id !== ruleId)
+        : [...prev, ruleId]
+    )
+  }
+
+  // 전체 선택/해제 토글
+  const toggleAllSelection = () => {
+    if (selectedRuleIds.length === rules.length) {
+      setSelectedRuleIds([])
+    } else {
+      setSelectedRuleIds(rules.map(r => r.id!))
     }
   }
 
@@ -281,15 +343,22 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
     if (rule.hall) parts.push(rule.hall)
     if (rule.brand) parts.push(rule.brand)
     if (rule.album) parts.push(rule.album)
+
+    // 기간 표시 (한쪽만 있어도 표시)
     if (rule.startDate && rule.endDate) {
       parts.push(`${format(rule.startDate, 'yyyy.MM.dd', { locale: ko })}~${format(rule.endDate, 'yyyy.MM.dd', { locale: ko })}`)
+    } else if (rule.startDate) {
+      parts.push(`${format(rule.startDate, 'yyyy.MM.dd', { locale: ko })}~`)
+    } else if (rule.endDate) {
+      parts.push(`~${format(rule.endDate, 'yyyy.MM.dd', { locale: ko })}`)
     }
+
     return parts.length > 0 ? parts.join(' · ') : '전체 적용'
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)] md:max-w-3xl md:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />
@@ -336,66 +405,92 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>기간 (선택)</Label>
+                  <Label>기간</Label>
                   <div className="flex gap-2">
-                    <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                      <PopoverTrigger asChild>
+                    <div className="flex-1 flex gap-1">
+                      <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'flex-1 justify-start text-left font-normal',
+                              !currentRule.startDate && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {currentRule.startDate
+                              ? format(currentRule.startDate, 'yyyy.MM.dd', { locale: ko })
+                              : '시작'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={currentRule.startDate}
+                            onSelect={(date) => {
+                              setCurrentRule({ ...currentRule, startDate: date || undefined })
+                              setStartDateOpen(false)
+                            }}
+                            defaultMonth={currentRule.startDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {currentRule.startDate && (
                         <Button
-                          variant="outline"
-                          className={cn(
-                            'flex-1 justify-start text-left font-normal',
-                            !currentRule.startDate && 'text-muted-foreground'
-                          )}
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-5"
+                          onClick={() => setCurrentRule({ ...currentRule, startDate: undefined })}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {currentRule.startDate
-                            ? format(currentRule.startDate, 'yyyy.MM.dd', { locale: ko })
-                            : '시작'}
+                          <X className="h-3 w-3" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={currentRule.startDate}
-                          onSelect={(date) => {
-                            setCurrentRule({ ...currentRule, startDate: date || undefined })
-                            setStartDateOpen(false)
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                      )}
+                    </div>
 
-                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                      <PopoverTrigger asChild>
+                    <div className="flex-1 flex gap-1">
+                      <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'flex-1 justify-start text-left font-normal',
+                              !currentRule.endDate && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {currentRule.endDate
+                              ? format(currentRule.endDate, 'yyyy.MM.dd', { locale: ko })
+                              : '종료'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={currentRule.endDate}
+                            onSelect={(date) => {
+                              setCurrentRule({ ...currentRule, endDate: date || undefined })
+                              setEndDateOpen(false)
+                            }}
+                            disabled={(date) =>
+                              currentRule.startDate ? date < currentRule.startDate : false
+                            }
+                            defaultMonth={currentRule.endDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {currentRule.endDate && (
                         <Button
-                          variant="outline"
-                          className={cn(
-                            'flex-1 justify-start text-left font-normal',
-                            !currentRule.endDate && 'text-muted-foreground'
-                          )}
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-5"
+                          onClick={() => setCurrentRule({ ...currentRule, endDate: undefined })}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {currentRule.endDate
-                            ? format(currentRule.endDate, 'yyyy.MM.dd', { locale: ko })
-                            : '종료'}
+                          <X className="h-3 w-3" />
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={currentRule.endDate}
-                          onSelect={(date) => {
-                            setCurrentRule({ ...currentRule, endDate: date || undefined })
-                            setEndDateOpen(false)
-                          }}
-                          disabled={(date) =>
-                            currentRule.startDate ? date < currentRule.startDate : false
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -446,6 +541,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                   <Input
                     id="price"
                     type="number"
+                    step="10000"
                     value={currentRule.price || ''}
                     onChange={(e) => setCurrentRule({ ...currentRule, price: parseInt(e.target.value) || 0 })}
                     placeholder="0"
@@ -453,7 +549,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">메모 (선택)</Label>
+                  <Label htmlFor="description">메모</Label>
                   <Input
                     id="description"
                     value={currentRule.description || ''}
@@ -505,24 +601,33 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
           {/* 단가 규칙 목록 */}
           {rules.length > 0 && (
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm">등록된 단가 규칙 ({rules.length}개)</h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">등록된 단가 규칙 ({rules.length}개)</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleAllSelection}
+                >
+                  {selectedRuleIds.length === rules.length ? '전체 해제' : '전체 선택'}
+                </Button>
+              </div>
+              <div className="space-y-2 max-h-[32rem] overflow-y-auto">
                 {rules.map((rule) => (
                   <Card
                     key={rule.id}
                     className={cn(
-                      "p-3 cursor-pointer transition-colors hover:bg-accent/50",
-                      editingId === rule.id && "border-2 border-primary bg-accent/30"
+                      "p-2.5 cursor-pointer transition-colors hover:bg-accent/50",
+                      selectedRuleIds.includes(rule.id!) && "border-2 border-primary bg-accent/30"
                     )}
-                    onClick={() => handleSelectRule(rule)}
+                    onClick={() => toggleRuleSelection(rule.id!)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {getRuleDescription(rule)}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-lg font-bold text-primary">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-base font-bold text-primary">
                             {rule.price.toLocaleString()}원
                           </span>
                           {rule.description && (
@@ -532,17 +637,28 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSelectRule(rule)
+                          }}
+                        >
+                          <Upload className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteRule(rule.id!)
                           }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </div>
@@ -557,7 +673,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                설정한 단가 규칙을 기존 스케줄에 적용하면, 조건이 일치하는 모든 스케줄의 촬영비가 업데이트됩니다.
+                선택된 단가 규칙을 기존 스케줄에 적용하면, 조건이 일치하는 모든 스케줄의 촬영비가 업데이트됩니다.
               </AlertDescription>
             </Alert>
           )}
@@ -580,10 +696,22 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
         open={confirmApplyOpen}
         onOpenChange={setConfirmApplyOpen}
         title="기존 스케줄에 적용"
-        description="설정한 단가 규칙을 기존 스케줄에 적용하시겠습니까? 조건이 일치하는 모든 스케줄의 촬영비가 업데이트됩니다."
+        description={`선택된 ${selectedRuleIds.length}개의 단가 규칙을 기존 스케줄에 적용하시겠습니까? 조건이 일치하는 모든 스케줄의 촬영비가 업데이트됩니다.`}
         confirmText="적용"
         cancelText="취소"
         onConfirm={confirmApplyToSchedules}
+      />
+
+      {/* 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="단가 규칙 삭제"
+        description="이 단가 규칙을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        cancelText="취소"
+        variant="destructive"
+        onConfirm={confirmDeleteRule}
       />
     </Dialog>
   )
