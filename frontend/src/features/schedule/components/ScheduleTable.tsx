@@ -66,7 +66,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
 
   // 가변폭 컬럼 크기 자동 계산 (memo 또는 spacer)
   const { flexWidth, tableWidth } = useFlexColumnWidth(
-    containerRef,
+    containerRef as React.RefObject<HTMLDivElement>,
     table,
     flexColumnId,
     viewMode,
@@ -122,7 +122,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
     },
     observeElementOffset: (_instance, cb) => {
       const handler = () => {
-        cb(window.scrollY)
+        cb(window.scrollY, _instance)
       }
 
       handler()

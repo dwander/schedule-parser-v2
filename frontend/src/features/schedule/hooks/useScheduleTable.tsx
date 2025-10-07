@@ -158,7 +158,7 @@ export function useScheduleTable(
   }
 
   // 태그 생성 핸들러 (TagSelectCell에서 새 태그 입력 시)
-  const handleSaveTag = async (value: string, field: 'brand' | 'album', scheduleId: number) => {
+  const handleSaveTag = async (value: string, field: 'brand' | 'album', scheduleId: string) => {
     // 먼저 스케줄 업데이트
     updateSchedule.mutate({
       id: scheduleId,
@@ -600,7 +600,7 @@ export function useScheduleTable(
     state: {
       columnFilters,
       rowSelection,
-      columnVisibility,
+      columnVisibility: columnVisibility as any,
     },
     enableSorting: false,
     onColumnFiltersChange: setColumnFilters,

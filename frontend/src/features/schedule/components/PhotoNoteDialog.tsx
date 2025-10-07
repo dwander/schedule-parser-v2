@@ -124,7 +124,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T> 
     const targetValue = target[key]
 
     if (sourceValue && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
-      result[key] = deepMerge(targetValue || {}, sourceValue as any)
+      result[key] = deepMerge((targetValue || {}) as any, sourceValue as any)
     } else {
       result[key] = sourceValue as any
     }
@@ -179,7 +179,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   const hasAnyDressData = !!(noteData.dress?.type || noteData.dress?.material || noteData.dress?.company)
   const hasAnyFamilyData = !!(noteData.familyRelations?.groomFamily || noteData.familyRelations?.brideFamily)
   const hasAnyCeremonyHostData = !!(
-    (noteData.ceremony?.host?.type && noteData.ceremony?.host?.type !== '') ||
+    noteData.ceremony?.host?.type ||
     noteData.ceremony?.host?.memo
   )
   const hasAnyCeremonyEventsData = !!(

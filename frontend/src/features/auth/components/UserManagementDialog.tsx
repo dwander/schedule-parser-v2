@@ -26,7 +26,7 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
   })
 
   // 날짜 포맷 함수 (한국 시간대 GMT+9)
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return '-'
 
     // UTC 시간임을 명시하기 위해 'Z' 추가 (없는 경우)

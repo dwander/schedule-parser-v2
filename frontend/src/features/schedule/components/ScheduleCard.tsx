@@ -1,4 +1,4 @@
-import type { Schedule } from '../types/schedule'
+import type { Schedule, Brand } from '../types/schedule'
 import { EditableCell } from './EditableCell'
 import { MemoCell } from './MemoCell'
 import { DatePickerCell } from './DatePickerCell'
@@ -90,6 +90,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarConfirm = async () => {
+    if (!user?.naverAccessToken) return
+
     try {
       // 날짜/시간 파싱
       const [year, month, day] = schedule.date.split('.').map(Number)
@@ -282,7 +284,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             onSave={(value) => {
               updateSchedule.mutate({
                 id: schedule.id,
-                brand: value
+                brand: (value || undefined) as Brand | undefined
               })
             }}
             onDelete={(tag) => onDeleteTag(tag, 'brand')}
@@ -295,7 +297,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               onSave={(value) => {
                 updateSchedule.mutate({
                   id: schedule.id,
-                  album: value
+                  album: value || ''
                 })
               }}
               onDelete={(tag) => onDeleteTag(tag, 'album')}
@@ -388,7 +390,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       onSave={(value) => {
                         updateSchedule.mutate({
                           id: schedule.id,
-                          photographer: value
+                          photographer: value || ''
                         })
                       }}
                       placeholder="작가"
