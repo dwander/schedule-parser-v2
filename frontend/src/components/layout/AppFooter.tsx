@@ -25,6 +25,7 @@ export function AppFooter({ stats }: AppFooterProps) {
 
   const totalPrice = stats?.totalPrice ?? 0
   const netPrice = Math.floor(totalPrice * 0.967)
+  const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 
   const items: StatItem[] = [
     { label: '스케줄', value: stats?.scheduleCount ?? 0 },
@@ -38,7 +39,7 @@ export function AppFooter({ stats }: AppFooterProps) {
   ]
 
   return (
-    <footer className="w-full flex justify-center py-4 bg-background">
+    <footer className="w-full flex flex-col items-center py-4 bg-background">
       <div className="max-w-[450px] w-full mx-4 border border-border/50 rounded-lg bg-background">
         <div className="flex h-12 items-center justify-around px-4 gap-2 sm:gap-4">
           {items.map((item, index) => {
@@ -68,6 +69,11 @@ export function AppFooter({ stats }: AppFooterProps) {
             )
           })}
         </div>
+      </div>
+
+      {/* Version display */}
+      <div className="mt-2 text-[0.625rem] text-muted-foreground/50">
+        v{appVersion}
       </div>
 
       {/* Safe area for mobile bottom */}

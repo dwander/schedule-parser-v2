@@ -69,9 +69,15 @@ Variables 탭에서 다음 환경변수 추가:
 ```bash
 # Backend API URL (backend 서비스의 도메인 사용)
 VITE_API_URL=https://your-backend-url.up.railway.app
+
+# App Version (deploy.sh가 자동으로 업데이트)
+# 초기값 설정 후 deploy.sh가 자동 관리
+VITE_APP_VERSION=2025.0.1.1
 ```
 
-**참고**: OAuth Client ID는 이제 Backend에서만 관리됩니다. Frontend는 `/api/config` 엔드포인트에서 런타임에 가져옵니다.
+**참고**:
+- OAuth Client ID는 이제 Backend에서만 관리됩니다. Frontend는 `/api/config` 엔드포인트에서 런타임에 가져옵니다.
+- `VITE_APP_VERSION`은 `deploy.sh` 스크립트가 배포 시 자동으로 증가시킵니다.
 
 #### 4-3. Settings 설정
 - **Root Directory**: `/frontend`
