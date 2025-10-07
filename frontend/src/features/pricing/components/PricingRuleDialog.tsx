@@ -359,11 +359,11 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)] md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
+        className="max-md:border-0 max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
         hideClose
       >
         {/* 커스텀 헤더 */}
-        <div className="sticky top-0 bg-background border-b z-10">
+        <div className="sticky top-0 bg-background z-10">
           <div className="flex items-center gap-3 px-3 py-4 md:px-6">
             <Button
               variant="ghost"
