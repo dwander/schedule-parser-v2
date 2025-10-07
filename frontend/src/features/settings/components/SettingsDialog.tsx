@@ -36,6 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setEnabledCalendars,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
+  const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 
   const getThemeLabel = () => {
     switch (theme) {
@@ -194,8 +195,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <div className="space-y-3 pt-4 border-t">
             <h3 className="text-sm font-semibold text-foreground">앱 정보</h3>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p>버전 v2.0.0</p>
-              <p>© 2025 Schedule Parser</p>
+              <p>버전 v{appVersion}</p>
+              <p>© 2025 Bonsik Snaper, dqstyle@gmail.com</p>
             </div>
           </div>
         </div>
