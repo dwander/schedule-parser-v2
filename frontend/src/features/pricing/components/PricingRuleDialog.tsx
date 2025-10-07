@@ -359,7 +359,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-md:border-0 max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
+        className="max-md:border-0 max-md:shadow-none max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
         hideClose
       >
         {/* 커스텀 헤더 */}

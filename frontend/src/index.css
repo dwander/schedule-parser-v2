@@ -23,6 +23,8 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
+  --shadow: 0 0% 0%;
+  --shadow-opacity: 0.1;
 }
 
 .dark {
@@ -45,6 +47,8 @@
   --border: 217.2 18% 25%;
   --input: 217.2 18% 25%;
   --ring: 212.7 15% 75%;
+  --shadow: 0 0% 0%;
+  --shadow-opacity: 0.3;
 }
 
 @layer base {
