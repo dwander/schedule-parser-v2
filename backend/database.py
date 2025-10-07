@@ -89,6 +89,57 @@ class Tag(Base):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
 
+class PricingRule(Base):
+    """촬영비 단가 규칙 테이블"""
+    __tablename__ = "pricing_rules"
+
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    # User identification
+    user_id = Column(String(255), nullable=False, index=True)
+
+    # 조건 필드 (NULL이면 전체 적용)
+    location = Column(String(255), nullable=True, index=True)  # 지역
+    venue = Column(String(255), nullable=True)                  # 장소(예식장)
+    start_date = Column(String(10), nullable=True)             # 기간 시작 (YYYY.MM.DD)
+    end_date = Column(String(10), nullable=True)               # 기간 끝 (YYYY.MM.DD)
+    brand = Column(String(255), nullable=True, index=True)     # 브랜드
+    album = Column(String(255), nullable=True, index=True)     # 앨범종류
+
+    # 단가 정보
+    price = Column(Integer, nullable=False, default=0)         # 단가
+    description = Column(Text, nullable=True)                  # 설명/메모
+
+    # 우선순위 (구체적인 규칙이 우선)
+    priority = Column(Integer, nullable=False, default=0)      # 높을수록 우선 적용
+
+    # 활성화 여부
+    is_active = Column(Boolean, nullable=False, default=True)  # 활성 여부
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert PricingRule model to dictionary"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'location': self.location,
+            'venue': self.venue,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'brand': self.brand,
+            'album': self.album,
+            'price': self.price,
+            'description': self.description,
+            'priority': self.priority,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
 class Schedule(Base):
     __tablename__ = "schedules"
 

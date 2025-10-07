@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
+import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface UserMenuProps {
@@ -29,6 +30,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
   const [userManagementOpen, setUserManagementOpen] = useState(false)
+  const [pricingRuleOpen, setPricingRuleOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -79,7 +81,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             <Database className="mr-2 h-4 w-4" />
             데이터 백업 및 복원
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => console.log('촬영비 계산 클릭')}>
+          <DropdownMenuItem onClick={() => setPricingRuleOpen(true)}>
             <Calculator className="mr-2 h-4 w-4" />
             촬영비 계산
           </DropdownMenuItem>
@@ -160,6 +162,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
         <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
+        <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
       </>
     )
   }
@@ -196,6 +199,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
       <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
+      <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
     </>
   )
 }
