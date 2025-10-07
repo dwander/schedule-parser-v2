@@ -33,13 +33,19 @@ export function DialogTestPanel() {
     toast.success(`${newTheme === 'dark' ? '다크' : '라이트'} 모드로 전환`)
   }
 
+  // 서비스워커 상태 확인 함수
+  const checkSwStatus = async () => {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration()
+      setSwEnabled(!!registration)
+      return !!registration
+    }
+    return false
+  }
+
   // 서비스워커 상태 확인
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then((registration) => {
-        setSwEnabled(!!registration)
-      })
-    }
+    checkSwStatus()
   }, [])
 
   const toggleServiceWorker = async () => {
@@ -54,17 +60,19 @@ export function DialogTestPanel() {
       if (registration) {
         // 서비스워커 해제
         await registration.unregister()
-        setSwEnabled(false)
-        toast.success('Service Worker가 해제되었습니다')
+
         // 캐시 삭제
         if ('caches' in window) {
           const cacheNames = await caches.keys()
           await Promise.all(cacheNames.map(name => caches.delete(name)))
-          toast.info('캐시가 모두 삭제되었습니다')
         }
+
+        // 상태 업데이트
+        setSwEnabled(false)
+        toast.success('Service Worker가 해제되었습니다')
+        toast.info('캐시가 모두 삭제되었습니다')
       } else {
-        // 서비스워커 등록
-        // 페이지 새로고침으로 자동 등록되도록 안내
+        // 서비스워커 등록 - 페이지 새로고침 필요
         toast.info('Service Worker 등록을 위해 페이지를 새로고침합니다')
         setTimeout(() => window.location.reload(), 1000)
       }
