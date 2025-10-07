@@ -720,19 +720,48 @@ function TrainingDataManager({ open, onOpenChange, trainingData, onSave, items }
     setEditingData({ ...DEFAULT_VOICE_TRAINING })
   }
 
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation()
     onSave(editingData)
     onOpenChange(false)
   }
 
+  const handleClose = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    onOpenChange(false)
+  }
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onOpenChange(false)
+  }
+
+  const handleResetClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    handleReset()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>훈련 데이터 관리</DialogTitle>
-        </DialogHeader>
+      <DialogContent
+        className="fixed inset-0 md:inset-auto left-0 top-0 md:left-[50%] md:top-[50%] translate-x-0 translate-y-0 md:translate-x-[-50%] md:translate-y-[-50%] max-w-none md:max-w-2xl w-full md:w-auto h-full md:h-[90vh] p-0 flex flex-col rounded-none md:rounded-lg border-0 md:border [&>button]:hidden"
+        onInteractOutside={(e) => e.stopPropagation()}
+        onEscapeKeyDown={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
+        <div className="flex flex-row items-center justify-between px-4 py-3 flex-shrink-0 border-b">
+          <h2 className="text-lg font-semibold">훈련 데이터 관리</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="h-9 w-9"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-1">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             {items.map((item) => (
               <div key={item.id} className="border rounded-lg p-4">
@@ -807,12 +836,12 @@ function TrainingDataManager({ open, onOpenChange, trainingData, onSave, items }
           </div>
         </div>
 
-        <div className="flex gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleReset}>
+        <div className="flex gap-2 px-4 py-3 border-t flex-shrink-0">
+          <Button variant="outline" onClick={handleResetClick}>
             초기화
           </Button>
           <div className="flex-1"></div>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             취소
           </Button>
           <Button onClick={handleSave}>
