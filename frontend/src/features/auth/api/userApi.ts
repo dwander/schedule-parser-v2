@@ -21,5 +21,5 @@ export interface UserDetail {
  */
 export async function fetchUsers(): Promise<UserDetail[]> {
   const response = await apiClient.get('/api/users')
-  return response.data
+  return response.data.users || []
 }
