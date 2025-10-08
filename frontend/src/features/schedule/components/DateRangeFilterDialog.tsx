@@ -128,6 +128,7 @@ export function DateRangeFilterDialog({
     <ContentModal
       open={open}
       onOpenChange={onOpenChange}
+      size="fullscreen-mobile"
       title="날짜 범위 선택"
       subtitle="필터링할 날짜 범위를 설정하세요"
       showFooter={true}
