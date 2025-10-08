@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -92,16 +92,43 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              휴지통
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-auto py-4">
+      <ContentModal
+        open={open}
+        onOpenChange={onOpenChange}
+        className="sm:max-w-2xl"
+        title="휴지통"
+        showFooter={trashSchedules.length > 0}
+        footerContent={
+          <div className="flex justify-between items-center w-full">
+            <p className="text-sm text-muted-foreground">
+              총 {trashSchedules.length}개 항목
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmRestoreAll(true)}
+                disabled={restoreAllMutation.isPending}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                전체 복구
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmEmptyTrash(true)}
+                disabled={emptyTrashMutation.isPending}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                휴지통 비우기
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <div>
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <LoadingSpinner size="lg" text="불러오는 중..." />
@@ -154,39 +181,8 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                 ))}
               </div>
             )}
-          </div>
-
-          {trashSchedules.length > 0 && (
-            <div className="flex justify-between items-center pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                총 {trashSchedules.length}개 항목
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmRestoreAll(true)}
-                  disabled={restoreAllMutation.isPending}
-                  className="gap-2"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  전체 복구
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setConfirmEmptyTrash(true)}
-                  disabled={emptyTrashMutation.isPending}
-                  className="gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  휴지통 비우기
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </ContentModal>
 
       {/* 영구 삭제 확인 */}
       <ConfirmDialog
