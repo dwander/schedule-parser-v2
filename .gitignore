@@ -45,6 +45,9 @@ backend/__pycache__
 backend/*.db
 backend/*.db-shm
 backend/*.db-wal
+backend/*/__pycache__
 
 deploy-test.sh
 deploy.sh
+
+
