@@ -192,53 +192,70 @@ class Schedule(Base):
     )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert SQLAlchemy model to dictionary (compatible with existing frontend)"""
-        return {
-            'id': self.id,
-            'date': self.date,
-            'location': self.location,
-            'time': self.time,
-            'couple': self.couple,
-            'contact': self.contact,
-            'brand': self.brand,
-            'album': self.album,
-            'photographer': self.photographer,
-            'memo': self.memo,
-            'manager': self.manager,
-            'price': self.price,
-            'needs_review': self.needs_review,
-            'review_reason': self.review_reason,
-            'photoNote': self.photo_note,
-            'photoSequence': self.photo_sequence,
-            'cuts': self.cuts,
-            'folderName': self.folder_name,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        """
+        Dynamically convert SQLAlchemy model to dictionary.
+        Automatically handles all columns and schema changes.
+        """
+        # Frontend expects camelCase for these fields
+        field_mapping = {
+            'photo_note': 'photoNote',
+            'photo_sequence': 'photoSequence',
+            'folder_name': 'folderName',
         }
+
+        result = {}
+        for column in self.__table__.columns:
+            value = getattr(self, column.name)
+
+            # Convert datetime to ISO format
+            if value is not None and hasattr(value, 'isoformat'):
+                value = value.isoformat()
+
+            # Use frontend-compatible field names
+            field_name = field_mapping.get(column.name, column.name)
+            result[field_name] = value
+
+        return result
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], user_id: str) -> 'Schedule':
-        """Create Schedule instance from dictionary (from frontend)"""
-        return cls(
-            user_id=user_id,
-            date=data.get('date', ''),
-            location=data.get('location', ''),
-            time=data.get('time', ''),
-            couple=data.get('couple', ''),
-            contact=data.get('contact', ''),
-            brand=data.get('brand', ''),
-            album=data.get('album', ''),
-            photographer=data.get('photographer', ''),
-            memo=data.get('memo', ''),
-            manager=data.get('manager', ''),
-            price=data.get('price', 0),
-            needs_review=data.get('needs_review', False),
-            review_reason=data.get('review_reason', ''),
-            photo_note=data.get('photoNote'),
-            photo_sequence=data.get('photoSequence'),
-            cuts=data.get('cuts', 0),
-            folder_name=data.get('folderName', ''),
-        )
+        """
+        Dynamically create Schedule instance from dictionary.
+        Handles schema changes gracefully - only sets fields that exist.
+        """
+        # Reverse mapping: camelCase → snake_case
+        field_mapping = {
+            'photoNote': 'photo_note',
+            'photoSequence': 'photo_sequence',
+            'folderName': 'folder_name',
+        }
+
+        # Fields to exclude (auto-managed or provided separately)
+        exclude_fields = {'id', 'user_id', 'created_at', 'updated_at'}
+
+        # Build kwargs dynamically
+        kwargs = {'user_id': user_id}
+
+        for column in cls.__table__.columns:
+            if column.name in exclude_fields:
+                continue
+
+            # Check both snake_case and camelCase
+            value = None
+            if column.name in data:
+                value = data[column.name]
+            else:
+                # Try camelCase version
+                for camel, snake in field_mapping.items():
+                    if snake == column.name and camel in data:
+                        value = data[camel]
+                        break
+
+            # Only set if value exists in data
+            if value is not None:
+                kwargs[column.name] = value
+
+        return cls(**kwargs)
 
 
 class TrashSchedule(Base):
