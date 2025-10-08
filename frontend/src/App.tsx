@@ -199,6 +199,13 @@ function AppContent() {
 
   // 앱을 처음 사용하는 경우 예제 데이터 추가
   useEffect(() => {
+    const addingFlag = localStorage.getItem('addingExamples')
+
+    // 현재 추가 중이면 스킵
+    if (addingFlag === 'true') {
+      return
+    }
+
     // 로딩 중이거나 이미 스케줄이 있으면 스킵
     if (schedulesLoading || schedules.length > 0) {
       return
@@ -215,9 +222,13 @@ function AppContent() {
       return
     }
 
+    localStorage.setItem('addingExamples', 'true') // 추가 중 플래그 설정
+
     // 예제 데이터 추가
     batchAddSchedules.mutate(EXAMPLE_SCHEDULES, {
       onSuccess: async () => {
+        localStorage.removeItem('addingExamples') // 추가 완료, 플래그 제거
+
         // 로그인 사용자: 백엔드에 기록
         if (user) {
           try {
@@ -236,6 +247,7 @@ function AppContent() {
       },
       onError: (error) => {
         console.error('예제 데이터 추가 실패:', error)
+        localStorage.removeItem('addingExamples') // 실패 시 플래그 제거
       }
     })
   }, [schedulesLoading, schedules, user])

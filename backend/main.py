@@ -1010,6 +1010,7 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
             "email": user_data.get("email"),
             "picture": user_data.get("picture"),
             "is_admin": final_user.is_admin if final_user else False,
+            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
@@ -1106,6 +1107,7 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
             "email": naver_user.get("email"),
             "picture": naver_user.get("profile_image"),
             "is_admin": final_user.is_admin if final_user else False,
+            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
@@ -1287,6 +1289,7 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
             "email": kakao_account.get("email"),
             "picture": profile.get("profile_image_url"),
             "is_admin": final_user.is_admin if final_user else False,
+            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
