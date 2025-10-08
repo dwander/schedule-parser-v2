@@ -25,6 +25,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Import config
+from config import settings
+
 # Import parsing functions from our parser module
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
 
@@ -75,12 +78,11 @@ async def startup_event():
 origins = DEV_ORIGINS.copy()
 
 # Add production frontend URL if specified
-FRONTEND_URL = os.getenv('FRONTEND_URL')
-if FRONTEND_URL:
-    origins.append(FRONTEND_URL)
+if settings.FRONTEND_URL:
+    origins.append(settings.FRONTEND_URL)
 
 # Railway 환경에서는 모든 Railway 도메인 허용 (프로덕션, 테스트 등)
-if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
+if settings.is_railway:
     origins.extend(PRODUCTION_ORIGINS)
 
 app.add_middleware(
@@ -113,40 +115,27 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-# --- OAuth Configuration ---
+# --- OAuth Configuration (from settings) ---
 # Google
-GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-DEV_ADMIN_ID = os.getenv('DEV_ADMIN_ID')  # 개발자 관리자 ID
-
-if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-    raise ValueError("GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET 환경변수가 설정되지 않았습니다.")
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
+DEV_ADMIN_ID = settings.DEV_ADMIN_ID
 
 # Naver
-NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
-NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
+NAVER_CLIENT_ID = settings.NAVER_CLIENT_ID
+NAVER_CLIENT_SECRET = settings.NAVER_CLIENT_SECRET
 
 # Kakao
-KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY')
-KAKAO_CLIENT_SECRET = os.getenv('KAKAO_CLIENT_SECRET')
+KAKAO_REST_API_KEY = settings.KAKAO_REST_API_KEY
+KAKAO_CLIENT_SECRET = settings.KAKAO_CLIENT_SECRET
 
-# Railway 환경 자동 감지 및 redirect URI 설정
-if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
-    # Railway 배포 환경 - GIS 리다이렉트 모드
-    FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://your-app.railway.app')
-    GOOGLE_REDIRECT_URI = f'{FRONTEND_URL}/auth/callback.html'
-    NAVER_REDIRECT_URI = f'{FRONTEND_URL}/auth/naver/callback'
-    KAKAO_REDIRECT_URI = f'{FRONTEND_URL}/auth/kakao/callback'
-else:
-    # 로컬 개발 환경 - GIS 리다이렉트 모드
-    GOOGLE_REDIRECT_URI = 'http://localhost:5173/auth/callback.html'
-    NAVER_REDIRECT_URI = 'http://localhost:5173/auth/naver/callback'
-    KAKAO_REDIRECT_URI = 'http://localhost:5173/auth/kakao/callback'
-
+# Redirect URIs (계산됨)
+GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
+NAVER_REDIRECT_URI = settings.NAVER_REDIRECT_URI
+KAKAO_REDIRECT_URI = settings.KAKAO_REDIRECT_URI
 
 # --- Storage Configuration ---
-# 로그인된 사용자의 백엔드 로컬 저장 여부 (기본값: 비활성화, 구글드라이브만 사용)
-ENABLE_LOCAL_BACKUP = os.getenv('ENABLE_LOCAL_BACKUP', 'false').lower() == 'true'
+ENABLE_LOCAL_BACKUP = settings.ENABLE_LOCAL_BACKUP
 
 # --- Data Models ---
 class GoogleAuthRequest(BaseModel):
@@ -202,7 +191,7 @@ SCHEDULES_DATA_DIR = 'data'
 SCHEDULES_DATA_FILE = 'schedules_latest.json'
 
 # Railway Persistent Volume 저장소 설정
-STORAGE_DIR = os.getenv('RAILWAY_VOLUME_MOUNT_PATH', 'storage')
+STORAGE_DIR = settings.storage_dir
 USERS_DATA_DIR = os.path.join(STORAGE_DIR, 'users')
 
 # Ensure directories exist
