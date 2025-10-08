@@ -94,3 +94,56 @@ async def empty_trash(
     except Exception as e:
         logger.error(f"Failed to empty trash: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/trash/schedules/batch-restore")
+async def batch_restore_schedules(
+    ids: list[int],
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Batch restore schedules from trash - optimized"""
+    try:
+        service = ScheduleService(db)
+        restored_count = service.batch_restore_schedules(user_id, ids)
+
+        if restored_count == 0:
+            raise HTTPException(status_code=404, detail="No schedules found in trash")
+
+        return {
+            "success": True,
+            "message": f"Successfully restored {restored_count} schedules",
+            "restored_count": restored_count
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to batch restore schedules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/trash/schedules/restore-all")
+async def restore_all_trash(
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Restore all schedules from trash for a user"""
+    try:
+        service = ScheduleService(db)
+        restored_count = service.restore_all_trash(user_id)
+
+        if restored_count == 0:
+            return {
+                "success": True,
+                "message": "No schedules in trash to restore",
+                "restored_count": 0
+            }
+
+        return {
+            "success": True,
+            "message": f"Successfully restored all {restored_count} schedules",
+            "restored_count": restored_count
+        }
+    except Exception as e:
+        logger.error(f"Failed to restore all trash: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

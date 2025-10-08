@@ -424,15 +424,21 @@ def batch_delete_schedules(
     user_id: str = Query(..., description="User ID"),
     db: Session = Depends(get_database)
 ):
-    """Batch move schedules to trash (soft delete)"""
+    """Batch move schedules to trash (soft delete) - optimized"""
     try:
         service = ScheduleService(db)
 
-        for schedule_id in ids:
-            # Use ScheduleService to move to trash
-            service.delete_schedule(user_id, int(schedule_id))
+        # Convert string IDs to integers
+        schedule_ids = [int(id) for id in ids]
 
-        return {"success": True, "message": f"Moved {len(ids)} schedules to trash"}
+        # Use optimized batch delete method
+        deleted_count = service.batch_delete_schedules(user_id, schedule_ids)
+
+        return {
+            "success": True,
+            "message": f"Moved {deleted_count} schedules to trash",
+            "deleted_count": deleted_count
+        }
 
     except Exception as e:
         logger.error(f"Failed to batch delete schedules: {e}")

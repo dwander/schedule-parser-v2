@@ -597,6 +597,37 @@ class ScheduleService:
             logger.error(f"❌ Failed to move schedule {schedule_id} to trash: {e}")
             raise
 
+    def batch_delete_schedules(self, user_id: str, schedule_ids: List[int]) -> int:
+        """Batch move schedules to trash (soft delete) - optimized version"""
+        try:
+            # Fetch all schedules in one query
+            schedules = self.db.query(Schedule).filter(
+                Schedule.id.in_(schedule_ids),
+                Schedule.user_id == user_id
+            ).all()
+
+            if not schedules:
+                return 0
+
+            # Create trash items in bulk
+            trash_items = [TrashSchedule.from_schedule(schedule) for schedule in schedules]
+            self.db.bulk_save_objects(trash_items)
+
+            # Delete original schedules in bulk
+            deleted_count = self.db.query(Schedule).filter(
+                Schedule.id.in_(schedule_ids),
+                Schedule.user_id == user_id
+            ).delete(synchronize_session=False)
+
+            self.db.commit()
+            logger.info(f"✅ Batch moved {deleted_count} schedules to trash")
+            return deleted_count
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to batch delete schedules: {e}")
+            raise
+
     def get_schedule_count(self, user_id: str) -> int:
         """Get total schedule count for a user"""
         return self.db.query(Schedule).filter(Schedule.user_id == user_id).count()
@@ -682,6 +713,114 @@ class ScheduleService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"❌ Failed to restore schedule {original_id}: {e}")
+            raise
+
+    def batch_restore_schedules(self, user_id: str, original_ids: List[int]) -> int:
+        """Batch restore schedules from trash - optimized version"""
+        try:
+            # Fetch all trash items in one query
+            trash_items = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id,
+                TrashSchedule.original_id.in_(original_ids)
+            ).all()
+
+            if not trash_items:
+                return 0
+
+            # Create restored schedules in bulk
+            restored_schedules = []
+            for trash_item in trash_items:
+                restored_schedule = Schedule(
+                    user_id=trash_item.user_id,
+                    date=trash_item.date,
+                    location=trash_item.location,
+                    time=trash_item.time,
+                    couple=trash_item.couple,
+                    contact=trash_item.contact,
+                    brand=trash_item.brand,
+                    album=trash_item.album,
+                    photographer=trash_item.photographer,
+                    memo=trash_item.memo,
+                    manager=trash_item.manager,
+                    price=trash_item.price,
+                    needs_review=trash_item.needs_review,
+                    review_reason=trash_item.review_reason,
+                    photo_note=trash_item.photo_note,
+                    photo_sequence=trash_item.photo_sequence,
+                    cuts=trash_item.cuts,
+                    folder_name=trash_item.folder_name,
+                )
+                restored_schedules.append(restored_schedule)
+
+            # Bulk add restored schedules
+            self.db.bulk_save_objects(restored_schedules)
+
+            # Bulk delete trash items
+            restored_count = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id,
+                TrashSchedule.original_id.in_(original_ids)
+            ).delete(synchronize_session=False)
+
+            self.db.commit()
+            logger.info(f"✅ Batch restored {restored_count} schedules from trash")
+            return restored_count
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to batch restore schedules: {e}")
+            raise
+
+    def restore_all_trash(self, user_id: str) -> int:
+        """Restore all schedules from trash for a user"""
+        try:
+            # Fetch all trash items for user
+            trash_items = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id
+            ).all()
+
+            if not trash_items:
+                return 0
+
+            # Create restored schedules in bulk
+            restored_schedules = []
+            for trash_item in trash_items:
+                restored_schedule = Schedule(
+                    user_id=trash_item.user_id,
+                    date=trash_item.date,
+                    location=trash_item.location,
+                    time=trash_item.time,
+                    couple=trash_item.couple,
+                    contact=trash_item.contact,
+                    brand=trash_item.brand,
+                    album=trash_item.album,
+                    photographer=trash_item.photographer,
+                    memo=trash_item.memo,
+                    manager=trash_item.manager,
+                    price=trash_item.price,
+                    needs_review=trash_item.needs_review,
+                    review_reason=trash_item.review_reason,
+                    photo_note=trash_item.photo_note,
+                    photo_sequence=trash_item.photo_sequence,
+                    cuts=trash_item.cuts,
+                    folder_name=trash_item.folder_name,
+                )
+                restored_schedules.append(restored_schedule)
+
+            # Bulk add restored schedules
+            self.db.bulk_save_objects(restored_schedules)
+
+            # Delete all trash items
+            restored_count = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id
+            ).delete(synchronize_session=False)
+
+            self.db.commit()
+            logger.info(f"✅ Restored all {restored_count} schedules from trash")
+            return restored_count
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to restore all trash: {e}")
             raise
 
     def permanent_delete_schedule(self, user_id: str, original_id: int) -> bool:

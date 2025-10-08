@@ -4,7 +4,7 @@ from typing import Dict, Union, List, Optional, Any
 
 
 class SaveSchedulesRequest(BaseModel):
-    schedules: Union[List[Dict], str] = None  # schedules or compressed data
+    schedules: Optional[Union[List[Dict], str]] = None  # schedules or compressed data
     user_id: str
     access_token: Optional[str] = None
     refresh_token: Optional[str] = None
