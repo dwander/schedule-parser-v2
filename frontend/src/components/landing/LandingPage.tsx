@@ -115,50 +115,58 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
         <div className="w-full max-w-md space-y-3">
           {/* 구글 로그인 - FedCM 방식 */}
           <div className="w-full flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={handleGoogleLoginError}
-              useOneTap={false}
-              use_fedcm_for_prompt={true}
-              text="signin_with"
-              size="large"
-              width="448"
-              logo_alignment="left"
-            />
+            <div className="py-0.5">
+              <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={handleGoogleLoginError}
+                useOneTap={false}
+                use_fedcm_for_prompt={true}
+                text="signin_with"
+                size="large"
+                width="348"
+                logo_alignment="left"
+              />
+            </div>
           </div>
 
           {/* 네이버 로그인 */}
-          <Button
-            variant="outline"
-            className="w-full h-12 text-base bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
-            onClick={handleNaverLogin}
-          >
-            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z" />
-            </svg>
-            네이버로 로그인
-          </Button>
+          <div className="w-full flex justify-center">
+            <Button
+              variant="outline"
+              className="w-[348px] h-11 text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
+              onClick={handleNaverLogin}
+            >
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z" />
+              </svg>
+              네이버로 로그인
+            </Button>
+          </div>
 
           {/* 카카오 로그인 */}
-          <Button
-            variant="outline"
-            className="w-full h-12 text-base bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
-            onClick={handleKakaoLogin}
-          >
-            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3C6.477 3 2 6.477 2 10.75c0 2.568 1.547 4.844 3.926 6.238-.136.49-.889 3.14-.914 3.286-.036.212.079.21.166.153.064-.042 2.619-1.738 3.036-2.021 4.061.548 8.786-1.099 8.786-7.656C22 6.477 17.523 3 12 3z" />
-            </svg>
-            카카오로 로그인
-          </Button>
+          <div className="w-full flex justify-center">
+            <Button
+              variant="outline"
+              className="w-[348px] h-11 text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
+              onClick={handleKakaoLogin}
+            >
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3C6.477 3 2 6.477 2 10.75c0 2.568 1.547 4.844 3.926 6.238-.136.49-.889 3.14-.914 3.286-.036.212.079.21.166.153.064-.042 2.619-1.738 3.036-2.021 4.061.548 8.786-1.099 8.786-7.656C22 6.477 17.523 3 12 3z" />
+              </svg>
+              카카오로 로그인
+            </Button>
+          </div>
 
           {/* 로그인 없이 이용 */}
-          <Button
-            onClick={onContinueAnonymous}
-            variant="ghost"
-            className="w-full h-10 text-sm"
-          >
-            로그인 없이 이용
-          </Button>
+          <div className="w-full flex justify-center">
+            <Button
+              onClick={onContinueAnonymous}
+              variant="ghost"
+              className="w-[348px] h-10 text-sm"
+            >
+              로그인 없이 이용
+            </Button>
+          </div>
         </div>
 
         {/* 푸터 */}
