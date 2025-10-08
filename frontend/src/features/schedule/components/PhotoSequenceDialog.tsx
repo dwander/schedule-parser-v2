@@ -16,6 +16,7 @@ import { Plus, Trash2, GripVertical, ArrowLeft, RotateCcw, X, Lock, Unlock, Mic,
 import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
+import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG } from '@/lib/constants/photoSequence'
 import {
   DndContext,
   closestCenter,
@@ -46,15 +47,15 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   )
   const [newItemText, setNewItemText] = useState('')
   const [isLocked, setIsLocked] = useState(() => {
-    const saved = localStorage.getItem('photoSequenceLocked')
+    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED)
     return saved ? JSON.parse(saved) : false
   })
   const [voiceEnabled, setVoiceEnabled] = useState(() => {
-    const saved = localStorage.getItem('photoSequenceVoiceEnabled')
+    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED)
     return saved ? JSON.parse(saved) : false
   })
   const [trainingData, setTrainingData] = useState<VoiceTrainingData>(() => {
-    const saved = localStorage.getItem('photoSequenceVoiceTraining')
+    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING)
     return saved ? JSON.parse(saved) : DEFAULT_VOICE_TRAINING
   })
   const [trainingTargetId, setTrainingTargetId] = useState<string | null>(null)
@@ -170,7 +171,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const toggleLock = () => {
     setIsLocked((prev: boolean) => {
       const newValue = !prev
-      localStorage.setItem('photoSequenceLocked', JSON.stringify(newValue))
+      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, JSON.stringify(newValue))
       return newValue
     })
   }
@@ -184,7 +185,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     }
 
     // 음성 인식을 켜려고 할 때 힌트 표시 (한 번만)
-    const hintDismissed = localStorage.getItem('photoSequenceVoiceHintDismissed')
+    const hintDismissed = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_HINT_DISMISSED)
     if (!voiceEnabled && !hintDismissed) {
       setShowVoiceHintDialog(true)
       return
@@ -192,7 +193,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
     setVoiceEnabled((prev: boolean) => {
       const newValue = !prev
-      localStorage.setItem('photoSequenceVoiceEnabled', JSON.stringify(newValue))
+      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, JSON.stringify(newValue))
       return newValue
     })
   }
@@ -200,13 +201,13 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 힌트 다이얼로그 확인 후 음성 인식 켜기
   const handleVoiceHintConfirm = () => {
     setVoiceEnabled(true)
-    localStorage.setItem('photoSequenceVoiceEnabled', JSON.stringify(true))
+    localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, JSON.stringify(true))
   }
 
   // 다시 알리지 않기 체크 시
   const handleDontAskAgain = (checked: boolean) => {
     if (checked) {
-      localStorage.setItem('photoSequenceVoiceHintDismissed', 'true')
+      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_HINT_DISMISSED, 'true')
     }
   }
 
@@ -232,7 +233,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       [itemText]: selectedPhrases,
     }
     setTrainingData(newTrainingData)
-    localStorage.setItem('photoSequenceVoiceTraining', JSON.stringify(newTrainingData))
+    localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING, JSON.stringify(newTrainingData))
     setExpandedTrainingId(null)
     setCollectedPhrases([])
   }
@@ -281,7 +282,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       const timer = setTimeout(() => {
         setShowRecognizedText(false)
         setMatchedItemText('') // 페이드 아웃 후 초기화
-      }, 3000) // 3초 후 페이드 아웃
+      }, PHOTO_SEQUENCE_TIMERS.FADE_OUT)
 
       return () => clearTimeout(timer)
     }
@@ -299,7 +300,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px 이상 움직여야 드래그 시작
+        distance: PHOTO_SEQUENCE_DRAG.ACTIVATION_DISTANCE,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -504,7 +505,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         trainingData={trainingData}
         onSave={(newData) => {
           setTrainingData(newData)
-          localStorage.setItem('photoSequenceVoiceTraining', JSON.stringify(newData))
+          localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING, JSON.stringify(newData))
         }}
         items={activeItems}
       />
@@ -582,7 +583,7 @@ function SortableItem({
     if (!isLocked && !trainingTargetId) {
       longPressTimer.current = setTimeout(() => {
         onStartTraining(item.id)
-      }, 500) // 500ms 롱프레스
+      }, PHOTO_SEQUENCE_TIMERS.LONG_PRESS)
     }
   }
 
