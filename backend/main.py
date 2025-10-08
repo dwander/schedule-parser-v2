@@ -31,6 +31,16 @@ from parser import parse_schedules, parse_schedules_classic_only, parse_schedule
 # Import database modules
 from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User, PricingRule, TrashSchedule
 
+# Import constants
+from constants import (
+    SERVICE_NAME,
+    DRIVE_FOLDER_NAME,
+    NAVER_DEFAULT_CALENDAR_ID,
+    DEV_ORIGINS,
+    PRODUCTION_ORIGINS,
+    BACKUP_RETENTION_DAYS,
+)
+
 # --- App Initialization ---
 app = FastAPI()
 
@@ -62,14 +72,7 @@ async def startup_event():
 
 # --- CORS Configuration ---
 # This allows the frontend to communicate with the backend.
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
-]
+origins = DEV_ORIGINS.copy()
 
 # Add production frontend URL if specified
 FRONTEND_URL = os.getenv('FRONTEND_URL')
@@ -78,18 +81,7 @@ if FRONTEND_URL:
 
 # Railway 환경에서는 모든 Railway 도메인 허용 (프로덕션, 테스트 등)
 if os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_GIT_BRANCH'):
-    origins.extend([
-        "https://bs-snaper-frontend.up.railway.app",
-        "https://bs-snaper-backend.up.railway.app",
-        "https://bs-snaper-frontend-test.up.railway.app",
-        "https://bs-snaper-backend-test.up.railway.app",
-		"https://bssnaper.enfree.com",
-		"https://sched.enfree.com",
-		"https://enfree.com",
-		"https://4to.app",
-		"https://sched.4to.app",
-		"https://first.4to.app",
-    ])
+    origins.extend(PRODUCTION_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,
@@ -487,7 +479,7 @@ def find_or_create_folder_direct(access_token, folder_name, log_func=print):
 
 def find_or_create_app_folder(service):
     """Find or create the app folder in Google Drive"""
-    folder_name = "Wedding Snapler Schedule Manager Data"
+    folder_name = DRIVE_FOLDER_NAME
 
     try:
         print(f"🔍 Searching for folder: {folder_name}")
@@ -1256,7 +1248,7 @@ async def add_naver_calendar(request: NaverCalendarRequest):
         encoded_ical_string = urllib.parse.quote(ical_string)
 
         # form-data 형식으로 전송
-        data = f"calendarId=defaultCalendarId&scheduleIcalString={encoded_ical_string}"
+        data = f"calendarId={NAVER_DEFAULT_CALENDAR_ID}&scheduleIcalString={encoded_ical_string}"
 
         print(f"📅 네이버 캘린더 iCal String (처음 200자): {ical_string[:200]}")
         print(f"📅 인코딩된 iCal String (처음 200자): {encoded_ical_string[:200]}")
@@ -1889,13 +1881,13 @@ async def restore_database(request: dict = Body(...)):
 
 
 def cleanup_old_backups():
-    """Clean up backup files older than 7 days"""
+    """Clean up backup files older than retention period"""
     try:
         users_dir = os.path.join(SCHEDULES_DATA_DIR, "users")
         if not os.path.exists(users_dir):
             return
 
-        cutoff_time = datetime.now() - timedelta(days=7)
+        cutoff_time = datetime.now() - timedelta(days=BACKUP_RETENTION_DAYS)
         cleaned_count = 0
 
         for user_folder in os.listdir(users_dir):
@@ -2314,7 +2306,7 @@ def privacy_policy():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>개인정보처리방침 - 본식스냅러</title>
+        <title>개인정보처리방침 - {SERVICE_NAME}</title>
         <style>
             body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; margin: 0; padding: 2rem; background: #f8f9fa; }
             .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -2331,7 +2323,7 @@ def privacy_policy():
             <p class="date">최종 수정일: 2024년 9월 23일</p>
 
             <h2>1. 개인정보 수집 및 이용 목적</h2>
-            <p>본식스냅러(이하 "서비스")는 다음의 목적을 위해 개인정보를 수집 및 이용합니다:</p>
+            <p>{SERVICE_NAME}(이하 "서비스")는 다음의 목적을 위해 개인정보를 수집 및 이용합니다:</p>
             <ul>
                 <li>스케줄 관리 서비스 제공</li>
                 <li>사용자 인증 및 계정 관리</li>
@@ -2397,7 +2389,7 @@ def terms_of_service():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>서비스 이용약관 - 본식스냅러</title>
+        <title>서비스 이용약관 - {SERVICE_NAME}</title>
         <style>
             body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; margin: 0; padding: 2rem; background: #f8f9fa; }
             .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -2415,11 +2407,11 @@ def terms_of_service():
             <p class="date">최종 수정일: 2024년 9월 23일</p>
 
             <h2>제1조 (목적)</h2>
-            <p>이 약관은 본식스냅러(이하 "서비스")의 이용조건 및 절차, 서비스와 회원의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+            <p>이 약관은 {SERVICE_NAME}(이하 "서비스")의 이용조건 및 절차, 서비스와 회원의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
 
             <h2>제2조 (정의)</h2>
             <ul>
-                <li><strong>"서비스"</strong>라 함은 본식스냅러가 제공하는 웨딩 스케줄 관리 서비스를 의미합니다.</li>
+                <li><strong>"서비스"</strong>라 함은 {SERVICE_NAME}가 제공하는 웨딩 스케줄 관리 서비스를 의미합니다.</li>
                 <li><strong>"회원"</strong>이라 함은 서비스에 접속하여 이 약관에 따라 서비스를 받는 고객을 말합니다.</li>
                 <li><strong>"계정"</strong>이라 함은 회원의 식별과 서비스 이용을 위하여 회원이 선정한 구글 계정을 의미합니다.</li>
             </ul>
