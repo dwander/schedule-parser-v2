@@ -124,7 +124,7 @@ export function TrainingDataManager({
         </div>
       }
     >
-        <div className="divide-y pr-2">
+        <div className="divide-y">
             {items.map((item) => (
               <div key={item.id} className="py-4 first:pt-0 last:pb-0">
                 <div className="font-medium mb-3">{item.text}</div>

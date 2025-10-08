@@ -107,8 +107,10 @@ export function ContentModal({
           'w-[calc(100%-2rem)] rounded-lg',
           // Flex 레이아웃과 최대 높이 설정 (grid 오버라이드)
           '!flex flex-col gap-0 max-h-[85vh]',
+          // 패딩 조정
+          'p-4',
           sizeClasses[size],
-          isFullscreenMobile && 'w-full h-full max-h-full rounded-none sm:w-[calc(100%-2rem)] sm:rounded-lg sm:max-h-[85vh]',
+          isFullscreenMobile && 'w-full h-full max-h-full rounded-none sm:w-[calc(100%-2rem)] sm:rounded-lg sm:max-h-[85vh] p-0 sm:p-4',
           className
         )}
         hideClose={true}
@@ -127,7 +129,7 @@ export function ContentModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 -ml-5"
+                  className="h-8 w-8 -ml-2"
                   onClick={handleClose}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -158,8 +160,8 @@ export function ContentModal({
 
         {/* Content */}
         <div className={cn(
-          'flex-1 overflow-y-auto min-h-0 py-4',
-          isFullscreenMobile && 'px-4 sm:px-0',
+          'flex-1 overflow-y-auto min-h-0 py-4 px-2',
+          isFullscreenMobile && 'px-4 sm:px-2',
           contentClassName
         )}>
           {children}
