@@ -27,7 +27,7 @@ load_dotenv()
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
 
 # Import database modules
-from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User, PricingRule
+from database import get_database, ScheduleService, create_tables, test_connection, run_migrations, SessionLocal, Schedule, Tag, User, PricingRule, TrashSchedule
 
 # --- App Initialization ---
 app = FastAPI()
@@ -2021,6 +2021,90 @@ async def delete_schedule(
         print(f"❌ Delete schedule error: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
+# ==================== Trash API ====================
+
+@app.get("/api/trash/schedules")
+async def get_trash_schedules(
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Get all deleted schedules (trash) for a user"""
+    try:
+        service = ScheduleService(db)
+        trash_schedules = service.get_trash_schedules(user_id)
+        return [schedule.to_dict() for schedule in trash_schedules]
+    except Exception as e:
+        logger.error(f"Failed to get trash schedules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.patch("/api/schedules/{schedule_id}/restore")
+async def restore_schedule(
+    schedule_id: int,
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Restore a deleted schedule from trash"""
+    try:
+        service = ScheduleService(db)
+        restored = service.restore_schedule(user_id, schedule_id)
+
+        if not restored:
+            raise HTTPException(status_code=404, detail="Schedule not found in trash")
+
+        return {
+            "success": True,
+            "message": f"Successfully restored schedule {schedule_id}",
+            "schedule": restored.to_dict()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to restore schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/schedules/{schedule_id}/permanent")
+async def permanent_delete_schedule(
+    schedule_id: int,
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Permanently delete a schedule from trash"""
+    try:
+        service = ScheduleService(db)
+        success = service.permanent_delete_schedule(user_id, schedule_id)
+
+        if not success:
+            raise HTTPException(status_code=404, detail="Schedule not found in trash")
+
+        return {
+            "success": True,
+            "message": f"Permanently deleted schedule {schedule_id}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to permanently delete schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/trash/schedules")
+async def empty_trash(
+    user_id: str = Query(...),
+    db: Session = Depends(get_database)
+):
+    """Permanently delete all schedules in trash for a user"""
+    try:
+        service = ScheduleService(db)
+        deleted_count = service.empty_trash(user_id)
+
+        return {
+            "success": True,
+            "message": f"Emptied trash ({deleted_count} items)",
+            "deleted_count": deleted_count
+        }
+    except Exception as e:
+        logger.error(f"Failed to empty trash: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== User Management API ====================
 
 @app.post("/api/users/init")
@@ -2502,34 +2586,6 @@ def update_schedule(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/schedules/{schedule_id}")
-def delete_schedule(
-    schedule_id: str,
-    user_id: str = Query(..., description="User ID"),
-    db: Session = Depends(get_database)
-):
-    """Delete a schedule"""
-    try:
-        existing = db.query(Schedule).filter(
-            Schedule.id == int(schedule_id),
-            Schedule.user_id == user_id
-        ).first()
-        
-        if not existing:
-            raise HTTPException(status_code=404, detail="Schedule not found")
-        
-        db.delete(existing)
-        db.commit()
-        
-        return {"success": True, "message": "Schedule deleted"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to delete schedule: {e}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/api/schedules/migrate")
 def migrate_schedules(
     from_user_id: str = Query(..., description="Anonymous user ID"),
@@ -2647,21 +2703,15 @@ def batch_delete_schedules(
     user_id: str = Query(..., description="User ID"),
     db: Session = Depends(get_database)
 ):
-    """Batch delete schedules"""
+    """Batch move schedules to trash (soft delete)"""
     try:
+        service = ScheduleService(db)
 
         for schedule_id in ids:
-            existing = db.query(Schedule).filter(
-                Schedule.id == int(schedule_id),
-                Schedule.user_id == user_id
-            ).first()
+            # Use ScheduleService to move to trash
+            service.delete_schedule(user_id, int(schedule_id))
 
-            if existing:
-                db.delete(existing)
-
-        db.commit()
-
-        return {"success": True, "message": f"Deleted {len(ids)} schedules"}
+        return {"success": True, "message": f"Moved {len(ids)} schedules to trash"}
 
     except Exception as e:
         logger.error(f"Failed to batch delete schedules: {e}")

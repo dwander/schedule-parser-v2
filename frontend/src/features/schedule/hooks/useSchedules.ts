@@ -6,6 +6,10 @@ import {
   updateSchedule,
   deleteSchedule,
   deleteSchedules,
+  fetchTrashSchedules,
+  restoreSchedule,
+  permanentDeleteSchedule,
+  emptyTrash,
 } from '../api/scheduleApi'
 
 export function useSchedules() {
@@ -69,6 +73,50 @@ export function useDeleteSchedules() {
     mutationFn: deleteSchedules,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
+      queryClient.invalidateQueries({ queryKey: ['trash'] })
+    },
+  })
+}
+
+// ==================== Trash Hooks ====================
+
+export function useTrashSchedules() {
+  return useQuery({
+    queryKey: ['trash'],
+    queryFn: fetchTrashSchedules,
+  })
+}
+
+export function useRestoreSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: restoreSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] })
+      queryClient.invalidateQueries({ queryKey: ['trash'] })
+    },
+  })
+}
+
+export function usePermanentDeleteSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: permanentDeleteSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trash'] })
+    },
+  })
+}
+
+export function useEmptyTrash() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: emptyTrash,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trash'] })
     },
   })
 }

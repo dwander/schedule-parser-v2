@@ -241,6 +241,112 @@ class Schedule(Base):
         )
 
 
+class TrashSchedule(Base):
+    """Trash table for deleted schedules - separate from active schedules"""
+    __tablename__ = "trash_schedules"
+
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    # User identification
+    user_id = Column(String(255), nullable=False, index=True)
+
+    # Core schedule fields (same as Schedule)
+    date = Column(String(20), nullable=False)
+    location = Column(String(500), nullable=False, default="")
+    time = Column(String(20), nullable=False, default="")
+    couple = Column(String(500), nullable=False, default="")
+
+    # Parsed fields
+    contact = Column(String(500), nullable=False, default="")
+    brand = Column(String(200), nullable=False, default="")
+    album = Column(String(200), nullable=False, default="")
+    photographer = Column(String(200), nullable=False, default="")
+    memo = Column(Text, nullable=False, default="")
+    manager = Column(String(200), nullable=False, default="")
+    price = Column(Integer, nullable=False, default=0)
+
+    # Review fields
+    needs_review = Column(Boolean, nullable=False, default=False)
+    review_reason = Column(String(500), nullable=False, default="")
+
+    # Photo note field (JSON data)
+    photo_note = Column(JSON, nullable=True)
+
+    # Photo sequence field (JSON data)
+    photo_sequence = Column(JSON, nullable=True)
+
+    # New fields
+    cuts = Column(Integer, nullable=False, default=0)
+    folder_name = Column(String(500), nullable=False, default="")
+
+    # Deletion metadata
+    original_id = Column(Integer, nullable=False)  # ID from schedules table
+    deleted_at = Column(DateTime(timezone=True), server_default=func.now())  # 삭제 일시
+
+    # Original timestamps
+    created_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_trash_user_deleted', 'user_id', 'deleted_at'),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert TrashSchedule to dictionary (same format as Schedule)"""
+        return {
+            'id': self.original_id,  # Use original ID for frontend compatibility
+            'date': self.date,
+            'location': self.location,
+            'time': self.time,
+            'couple': self.couple,
+            'contact': self.contact,
+            'brand': self.brand,
+            'album': self.album,
+            'photographer': self.photographer,
+            'memo': self.memo,
+            'manager': self.manager,
+            'price': self.price,
+            'needs_review': self.needs_review,
+            'review_reason': self.review_reason,
+            'photoNote': self.photo_note,
+            'photoSequence': self.photo_sequence,
+            'cuts': self.cuts,
+            'folderName': self.folder_name,
+            'deletedAt': self.deleted_at.isoformat() if self.deleted_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    @classmethod
+    def from_schedule(cls, schedule: Schedule) -> 'TrashSchedule':
+        """Create TrashSchedule from a Schedule instance"""
+        return cls(
+            user_id=schedule.user_id,
+            original_id=schedule.id,
+            date=schedule.date,
+            location=schedule.location,
+            time=schedule.time,
+            couple=schedule.couple,
+            contact=schedule.contact,
+            brand=schedule.brand,
+            album=schedule.album,
+            photographer=schedule.photographer,
+            memo=schedule.memo,
+            manager=schedule.manager,
+            price=schedule.price,
+            needs_review=schedule.needs_review,
+            review_reason=schedule.review_reason,
+            photo_note=schedule.photo_note,
+            photo_sequence=schedule.photo_sequence,
+            cuts=schedule.cuts,
+            folder_name=schedule.folder_name,
+            created_at=schedule.created_at,
+            updated_at=schedule.updated_at,
+        )
+
+
 # Database configuration
 # Railway 볼륨 경로 사용 (/app/data로 마운트된 볼륨)
 VOLUME_PATH = os.getenv('RAILWAY_VOLUME_MOUNT_PATH', '.')
@@ -469,7 +575,7 @@ class ScheduleService:
             raise
 
     def delete_schedule(self, user_id: str, schedule_id: int) -> bool:
-        """Delete a specific schedule"""
+        """Move a schedule to trash (soft delete)"""
         try:
             schedule = self.db.query(Schedule).filter(
                 Schedule.id == schedule_id,
@@ -479,13 +585,16 @@ class ScheduleService:
             if not schedule:
                 return False
 
+            # Move to trash
+            trash_item = TrashSchedule.from_schedule(schedule)
+            self.db.add(trash_item)
             self.db.delete(schedule)
             self.db.commit()
             return True
 
         except Exception as e:
             self.db.rollback()
-            logger.error(f"❌ Failed to delete schedule {schedule_id}: {e}")
+            logger.error(f"❌ Failed to move schedule {schedule_id} to trash: {e}")
             raise
 
     def get_schedule_count(self, user_id: str) -> int:
@@ -518,4 +627,93 @@ class ScheduleService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"❌ Failed to save schedule for user {user_id}: {e}")
+            raise
+
+    # ==================== Trash Methods ====================
+
+    def get_trash_schedules(self, user_id: str) -> List[TrashSchedule]:
+        """Get all deleted schedules from trash"""
+        return self.db.query(TrashSchedule).filter(
+            TrashSchedule.user_id == user_id
+        ).order_by(TrashSchedule.deleted_at.desc()).all()
+
+    def restore_schedule(self, user_id: str, original_id: int) -> Optional[Schedule]:
+        """Restore a schedule from trash to active schedules"""
+        try:
+            # Find trash item by original_id
+            trash_item = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id,
+                TrashSchedule.original_id == original_id
+            ).first()
+
+            if not trash_item:
+                return None
+
+            # Create new schedule from trash data
+            restored_schedule = Schedule(
+                user_id=trash_item.user_id,
+                date=trash_item.date,
+                location=trash_item.location,
+                time=trash_item.time,
+                couple=trash_item.couple,
+                contact=trash_item.contact,
+                brand=trash_item.brand,
+                album=trash_item.album,
+                photographer=trash_item.photographer,
+                memo=trash_item.memo,
+                manager=trash_item.manager,
+                price=trash_item.price,
+                needs_review=trash_item.needs_review,
+                review_reason=trash_item.review_reason,
+                photo_note=trash_item.photo_note,
+                photo_sequence=trash_item.photo_sequence,
+                cuts=trash_item.cuts,
+                folder_name=trash_item.folder_name,
+            )
+
+            # Add to schedules and remove from trash
+            self.db.add(restored_schedule)
+            self.db.delete(trash_item)
+            self.db.commit()
+            self.db.refresh(restored_schedule)
+
+            return restored_schedule
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to restore schedule {original_id}: {e}")
+            raise
+
+    def permanent_delete_schedule(self, user_id: str, original_id: int) -> bool:
+        """Permanently delete a schedule from trash"""
+        try:
+            trash_item = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id,
+                TrashSchedule.original_id == original_id
+            ).first()
+
+            if not trash_item:
+                return False
+
+            self.db.delete(trash_item)
+            self.db.commit()
+            return True
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to permanently delete schedule {original_id}: {e}")
+            raise
+
+    def empty_trash(self, user_id: str) -> int:
+        """Permanently delete all schedules in trash for a user"""
+        try:
+            deleted_count = self.db.query(TrashSchedule).filter(
+                TrashSchedule.user_id == user_id
+            ).delete()
+            self.db.commit()
+            return deleted_count
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"❌ Failed to empty trash for user {user_id}: {e}")
             raise

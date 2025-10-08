@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon } from 'lucide-react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
 import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
+import { TrashDialog } from '@/features/schedule/components/TrashDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
@@ -54,6 +55,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [appSettingsOpen, setAppSettingsOpen] = useState(false)
   const [userManagementOpen, setUserManagementOpen] = useState(false)
   const [pricingRuleOpen, setPricingRuleOpen] = useState(false)
+  const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [statsAlertOpen, setStatsAlertOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -192,6 +194,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       {user && (
         <>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setTrashDialogOpen(true)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>휴지통</span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>로그아웃</span>
@@ -241,6 +247,13 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       {user && (
         <>
           <div className="border-t my-2" />
+          <button
+            onClick={() => handleMenuItemClick(() => setTrashDialogOpen(true))}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent rounded-md transition-colors"
+          >
+            <Trash2 className="h-5 w-5" />
+            <span className="font-medium">휴지통</span>
+          </button>
           <button
             onClick={() => handleMenuItemClick(handleLogout)}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent rounded-md transition-colors text-destructive"
@@ -325,6 +338,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
         <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
         <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
+        <TrashDialog open={trashDialogOpen} onOpenChange={setTrashDialogOpen} />
         <AlertDialog
           open={statsAlertOpen}
           onOpenChange={setStatsAlertOpen}
@@ -414,6 +428,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       <SettingsDialog open={appSettingsOpen} onOpenChange={setAppSettingsOpen} />
       <UserManagementDialog open={userManagementOpen} onOpenChange={setUserManagementOpen} />
       <PricingRuleDialog open={pricingRuleOpen} onOpenChange={setPricingRuleOpen} />
+      <TrashDialog open={trashDialogOpen} onOpenChange={setTrashDialogOpen} />
       <AlertDialog
         open={statsAlertOpen}
         onOpenChange={setStatsAlertOpen}

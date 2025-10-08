@@ -63,3 +63,32 @@ export async function migrateSchedules(fromUserId: string, toUserId: string): Pr
   })
   return data
 }
+
+// ==================== Trash API ====================
+
+export async function fetchTrashSchedules(): Promise<Schedule[]> {
+  const { data } = await apiClient.get('/api/trash/schedules', {
+    params: { user_id: getUserId() }
+  })
+  return data
+}
+
+export async function restoreSchedule(id: string): Promise<Schedule> {
+  const { data } = await apiClient.patch(`/api/schedules/${id}/restore`, null, {
+    params: { user_id: getUserId() }
+  })
+  return data.schedule
+}
+
+export async function permanentDeleteSchedule(id: string): Promise<void> {
+  await apiClient.delete(`/api/schedules/${id}/permanent`, {
+    params: { user_id: getUserId() }
+  })
+}
+
+export async function emptyTrash(): Promise<{ deleted_count: number }> {
+  const { data } = await apiClient.delete('/api/trash/schedules', {
+    params: { user_id: getUserId() }
+  })
+  return data
+}
