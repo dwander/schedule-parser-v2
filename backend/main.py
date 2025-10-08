@@ -123,7 +123,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Google
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
-DEV_ADMIN_ID = os.getenv('VITE_DEV_ADMIN_ID')  # 개발자 관리자 ID
+DEV_ADMIN_ID = os.getenv('DEV_ADMIN_ID')  # 개발자 관리자 ID
 
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     raise ValueError("GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET 환경변수가 설정되지 않았습니다.")
