@@ -169,7 +169,13 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       toast.error('구글 로그인에 실패했습니다')
     },
     flow: 'auth-code',
-    redirect_uri: redirectUri
+    redirect_uri: redirectUri,
+    // GIS 고질적 문제 우회: 이미 승인한 사용자는 동의 화면 건너뛰기
+    select_account: false,
+    ux_mode: 'popup',
+    // prompt를 명시적으로 빈 문자열로 설정 (이미 승인된 경우 건너뛰기)
+    // @ts-ignore - useGoogleLogin 타입에 없지만 내부적으로 전달됨
+    prompt: ''
   })
 
   const handleNaverLogin = () => {
