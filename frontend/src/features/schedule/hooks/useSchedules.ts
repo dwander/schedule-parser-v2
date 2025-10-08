@@ -10,6 +10,7 @@ import {
   restoreSchedule,
   permanentDeleteSchedule,
   emptyTrash,
+  restoreAllTrash,
 } from '../api/scheduleApi'
 
 export function useSchedules() {
@@ -125,6 +126,18 @@ export function useEmptyTrash() {
   return useMutation({
     mutationFn: emptyTrash,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trash'] })
+    },
+  })
+}
+
+export function useRestoreAllTrash() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: restoreAllTrash,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] })
       queryClient.invalidateQueries({ queryKey: ['trash'] })
     },
   })

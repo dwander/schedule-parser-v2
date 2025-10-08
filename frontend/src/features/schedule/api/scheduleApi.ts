@@ -92,3 +92,10 @@ export async function emptyTrash(): Promise<{ deleted_count: number }> {
   })
   return data
 }
+
+export async function restoreAllTrash(): Promise<{ restored_count: number }> {
+  const { data } = await apiClient.post('/api/trash/schedules/restore-all', null, {
+    params: { user_id: getUserId() }
+  })
+  return data
+}

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Trash2, RotateCcw, X } from 'lucide-react'
-import { useTrashSchedules, useRestoreSchedule, usePermanentDeleteSchedule, useEmptyTrash } from '../hooks/useSchedules'
+import { useTrashSchedules, useRestoreSchedule, usePermanentDeleteSchedule, useEmptyTrash, useRestoreAllTrash } from '../hooks/useSchedules'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -20,9 +20,11 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
   const restoreMutation = useRestoreSchedule()
   const permanentDeleteMutation = usePermanentDeleteSchedule()
   const emptyTrashMutation = useEmptyTrash()
+  const restoreAllMutation = useRestoreAllTrash()
 
   const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<number | null>(null)
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false)
+  const [confirmRestoreAll, setConfirmRestoreAll] = useState(false)
 
   const handleRestore = (schedule: Schedule) => {
     restoreMutation.mutate(String(schedule.id), {
@@ -56,6 +58,19 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
       },
       onError: (error) => {
         toast.error('휴지통 비우기 실패: ' + (error as Error).message)
+      }
+    })
+  }
+
+  const handleRestoreAll = () => {
+    restoreAllMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        toast.success(`모든 항목을 복구했습니다 (${data.restored_count}개 복구)`)
+        setConfirmRestoreAll(false)
+        onOpenChange(false)
+      },
+      onError: (error) => {
+        toast.error('전체 복구 실패: ' + (error as Error).message)
       }
     })
   }
@@ -146,16 +161,28 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
               <p className="text-sm text-muted-foreground">
                 총 {trashSchedules.length}개 항목
               </p>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmEmptyTrash(true)}
-                disabled={emptyTrashMutation.isPending}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                휴지통 비우기
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmRestoreAll(true)}
+                  disabled={restoreAllMutation.isPending}
+                  className="gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  전체 복구
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setConfirmEmptyTrash(true)}
+                  disabled={emptyTrashMutation.isPending}
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  휴지통 비우기
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -181,6 +208,16 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
         confirmText="모두 삭제"
         onConfirm={handleEmptyTrash}
         variant="destructive"
+      />
+
+      {/* 전체 복구 확인 */}
+      <ConfirmDialog
+        open={confirmRestoreAll}
+        onOpenChange={setConfirmRestoreAll}
+        title="전체 복구"
+        description={`휴지통의 모든 항목(${trashSchedules.length}개)을 복구하시겠습니까?`}
+        confirmText="전체 복구"
+        onConfirm={handleRestoreAll}
       />
     </>
   )
