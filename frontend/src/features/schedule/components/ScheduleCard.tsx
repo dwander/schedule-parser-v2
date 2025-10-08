@@ -24,10 +24,11 @@ interface ScheduleCardProps {
   isDuplicate?: boolean
   isConflict?: boolean
   onToggleSelect: () => void
+  onToggleCheckboxVisibility: () => void
   onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
 }
 
-export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onDeleteTag }: ScheduleCardProps) {
+export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
   const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm } = useSettingsStore()
@@ -185,14 +186,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     }
   }
 
-  // 헤더 더블클릭 핸들러 (체크박스 토글)
-  const handleHeaderDoubleClick = (e: React.MouseEvent) => {
+  // 카드 더블클릭 핸들러 (체크박스 visibility 토글)
+  const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    onToggleSelect()
+    onToggleCheckboxVisibility()
   }
 
-  // 헤더 롱프레스 핸들러 (체크박스 토글)
-  const handleHeaderPointerDown = (e: React.PointerEvent) => {
+  // 카드 롱프레스 핸들러 (체크박스 visibility 토글)
+  const handleCardPointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement
 
     // EditableCell 내부 input이나 버튼 클릭은 제외 (체크박스는 허용)
@@ -202,7 +203,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     }
 
     longPressTimerRef.current = setTimeout(() => {
-      onToggleSelect()
+      onToggleCheckboxVisibility()
     }, 500) // 500ms 롱프레스
   }
 
@@ -255,8 +256,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             : 'border-border bg-card'
         }
       `}
-      onDoubleClick={handleHeaderDoubleClick}
-      onPointerDown={handleHeaderPointerDown}
+      onDoubleClick={handleCardDoubleClick}
+      onPointerDown={handleCardPointerDown}
       onPointerUp={handleHeaderPointerUp}
       onPointerLeave={handleHeaderPointerUp}
     >

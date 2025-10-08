@@ -25,18 +25,24 @@ import {
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DateRangeFilterDialog } from './DateRangeFilterDialog'
 import { toast } from 'sonner'
-import { useState, useLayoutEffect, useRef } from 'react'
+import { useState, useLayoutEffect, useRef, useEffect } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface ScheduleTableProps {
   data: Schedule[]
   globalFilter: string
   onGlobalFilterChange: (value: string) => void
+  onSelectedCountChange?: (count: number) => void
+  deleteDialogOpen?: boolean
+  onDeleteDialogChange?: (open: boolean) => void
 }
 
-export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: ScheduleTableProps) {
+export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange }: ScheduleTableProps) {
   const { isLoading, error } = useSchedules()
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
+  const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
+  const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
+  const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
   const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
 
   // localStorage에서 불러온 문자열을 Date 객체로 변환
@@ -61,7 +67,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
   const deleteSchedules = useDeleteSchedules()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { viewMode, setViewMode } = useSettingsStore()
 
   // 가변폭 컬럼 크기 자동 계산 (memo 또는 spacer)
@@ -136,9 +141,10 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
   const selectedCount = Object.keys(rowSelection).length
   const hasSelection = selectedCount > 0
 
-  const handleDeleteClick = () => {
-    setDeleteDialogOpen(true)
-  }
+  // selectedCount 변경 시 부모에게 알림
+  useEffect(() => {
+    onSelectedCountChange?.(selectedCount)
+  }, [selectedCount, onSelectedCountChange])
 
   const handleDeleteConfirm = () => {
     const selectedRows = table.getSelectedRowModel().rows
@@ -224,17 +230,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
           </DropdownMenu>
 
         <div className="flex items-center gap-1 ml-auto">
-          {columnVisibility.select && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9"
-              onClick={handleDeleteClick}
-              disabled={!hasSelection}
-            >
-              <Trash2 className={`h-5 w-5 ${hasSelection ? 'text-destructive' : ''}`} />
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -463,7 +458,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange }: Sche
                             isSelected={row.getIsSelected()}
                             isDuplicate={isDuplicate}
                             isConflict={isConflict}
-                            onToggleSelect={() => setColumnVisibility({ ...columnVisibility, select: !columnVisibility.select })}
+                            onToggleSelect={() => row.toggleSelected()}
+                            onToggleCheckboxVisibility={() => setColumnVisibility({ ...columnVisibility, select: !columnVisibility.select })}
                             onDeleteTag={handleDeleteTag}
                           />
                         </div>

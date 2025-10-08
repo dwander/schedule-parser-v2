@@ -1,4 +1,4 @@
-import { ListPlus, FolderSync } from 'lucide-react'
+import { ListPlus, FolderSync, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from './UserMenu'
 
@@ -6,9 +6,11 @@ interface AppHeaderProps {
   onAddClick?: () => void
   onFolderSyncClick?: () => void
   onBackupRestoreClick?: () => void
+  selectedCount?: number
+  onDeleteClick?: () => void
 }
 
-export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick }: AppHeaderProps) {
+export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount = 0, onDeleteClick }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40">
       {/* Safe area for mobile status bar */}
@@ -23,6 +25,19 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick 
 
         {/* Right: Buttons */}
         <div className="flex items-center gap-2">
+          {/* Delete Button (체크된 항목이 있을 때만 표시) */}
+          {selectedCount > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onDeleteClick}
+              aria-label="선택 항목 삭제"
+              className="bg-background/50 backdrop-blur-sm"
+            >
+              <Trash2 className="h-[1.25rem] w-[1.25rem] text-destructive" />
+            </Button>
+          )}
+
           {/* Folder Sync Button (Desktop only) */}
           <Button
             variant="outline"

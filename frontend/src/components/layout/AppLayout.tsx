@@ -13,9 +13,11 @@ interface AppLayoutProps {
   onAddClick?: () => void
   onFolderSyncClick?: () => void
   onBackupRestoreClick?: () => void
+  selectedCount?: number
+  onDeleteClick?: () => void
 }
 
-export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick }: AppLayoutProps) {
+export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount, onDeleteClick }: AppLayoutProps) {
   return (
     <div className="relative min-h-screen bg-background">
       {/* Floating Header */}
@@ -23,6 +25,8 @@ export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBa
         onAddClick={onAddClick}
         onFolderSyncClick={onFolderSyncClick}
         onBackupRestoreClick={onBackupRestoreClick}
+        selectedCount={selectedCount}
+        onDeleteClick={onDeleteClick}
       />
 
       {/* Main Content */}

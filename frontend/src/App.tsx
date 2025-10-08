@@ -29,6 +29,8 @@ function AppContent() {
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
   const [globalFilter, setGlobalFilter] = useState('')
+  const [selectedCount, setSelectedCount] = useState(0)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { testPanelVisible, fontSize, dateRangeFilter, sortBy } = useSettingsStore()
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
   const { data: tags = [] } = useTags()
@@ -338,6 +340,8 @@ function AppContent() {
         onAddClick={() => setParserOpen(true)}
         onFolderSyncClick={() => setFolderSyncOpen(true)}
         onBackupRestoreClick={() => setBackupRestoreOpen(true)}
+        selectedCount={selectedCount}
+        onDeleteClick={() => setDeleteDialogOpen(true)}
       >
         {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
@@ -345,6 +349,9 @@ function AppContent() {
             data={filteredSchedules}
             globalFilter={globalFilter}
             onGlobalFilterChange={setGlobalFilter}
+            onSelectedCountChange={setSelectedCount}
+            deleteDialogOpen={deleteDialogOpen}
+            onDeleteDialogChange={setDeleteDialogOpen}
           />
         </section>
       </AppLayout>
