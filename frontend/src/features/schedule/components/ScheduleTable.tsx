@@ -27,6 +27,7 @@ import { DateRangeFilterDialog } from './DateRangeFilterDialog'
 import { toast } from 'sonner'
 import { useState, useLayoutEffect, useRef, useEffect } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { UI_SIZES } from '@/lib/constants/ui'
 
 interface ScheduleTableProps {
   data: Schedule[]
@@ -80,8 +81,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   // Grid virtualizer (card 모드일 때만)
   const gridContainerRef = useRef<HTMLDivElement>(null)
-  const cardWidth = 320
-  const gap = 16
+  const cardWidth = UI_SIZES.CARD_WIDTH
+  const gap = UI_SIZES.CARD_GAP
   const [gridColumns, setGridColumns] = useState(() => {
     // 초기값을 window 크기로 계산
     if (typeof window !== 'undefined') {
@@ -110,8 +111,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const gridVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => window as any,
-    estimateSize: () => 400,
-    overscan: 3,
+    estimateSize: () => UI_SIZES.CARD_ESTIMATED_HEIGHT,
+    overscan: UI_SIZES.GRID_OVERSCAN,
     scrollMargin: gridContainerRef.current?.offsetTop ?? 0,
     observeElementRect: (_instance, cb) => {
       const handler = () => {

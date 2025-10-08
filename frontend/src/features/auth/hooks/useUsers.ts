@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchUsers } from '../api/userApi'
+import { QUERY_CONFIG } from '@/lib/constants/query'
 
 interface UseUsersOptions {
   enabled?: boolean
@@ -12,7 +13,7 @@ export function useUsers(options?: UseUsersOptions) {
   return useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: QUERY_CONFIG.USER_STALE_TIME_MS,
     enabled: options?.enabled ?? true,
   })
 }

@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { Schedule } from '../types/schedule'
+import { DATETIME } from '@/lib/constants/datetime'
 
 interface TrashDialogProps {
   open: boolean
@@ -65,7 +66,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
     const date = new Date(deletedAt)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffDays = Math.floor(diffMs / DATETIME.MS_PER_DAY)
 
     if (diffDays === 0) return '오늘 삭제됨'
     if (diffDays === 1) return '어제 삭제됨'

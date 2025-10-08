@@ -8,6 +8,7 @@ import {
 import { useUsers } from '../hooks/useUsers'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { DATETIME } from '@/lib/constants/datetime'
 
 interface UserManagementDialogProps {
   open: boolean
@@ -34,7 +35,7 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
     const date = new Date(utcString)
 
     // 9시간 추가 (UTC → KST)
-    const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000))
+    const kstDate = new Date(date.getTime() + DATETIME.KST_OFFSET_MS)
 
     // YYYY-MM-DD HH:mm 형식으로 포맷
     const year = kstDate.getUTCFullYear()
