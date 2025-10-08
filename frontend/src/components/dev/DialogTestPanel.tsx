@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { FormDialog } from '@/components/common/FormDialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { LoadingOverlay } from '@/components/common/LoadingOverlay'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -24,6 +26,9 @@ export function DialogTestPanel() {
   const [emptyOpen, setEmptyOpen] = useState(false)
   const [syncOpen, setSyncOpen] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
+  const [contentModalOpen, setContentModalOpen] = useState(false)
+  const [contentModalSize, setContentModalSize] = useState<'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'fullscreen-mobile'>('lg')
+  const [contentModalToggle, setContentModalToggle] = useState(false)
   const [name, setName] = useState('')
   const [swEnabled, setSwEnabled] = useState(false)
   const { theme, setTheme } = useSettingsStore()
@@ -164,6 +169,28 @@ export function DialogTestPanel() {
             onClick={() => setFormOpen(true)}
           >
             폼 모달
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              setContentModalSize('lg')
+              setContentModalOpen(true)
+            }}
+          >
+            Content (lg)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              setContentModalSize('fullscreen-mobile')
+              setContentModalOpen(true)
+            }}
+          >
+            Content (full)
           </Button>
         </div>
 
@@ -317,6 +344,75 @@ export function DialogTestPanel() {
 
       {/* Pricing Rule Dialog */}
       <PricingRuleDialog open={pricingOpen} onOpenChange={setPricingOpen} />
+
+      {/* Content Modal Test */}
+      <ContentModal
+        open={contentModalOpen}
+        onOpenChange={setContentModalOpen}
+        size={contentModalSize}
+        title="ContentModal 테스트"
+        subtitle="새로운 통합 모달 컴포넌트"
+        headerAction={
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {contentModalToggle ? '켜짐' : '꺼짐'}
+            </span>
+            <Switch
+              checked={contentModalToggle}
+              onCheckedChange={setContentModalToggle}
+            />
+          </div>
+        }
+        showFooter={true}
+        footerContent={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="outline" onClick={() => setContentModalOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={() => {
+              toast.success('저장 완료!')
+              setContentModalOpen(false)
+            }}>
+              저장
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            현재 크기: <strong>{contentModalSize}</strong>
+          </p>
+          <p className="text-sm">
+            이것은 새로운 ContentModal 컴포넌트입니다. 모바일에서도 마진과 라운딩이 적용되어 현대적인 느낌을 줍니다.
+          </p>
+          <p className="text-sm">
+            오른쪽 상단의 토글: <strong>{contentModalToggle ? '활성화' : '비활성화'}</strong>
+          </p>
+          <div className="space-y-2">
+            <Label>이름</Label>
+            <Input placeholder="테스트 입력" />
+          </div>
+          <div className="space-y-2">
+            <Label>설명</Label>
+            <Input placeholder="설명을 입력하세요" />
+          </div>
+
+          {/* 스크롤 테스트용 긴 콘텐츠 */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-semibold">스크롤 테스트 콘텐츠</h3>
+            {[...Array(20)].map((_, i) => (
+              <div key={i} className="p-4 border rounded-lg">
+                <h4 className="font-medium mb-2">섹션 {i + 1}</h4>
+                <p className="text-sm text-muted-foreground">
+                  이것은 스크롤 테스트를 위한 긴 콘텐츠입니다.
+                  모달의 높이가 제한되고 컨텐츠 영역에 세로 스크롤바가
+                  올바르게 나타나는지 확인하기 위한 더미 텍스트입니다.
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ContentModal>
     </div>
   )
 }

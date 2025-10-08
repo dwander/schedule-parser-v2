@@ -1,10 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -361,61 +356,53 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   ]
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-w-full sm:max-w-4xl sm:h-auto sm:max-h-[85vh] sm:overflow-y-auto p-0 sm:p-6 flex flex-col sm:block">
-        <DialogHeader className="pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0 flex-shrink-0 sm:flex-shrink">
-          <div className="flex items-center justify-between gap-4">
-            {/* 왼쪽: 아이콘 + 타이틀 */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-xl text-left">
-                  {schedule.location} <span className="text-muted-foreground">·</span> {schedule.couple}
-                </DialogTitle>
-                <p className="text-sm text-muted-foreground mt-0.5 truncate flex items-center gap-1">
-                  <span>{schedule.date} · {schedule.time}</span>
-                  {schedule.contact && (
-                    <>
-                      <Phone className="h-3.5 w-3.5 ml-2" />
-                      {schedule.contact.includes('@') ? (
-                        <span>{schedule.contact}</span>
-                      ) : (
-                        <a
-                          href={`tel:${schedule.contact.replace(/\D/g, '')}`}
-                          className="hover:text-foreground hover:underline transition-colors"
-                        >
-                          {schedule.contact}
-                        </a>
-                      )}
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* 오른쪽: 상태 + 토글 */}
-            <div className="flex items-center gap-2 flex-shrink-0 relative top-3">
-              <span className="text-sm text-muted-foreground">
-                {isEditMode ? '편집 중' : '읽기 전용'}
-              </span>
-              <Switch
-                checked={isEditMode}
-                onCheckedChange={setIsEditMode}
-              />
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div
-          className="space-y-4 py-4 px-4 sm:px-0 flex-1 overflow-y-auto sm:flex-auto sm:overflow-visible"
-          onDoubleClick={() => {
-            if (!isEditMode) {
-              setIsEditMode(true)
-            }
-          }}
-        >
+    <ContentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="fullscreen-mobile"
+      className="sm:max-w-4xl"
+      title={`${schedule.location} · ${schedule.couple}`}
+      subtitle={
+        <span className="flex items-center gap-1">
+          <span>{schedule.date} · {schedule.time}</span>
+          {schedule.contact && (
+            <>
+              <Phone className="h-3.5 w-3.5 ml-2" />
+              {schedule.contact.includes('@') ? (
+                <span>{schedule.contact}</span>
+              ) : (
+                <a
+                  href={`tel:${schedule.contact.replace(/\D/g, '')}`}
+                  className="hover:text-foreground hover:underline transition-colors"
+                >
+                  {schedule.contact}
+                </a>
+              )}
+            </>
+          )}
+        </span>
+      }
+      headerAction={
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {isEditMode ? '편집 중' : '읽기 전용'}
+          </span>
+          <Switch
+            checked={isEditMode}
+            onCheckedChange={setIsEditMode}
+          />
+        </div>
+      }
+      showFooter={false}
+    >
+      <div
+        className="space-y-4"
+        onDoubleClick={() => {
+          if (!isEditMode) {
+            setIsEditMode(true)
+          }
+        }}
+      >
           {/* 중요 메모 */}
           <SectionCard icon={AlertCircle} title="중요 메모" show={isEditMode ? true : !!getValue('importantMemo')} isEditMode={isEditMode}>
             <Textarea
@@ -697,8 +684,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               </Button>
             </div>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ContentModal>
   )
 }

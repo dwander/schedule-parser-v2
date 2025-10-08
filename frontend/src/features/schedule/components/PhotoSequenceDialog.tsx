@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
@@ -12,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, ArrowLeft, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X } from 'lucide-react'
 import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
@@ -320,63 +315,91 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 md:inset-auto left-0 top-0 md:left-[50%] md:top-[50%] translate-x-0 translate-y-0 md:translate-x-[-50%] md:translate-y-[-50%] max-w-none md:max-w-2xl w-full md:w-auto md:min-w-[500px] h-full md:h-[90vh] p-0 flex flex-col rounded-none md:rounded-lg border-0 md:border [&>button]:hidden">
-        {/* 헤더 */}
-        <div className="flex flex-row items-center justify-between px-4 py-3 flex-shrink-0">
+    <ContentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="fullscreen-mobile"
+      className="md:max-w-2xl md:min-w-[500px] md:h-[90vh]"
+      title=" "
+      headerAction={
+        <div className="flex items-center gap-1">
+          {isListening && (
+            <span className="text-sm text-muted-foreground">듣는 중</span>
+          )}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onOpenChange(false)}
-            className="h-9 w-9"
+            onClick={toggleVoice}
+            className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''} ${isListening ? 'animate-pulse' : ''}`}
+            title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
           >
-            <ArrowLeft className="h-5 w-5" />
+            {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
           </Button>
-
-          <div className="flex-1"></div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleVoice}
-              className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''}`}
-              title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
-            >
-              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTrainingManager(true)}
-              className="h-9 w-9"
-              title="훈련 데이터 관리"
-            >
-              <CassetteTape className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleLock}
-              className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
-              title={isLocked ? "잠금 해제" : "잠금"}
-            >
-              {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleReset}
-              className="h-9 w-9"
-              title="모두 초기화"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowTrainingManager(true)}
+            className="h-9 w-9"
+            title="훈련 데이터 관리"
+          >
+            <CassetteTape className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleLock}
+            className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
+            title={isLocked ? "잠금 해제" : "잠금"}
+          >
+            {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleReset}
+            className="h-9 w-9"
+            title="모두 초기화"
+          >
+            <RotateCcw className="h-5 w-5" />
+          </Button>
         </div>
+      }
+      showFooter={!isLocked}
+      footerContent={
+        <div className="flex gap-2 w-full">
+          <Input
+            placeholder="항목 추가..."
+            value={newItemText}
+            onChange={(e) => setNewItemText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addItem()
+              }
+            }}
+            className="flex-1"
+          />
+          <Button onClick={addItem} size="icon" variant="outline" className="flex-shrink-0">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      }
+    >
+
+        {/* 음성 인식 상태 영역 */}
+        {voiceEnabled && displayedText && (
+          <div className="border-b pb-4">
+            {/* 인식된 텍스트 표시 */}
+            <div className={`text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
+              <div className={`text-xl font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {displayedText}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 체크리스트 */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="space-y-4">
           {activeItems.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               촬영 순서를 추가해주세요
@@ -419,71 +442,26 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
         {/* 삭제된 항목 배지 */}
         {!isLocked && deletedItems.length > 0 && (
-          <div className="mx-4 mb-3 flex-shrink-0">
-            <div className="flex flex-wrap gap-2">
-              {deletedItems.map((item) => (
-                <Badge
-                  key={item.id}
-                  variant="secondary"
-                  className="cursor-pointer hover:bg-accent flex items-center gap-1.5 px-3 py-1.5 font-normal"
-                >
-                  <span onClick={() => restoreItem(item.id)}>{item.text}</span>
-                  <X
-                    className="h-3 w-3 hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      permanentlyDelete(item.id)
-                    }}
-                  />
-                </Badge>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2">
+            {deletedItems.map((item) => (
+              <Badge
+                key={item.id}
+                variant="secondary"
+                className="cursor-pointer hover:bg-accent flex items-center gap-1.5 px-3 py-1.5 font-normal"
+              >
+                <span onClick={() => restoreItem(item.id)}>{item.text}</span>
+                <X
+                  className="h-3 w-3 hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    permanentlyDelete(item.id)
+                  }}
+                />
+              </Badge>
+            ))}
           </div>
         )}
-
-        {/* 인식된 텍스트 크게 표시 (페이드 아웃) */}
-        {voiceEnabled && displayedText && (
-          <div className={`mx-4 mb-3 flex-shrink-0 text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
-            <div className={`text-xl font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
-              {displayedText}
-            </div>
-          </div>
-        )}
-
-        {/* 음성 인식 상태 (듣는 중만) */}
-        {voiceEnabled && isListening && (
-          <div className="mx-4 flex-shrink-0 text-center" style={{ marginTop: '-1rem', marginBottom: '1rem' }}>
-            <span className="flex items-center justify-center gap-1.5 text-base">
-              <Mic className="h-4 w-4 text-red-500 animate-pulse" />
-              <span className="text-muted-foreground">듣는 중...</span>
-            </span>
-          </div>
-        )}
-
-        {/* 항목 추가 */}
-        {!isLocked && (
-          <div className="px-4 py-3 flex-shrink-0">
-            <div className="flex gap-2">
-              <Input
-                placeholder="항목 추가..."
-                value={newItemText}
-                onChange={(e) => setNewItemText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addItem()
-                  }
-                }}
-                className="flex-1"
-              />
-              <Button onClick={addItem} size="icon" variant="outline" className="flex-shrink-0">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    </ContentModal>
 
       {/* 훈련 데이터 관리 다이얼로그 */}
       <TrainingDataManager
