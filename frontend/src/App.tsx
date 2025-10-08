@@ -18,6 +18,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedules'
 import { markSampleDataSeen } from '@/lib/api/sampleData'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
+import { getApiUrl } from '@/lib/constants/api'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { fetchConfig } from '@/lib/api/config'
@@ -65,7 +66,7 @@ function AppContent() {
         sessionStorage.removeItem('naver_state')
 
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const apiUrl = getApiUrl()
           const response = await axios.post(`${apiUrl}/auth/naver`, {
             code,
             state
@@ -108,7 +109,7 @@ function AppContent() {
         window.history.replaceState({}, '', '/')
 
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const apiUrl = getApiUrl()
           const response = await axios.post(`${apiUrl}/auth/kakao`, {
             code
           })
@@ -158,7 +159,7 @@ function AppContent() {
         sessionStorage.removeItem('naver_calendar_state')
 
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+          const apiUrl = getApiUrl()
           const response = await axios.post(`${apiUrl}/auth/naver`, {
             code,
             state

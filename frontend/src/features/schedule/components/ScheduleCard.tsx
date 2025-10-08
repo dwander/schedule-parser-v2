@@ -18,6 +18,7 @@ import { useState, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
+import { getApiUrl } from '@/lib/constants/api'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -116,7 +117,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       }
 
       // 백엔드를 통해 네이버 캘린더 API 호출
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = getApiUrl()
       const response = await axios.post(
         `${apiUrl}/api/calendar/naver`,
         {

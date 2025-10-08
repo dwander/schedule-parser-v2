@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { getApiUrl } from '@/lib/constants/api'
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: getApiUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

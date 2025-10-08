@@ -17,6 +17,7 @@ import { migrateSchedules } from '@/features/schedule/api/scheduleApi'
 import { MigrateDataDialog } from './MigrateDataDialog'
 import { useQueryClient } from '@tanstack/react-query'
 import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
+import { getApiUrl } from '@/lib/constants/api'
 
 interface LoginDialogProps {
   open: boolean
@@ -46,7 +47,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = getApiUrl()
 
       // 로그인 계정의 기존 스케줄 확인
       const existingResponse = await axios.get(`${apiUrl}/api/schedules`, {
@@ -133,7 +134,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       }
 
       // 백엔드로 ID Token 전송
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = getApiUrl()
       const response = await axios.post(`${apiUrl}/auth/google/token`, {
         credential: credentialResponse.credential
       })

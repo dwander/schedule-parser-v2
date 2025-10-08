@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { useQueryClient } from '@tanstack/react-query'
 import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
+import { getApiUrl } from '@/lib/constants/api'
 
 interface LandingPageProps {
   onContinueAnonymous: () => void
@@ -32,7 +33,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
       }
 
       // 백엔드로 ID Token 전송
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = getApiUrl()
       const response = await axios.post(`${apiUrl}/auth/google/token`, {
         credential: credentialResponse.credential
       })
