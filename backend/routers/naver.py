@@ -1,24 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional
 import requests
 import uuid
 from datetime import datetime
 import urllib.parse
 
 from constants import NAVER_DEFAULT_CALENDAR_ID
+from schemas.naver import NaverCalendarRequest
 
 router = APIRouter()
-
-
-# Data Models
-class NaverCalendarRequest(BaseModel):
-    access_token: str
-    subject: str
-    location: str
-    start_datetime: str  # ISO 8601 format
-    end_datetime: str    # ISO 8601 format
-    description: Optional[str] = None
 
 
 # --- API Endpoints ---

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from typing import Dict, Union, List, Optional, Any
 from datetime import datetime
 import os
 import json
 
 from database import get_database, ScheduleService
+from schemas.storage import SaveSchedulesRequest, LoadSchedulesRequest, PersistentSaveRequest, PersistentLoadRequest
 
 router = APIRouter()
 
@@ -15,31 +15,6 @@ router = APIRouter()
 # For now, importing from main
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-
-# Data Models
-class SaveSchedulesRequest(BaseModel):
-    schedules: Union[List[Dict], str] = None  # schedules or compressed data
-    user_id: str
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
-    device_uuid: Optional[str] = None
-    schedules_data: Optional[Dict] = None
-
-
-class LoadSchedulesRequest(BaseModel):
-    user_id: str
-    access_token: str
-    refresh_token: Optional[str] = None
-
-
-class PersistentSaveRequest(BaseModel):
-    user_id: str
-    schedules_data: Dict
-
-
-class PersistentLoadRequest(BaseModel):
-    user_id: str
 
 
 # Constants (should be imported from main, but defining here for now)

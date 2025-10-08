@@ -9,6 +9,7 @@ from google.auth.transport import requests as google_requests
 
 from config import settings
 from database import get_database, User
+from schemas.auth import GoogleAuthRequest, GoogleTokenRequest, NaverAuthRequest, KakaoAuthRequest
 
 router = APIRouter()
 
@@ -28,25 +29,6 @@ NAVER_REDIRECT_URI = settings.NAVER_REDIRECT_URI
 KAKAO_REDIRECT_URI = settings.KAKAO_REDIRECT_URI
 
 FRONTEND_URL = settings.FRONTEND_URL
-
-
-# Data Models
-class GoogleAuthRequest(BaseModel):
-    code: str
-    redirect_uri: Optional[str] = None
-
-
-class GoogleTokenRequest(BaseModel):
-    credential: str  # ID Token (JWT)
-
-
-class NaverAuthRequest(BaseModel):
-    code: str
-    state: str
-
-
-class KakaoAuthRequest(BaseModel):
-    code: str
 
 
 # --- API Endpoints ---

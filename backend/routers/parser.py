@@ -1,15 +1,9 @@
 from fastapi import APIRouter, UploadFile, File
-from pydantic import BaseModel
 
 from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
+from schemas.parser import ParseTextRequest
 
 router = APIRouter()
-
-# Data Models
-class ParseTextRequest(BaseModel):
-    text: str
-    engine: str = "hybrid"  # classic, hybrid, ai_only
-
 
 # Data File Path
 DATA_FILE_PATH = '../.screenshot/KakaoTalk_20250814_1307_38_031_KPAG_매니저.txt'

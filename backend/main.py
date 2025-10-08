@@ -53,6 +53,20 @@ from legacy import (
     USERS_DATA_DIR,
 )
 
+# Import schemas
+from schemas import (
+    GoogleAuthRequest,
+    GoogleTokenRequest,
+    NaverAuthRequest,
+    KakaoAuthRequest,
+    NaverCalendarRequest,
+    SaveSchedulesRequest,
+    LoadSchedulesRequest,
+    PersistentSaveRequest,
+    PersistentLoadRequest,
+    ParseTextRequest,
+)
+
 # --- App Initialization ---
 app = FastAPI()
 
@@ -145,53 +159,6 @@ KAKAO_REDIRECT_URI = settings.KAKAO_REDIRECT_URI
 
 # --- Storage Configuration ---
 ENABLE_LOCAL_BACKUP = settings.ENABLE_LOCAL_BACKUP
-
-# --- Data Models ---
-class GoogleAuthRequest(BaseModel):
-    code: str
-    redirect_uri: Optional[str] = None  # 프론트엔드에서 사용한 redirect_uri를 받음
-
-class GoogleTokenRequest(BaseModel):
-    credential: str  # ID Token (JWT)
-
-class NaverAuthRequest(BaseModel):
-    code: str
-    state: str
-
-class KakaoAuthRequest(BaseModel):
-    code: str
-
-class NaverCalendarRequest(BaseModel):
-    access_token: str
-    subject: str
-    location: str
-    start_datetime: str  # ISO 8601 format
-    end_datetime: str    # ISO 8601 format
-    description: Optional[str] = None
-
-class SaveSchedulesRequest(BaseModel):
-    schedules: Union[List[Dict], str]  # 압축된 문자열도 허용
-    user_id: str
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
-    device_uuid: Optional[str] = None
-
-class LoadSchedulesRequest(BaseModel):
-    user_id: str
-    access_token: str
-    refresh_token: Optional[str] = None
-
-# Railway Persistent Storage Models
-class PersistentSaveRequest(BaseModel):
-    user_id: str
-    schedules_data: Dict
-
-class PersistentLoadRequest(BaseModel):
-    user_id: str
-
-class ParseTextRequest(BaseModel):
-    text: str
-    engine: str = "hybrid"  # classic, hybrid, ai_only
 
 # --- Data File Path ---
 # The path is relative to the root of the project where the server will be started.
