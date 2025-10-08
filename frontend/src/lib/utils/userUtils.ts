@@ -1,3 +1,5 @@
+import { AUTH_STORAGE_KEYS } from '@/lib/constants/storage'
+
 /**
  * Generate a random UUID v4
  */
@@ -34,7 +36,7 @@ export function formatAnonymousUserId(uuid: string): string {
  */
 export function getUserId(): string {
   // Check if user is authenticated
-  const authStorage = localStorage.getItem('auth-storage')
+  const authStorage = localStorage.getItem(AUTH_STORAGE_KEYS.STORAGE)
   if (authStorage) {
     try {
       const authState = JSON.parse(authStorage)
@@ -48,10 +50,10 @@ export function getUserId(): string {
   }
 
   // For anonymous users, get or create UUID
-  let anonymousId = localStorage.getItem('anonymous_user_id')
+  let anonymousId = localStorage.getItem(AUTH_STORAGE_KEYS.ANONYMOUS_USER_ID)
   if (!anonymousId) {
     anonymousId = generateUUID()
-    localStorage.setItem('anonymous_user_id', anonymousId)
+    localStorage.setItem(AUTH_STORAGE_KEYS.ANONYMOUS_USER_ID, anonymousId)
   }
 
   return formatAnonymousUserId(anonymousId)
@@ -61,7 +63,7 @@ export function getUserId(): string {
  * Get anonymous user ID if it exists (without creating a new one)
  */
 export function getAnonymousUserId(): string | null {
-  const anonymousId = localStorage.getItem('anonymous_user_id')
+  const anonymousId = localStorage.getItem(AUTH_STORAGE_KEYS.ANONYMOUS_USER_ID)
   return anonymousId ? formatAnonymousUserId(anonymousId) : null
 }
 
@@ -69,5 +71,5 @@ export function getAnonymousUserId(): string | null {
  * Clear anonymous user data (called after migration)
  */
 export function clearAnonymousData() {
-  localStorage.removeItem('anonymous_user_id')
+  localStorage.removeItem(AUTH_STORAGE_KEYS.ANONYMOUS_USER_ID)
 }

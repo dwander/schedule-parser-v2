@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sheet'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
+import { APP_STORAGE_KEYS } from '@/lib/constants/storage'
 import { SettingsDialog } from '@/features/settings/components/SettingsDialog'
 import { UserManagementDialog } from '@/features/auth/components/UserManagementDialog'
 import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
@@ -64,7 +65,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
 
   const handleLogout = async () => {
     await logout()
-    localStorage.removeItem('skipLanding')
+    localStorage.removeItem(APP_STORAGE_KEYS.SKIP_LANDING)
     window.location.reload()
   }
 

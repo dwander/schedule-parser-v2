@@ -19,6 +19,7 @@ import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedule
 import { markSampleDataSeen } from '@/lib/api/sampleData'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { getApiUrl } from '@/lib/constants/api'
+import { APP_STORAGE_KEYS } from '@/lib/constants/storage'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { fetchConfig } from '@/lib/api/config'
@@ -41,7 +42,7 @@ function AppContent() {
   const queryClient = useQueryClient()
   const [showLanding, setShowLanding] = useState(() => {
     // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
-    return !user && !localStorage.getItem('skipLanding')
+    return !user && !localStorage.getItem(APP_STORAGE_KEYS.SKIP_LANDING)
   })
 
   // 네이버 로그인 callback 처리
@@ -199,7 +200,7 @@ function AppContent() {
 
   // 앱을 처음 사용하는 경우 예제 데이터 추가
   useEffect(() => {
-    const addingFlag = localStorage.getItem('addingExamples')
+    const addingFlag = localStorage.getItem(APP_STORAGE_KEYS.ADDING_EXAMPLES)
 
     // 현재 추가 중이면 스킵
     if (addingFlag === 'true') {
@@ -216,18 +217,18 @@ function AppContent() {
     // 익명 사용자: localStorage 확인
     const hasSeenExamples = user
       ? user.hasSeenSampleData
-      : localStorage.getItem('hasSeenExamples') === 'true'
+      : localStorage.getItem(APP_STORAGE_KEYS.HAS_SEEN_EXAMPLES) === 'true'
 
     if (hasSeenExamples) {
       return
     }
 
-    localStorage.setItem('addingExamples', 'true') // 추가 중 플래그 설정
+    localStorage.setItem(APP_STORAGE_KEYS.ADDING_EXAMPLES, 'true') // 추가 중 플래그 설정
 
     // 예제 데이터 추가
     batchAddSchedules.mutate(EXAMPLE_SCHEDULES, {
       onSuccess: async () => {
-        localStorage.removeItem('addingExamples') // 추가 완료, 플래그 제거
+        localStorage.removeItem(APP_STORAGE_KEYS.ADDING_EXAMPLES) // 추가 완료, 플래그 제거
 
         // 로그인 사용자: 백엔드에 기록
         if (user) {
@@ -240,21 +241,21 @@ function AppContent() {
           }
         } else {
           // 익명 사용자: localStorage에 기록
-          localStorage.setItem('hasSeenExamples', 'true')
+          localStorage.setItem(APP_STORAGE_KEYS.HAS_SEEN_EXAMPLES, 'true')
         }
 
         toast.success('🎉 환영합니다! 예제 데이터가 추가되었습니다.')
       },
       onError: (error) => {
         console.error('예제 데이터 추가 실패:', error)
-        localStorage.removeItem('addingExamples') // 실패 시 플래그 제거
+        localStorage.removeItem(APP_STORAGE_KEYS.ADDING_EXAMPLES) // 실패 시 플래그 제거
       }
     })
   }, [schedulesLoading, schedules, user])
 
   // 익명으로 계속하기 핸들러
   const handleContinueAnonymous = () => {
-    localStorage.setItem('skipLanding', 'true')
+    localStorage.setItem(APP_STORAGE_KEYS.SKIP_LANDING, 'true')
     setShowLanding(false)
   }
 

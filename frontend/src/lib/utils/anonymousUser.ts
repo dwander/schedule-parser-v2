@@ -2,7 +2,9 @@
  * 익명 사용자 ID 생성 및 관리
  */
 
-const STORAGE_KEY = 'anonymous_user_id'
+import { AUTH_STORAGE_KEYS } from '@/lib/constants/storage'
+
+const STORAGE_KEY = AUTH_STORAGE_KEYS.ANONYMOUS_USER_ID
 
 /**
  * 익명 사용자 ID 가져오기 (없으면 생성)
