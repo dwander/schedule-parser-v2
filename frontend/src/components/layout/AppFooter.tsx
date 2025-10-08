@@ -25,7 +25,6 @@ export function AppFooter({ stats }: AppFooterProps) {
 
   const totalPrice = stats?.totalPrice ?? 0
   const netPrice = Math.floor(totalPrice * 0.967)
-  const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 
   const items: StatItem[] = [
     { label: '스케줄', value: stats?.scheduleCount ?? 0 },
@@ -69,11 +68,6 @@ export function AppFooter({ stats }: AppFooterProps) {
             )
           })}
         </div>
-      </div>
-
-      {/* Version display */}
-      <div className="mt-2 text-[0.625rem] text-muted-foreground/50">
-        v{appVersion}
       </div>
 
       {/* Safe area for mobile bottom */}
