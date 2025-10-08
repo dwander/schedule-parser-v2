@@ -17,6 +17,7 @@ import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
 import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG } from '@/lib/constants/photoSequence'
+import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
 import {
   DndContext,
   closestCenter,
@@ -46,18 +47,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     schedule.photoSequence || generatePhotoSequence()
   )
   const [newItemText, setNewItemText] = useState('')
-  const [isLocked, setIsLocked] = useState(() => {
-    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED)
-    return saved ? JSON.parse(saved) : false
-  })
-  const [voiceEnabled, setVoiceEnabled] = useState(() => {
-    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED)
-    return saved ? JSON.parse(saved) : false
-  })
-  const [trainingData, setTrainingData] = useState<VoiceTrainingData>(() => {
-    const saved = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING)
-    return saved ? JSON.parse(saved) : DEFAULT_VOICE_TRAINING
-  })
+  const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
+  const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
+  const [trainingData, setTrainingData] = useLocalStorage<VoiceTrainingData>(
+    PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING,
+    DEFAULT_VOICE_TRAINING
+  )
   const [trainingTargetId, setTrainingTargetId] = useState<string | null>(null)
   const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
@@ -169,11 +164,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 잠금 토글
   const toggleLock = () => {
-    setIsLocked((prev: boolean) => {
-      const newValue = !prev
-      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, JSON.stringify(newValue))
-      return newValue
-    })
+    setIsLocked((prev) => !prev)
   }
 
   // 음성 인식 토글
@@ -191,17 +182,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       return
     }
 
-    setVoiceEnabled((prev: boolean) => {
-      const newValue = !prev
-      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, JSON.stringify(newValue))
-      return newValue
-    })
+    setVoiceEnabled((prev) => !prev)
   }
 
   // 힌트 다이얼로그 확인 후 음성 인식 켜기
   const handleVoiceHintConfirm = () => {
     setVoiceEnabled(true)
-    localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, JSON.stringify(true))
   }
 
   // 다시 알리지 않기 체크 시
@@ -228,12 +214,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 훈련 데이터 저장
   const saveTrainingData = (itemText: string, selectedPhrases: string[]) => {
-    const newTrainingData = {
+    setTrainingData({
       ...trainingData,
       [itemText]: selectedPhrases,
-    }
-    setTrainingData(newTrainingData)
-    localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING, JSON.stringify(newTrainingData))
+    })
     setExpandedTrainingId(null)
     setCollectedPhrases([])
   }
@@ -503,10 +487,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         open={showTrainingManager}
         onOpenChange={setShowTrainingManager}
         trainingData={trainingData}
-        onSave={(newData) => {
-          setTrainingData(newData)
-          localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING, JSON.stringify(newData))
-        }}
+        onSave={setTrainingData}
         items={activeItems}
       />
 
