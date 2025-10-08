@@ -55,6 +55,9 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply bg-background;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, sans-serif;
