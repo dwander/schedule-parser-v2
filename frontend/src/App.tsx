@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from './lib/api/queryClient'
@@ -37,6 +37,7 @@ function AppContent() {
   const syncTags = useSyncTags()
   const batchAddSchedules = useBatchAddSchedules()
   const { user, login, updateNaverToken } = useAuthStore()
+  const queryClient = useQueryClient()
   const [showLanding, setShowLanding] = useState(() => {
     // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
     return !user && !localStorage.getItem('skipLanding')
@@ -79,11 +80,12 @@ function AppContent() {
 
           login(user)
           sessionStorage.removeItem('naver_state')
+          queryClient.invalidateQueries({ queryKey: ['schedules'] })
+          queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
 
           // 홈으로 리다이렉트
           window.history.replaceState({}, '', '/')
-          window.location.reload()
         } catch (error) {
           console.error('네이버 로그인 실패:', error)
           toast.error('네이버 로그인에 실패했습니다')
@@ -119,11 +121,12 @@ function AppContent() {
           }
 
           login(user)
+          queryClient.invalidateQueries({ queryKey: ['schedules'] })
+          queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
 
           // 홈으로 리다이렉트
           window.history.replaceState({}, '', '/')
-          window.location.reload()
         } catch (error) {
           console.error('카카오 로그인 실패:', error)
           toast.error('카카오 로그인에 실패했습니다')
@@ -166,7 +169,6 @@ function AppContent() {
 
           // 홈으로 리다이렉트
           window.history.replaceState({}, '', '/')
-          window.location.reload()
         } catch (error) {
           console.error('네이버 캘린더 연동 실패:', error)
           toast.error('네이버 캘린더 연동에 실패했습니다')
