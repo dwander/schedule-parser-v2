@@ -1,12 +1,5 @@
 import { useState, useRef } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { Button } from '@/components/ui/button'
 import { Download, Upload, FileJson, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -137,85 +130,78 @@ export function BackupRestoreDialog({ open, onOpenChange }: BackupRestoreDialogP
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>데이터 백업 및 복원</DialogTitle>
-            <DialogDescription>
-              스케줄 데이터를 JSON 파일로 백업하거나 복원할 수 있습니다.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* 백업 (내보내기) */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                데이터 백업
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                현재 저장된 {schedules.length}개의 스케줄을 JSON 파일로 백업합니다.
-              </p>
-              <Button
-                onClick={handleExport}
-                disabled={schedules.length === 0}
-                className="w-full"
-                variant="outline"
-              >
-                <FileJson className="h-4 w-4 mr-2" />
-                백업 파일 다운로드
-              </Button>
-            </div>
-
-            <div className="border-t border-border" />
-
-            {/* 복원 (가져오기) */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                데이터 복원
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                백업 파일에서 스케줄 데이터를 복원합니다.
-              </p>
-              <Button
-                onClick={handleFileSelect}
-                disabled={isProcessing}
-                className="w-full"
-                variant="outline"
-              >
-                {isProcessing ? (
-                  <LoadingSpinner size="sm" className="mr-2" />
-                ) : (
-                  <Upload className="h-4 w-4 mr-2" />
-                )}
-                백업 파일 선택
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-
-            {/* 경고 메시지 */}
-            <div className="flex items-start gap-2 rounded-md bg-yellow-50 dark:bg-yellow-950/20 p-3 text-sm">
-              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
-              <p className="text-yellow-800 dark:text-yellow-200">
-                복원 시 중복된 스케줄은 건너뛰고, 새로운 스케줄만 추가됩니다.
-              </p>
-            </div>
+      <ContentModal
+        open={open}
+        onOpenChange={onOpenChange}
+        size="fullscreen-mobile"
+        className="sm:max-w-md"
+        title="데이터 백업 및 복원"
+        subtitle="스케줄 데이터를 JSON 파일로 백업하거나 복원할 수 있습니다."
+        showFooter={false}
+      >
+        <div className="space-y-4">
+          {/* 백업 (내보내기) */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              데이터 백업
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              현재 저장된 {schedules.length}개의 스케줄을 JSON 파일로 백업합니다.
+            </p>
+            <Button
+              onClick={handleExport}
+              disabled={schedules.length === 0}
+              className="w-full"
+              variant="outline"
+            >
+              <FileJson className="h-4 w-4 mr-2" />
+              백업 파일 다운로드
+            </Button>
           </div>
 
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              닫기
+          <div className="border-t border-border" />
+
+          {/* 복원 (가져오기) */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              데이터 복원
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              백업 파일에서 스케줄 데이터를 복원합니다.
+            </p>
+            <Button
+              onClick={handleFileSelect}
+              disabled={isProcessing}
+              className="w-full"
+              variant="outline"
+            >
+              {isProcessing ? (
+                <LoadingSpinner size="sm" className="mr-2" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              백업 파일 선택
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          {/* 경고 메시지 */}
+          <div className="flex items-start gap-2 rounded-md bg-yellow-50 dark:bg-yellow-950/20 p-3 text-sm">
+            <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
+            <p className="text-yellow-800 dark:text-yellow-200">
+              복원 시 중복된 스케줄은 건너뛰고, 새로운 스케줄만 추가됩니다.
+            </p>
+          </div>
+        </div>
+      </ContentModal>
 
       {/* 복원 확인 다이얼로그 */}
       <ConfirmDialog
