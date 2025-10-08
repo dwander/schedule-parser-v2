@@ -60,6 +60,10 @@ function AppContent() {
           return
         }
 
+        // 중복 실행 방지: 즉시 URL에서 code/state 제거
+        window.history.replaceState({}, '', '/')
+        sessionStorage.removeItem('naver_state')
+
         try {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
           const response = await axios.post(`${apiUrl}/auth/naver`, {
@@ -79,17 +83,12 @@ function AppContent() {
           }
 
           login(user)
-          sessionStorage.removeItem('naver_state')
           queryClient.invalidateQueries({ queryKey: ['schedules'] })
           queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
-
-          // 홈으로 리다이렉트
-          window.history.replaceState({}, '', '/')
         } catch (error) {
           console.error('네이버 로그인 실패:', error)
           toast.error('네이버 로그인에 실패했습니다')
-          window.history.replaceState({}, '', '/')
         }
       }
     }
@@ -105,6 +104,9 @@ function AppContent() {
       const path = window.location.pathname
 
       if (path === '/auth/kakao/callback' && code) {
+        // 중복 실행 방지: 즉시 URL에서 code 제거
+        window.history.replaceState({}, '', '/')
+
         try {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
           const response = await axios.post(`${apiUrl}/auth/kakao`, {
@@ -124,13 +126,9 @@ function AppContent() {
           queryClient.invalidateQueries({ queryKey: ['schedules'] })
           queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
-
-          // 홈으로 리다이렉트
-          window.history.replaceState({}, '', '/')
         } catch (error) {
           console.error('카카오 로그인 실패:', error)
           toast.error('카카오 로그인에 실패했습니다')
-          window.history.replaceState({}, '', '/')
         }
       }
     }
@@ -155,6 +153,10 @@ function AppContent() {
           return
         }
 
+        // 중복 실행 방지: 즉시 URL에서 code/state 제거
+        window.history.replaceState({}, '', '/')
+        sessionStorage.removeItem('naver_calendar_state')
+
         try {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
           const response = await axios.post(`${apiUrl}/auth/naver`, {
@@ -164,15 +166,10 @@ function AppContent() {
 
           // 로그인이 아닌 토큰만 저장
           updateNaverToken(response.data.access_token, response.data.refresh_token)
-          sessionStorage.removeItem('naver_calendar_state')
           toast.success('네이버 캘린더 연동이 완료되었습니다')
-
-          // 홈으로 리다이렉트
-          window.history.replaceState({}, '', '/')
         } catch (error) {
           console.error('네이버 캘린더 연동 실패:', error)
           toast.error('네이버 캘린더 연동에 실패했습니다')
-          window.history.replaceState({}, '', '/')
         }
       }
     }
