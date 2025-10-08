@@ -523,14 +523,29 @@ interface FolderItemProps {
 }
 
 function FolderItem({ folder, onClick, selected }: FolderItemProps) {
+  // 매칭 상태에 따른 테두리 스타일
+  const getBorderStyle = () => {
+    if (selected) {
+      return 'border-2 border-primary bg-primary/5'
+    }
+
+    if (folder.matched) {
+      if (folder.mismatch) {
+        // 매칭 성공 + 불일치: 주황색 테두리 (경고)
+        return 'border-2 border-orange-500/60 hover:border-orange-500 bg-orange-50/30 dark:bg-orange-950/20'
+      }
+      // 매칭 성공: 녹색 테두리
+      return 'border-2 border-green-500/60 hover:border-green-500 bg-green-50/30 dark:bg-green-950/20'
+    }
+
+    // 매칭 실패: 빨간색 테두리
+    return 'border-2 border-red-500/40 hover:border-red-500/60 bg-red-50/20 dark:bg-red-950/10 opacity-75'
+  }
+
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-        selected
-          ? 'border-primary bg-primary/5'
-          : 'border-border hover:border-primary/50 hover:bg-accent/50'
-      } ${folder.matched ? '' : 'opacity-60'}`}
+      className={`w-full text-left p-3 rounded-lg transition-colors ${getBorderStyle()}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
