@@ -12,6 +12,8 @@ import requests
 from pydantic import BaseModel, ValidationError
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2.credentials import Credentials
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import io
@@ -158,6 +160,9 @@ ENABLE_LOCAL_BACKUP = os.getenv('ENABLE_LOCAL_BACKUP', 'false').lower() == 'true
 class GoogleAuthRequest(BaseModel):
     code: str
     redirect_uri: str = None  # 프론트엔드에서 사용한 redirect_uri를 받음
+
+class GoogleTokenRequest(BaseModel):
+    credential: str  # ID Token (JWT)
 
 class NaverAuthRequest(BaseModel):
     code: str
@@ -1016,6 +1021,81 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         }
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
+
+@app.post("/auth/google/token")
+async def google_token_auth(auth_request: GoogleTokenRequest, db: Session = Depends(get_database)):
+    """Verify Google ID Token and authenticate user (FedCM compatible)."""
+    try:
+        print(f"🔑 받은 ID Token: {auth_request.credential[:50]}...")
+
+        # Verify ID Token
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                auth_request.credential,
+                google_requests.Request(),
+                GOOGLE_CLIENT_ID
+            )
+        except ValueError as e:
+            print(f"❌ ID Token 검증 실패: {str(e)}")
+            raise HTTPException(status_code=401, detail=f"Invalid ID token: {str(e)}")
+
+        # Extract user information from ID token
+        google_id = idinfo.get('sub')
+        email = idinfo.get('email')
+        name = idinfo.get('name')
+        picture = idinfo.get('picture')
+
+        if not google_id or not email:
+            raise HTTPException(status_code=400, detail="Invalid ID token payload")
+
+        print(f"✅ ID Token 검증 성공: {name} ({email})")
+
+        # Save or update user in database
+        user_id = f"google_{google_id}"
+        existing_user = db.query(User).filter(User.id == user_id).first()
+
+        if existing_user:
+            # Update existing user (is_admin 값은 유지)
+            existing_user.email = email
+            existing_user.name = name
+            existing_user.last_login = func.now()
+            admin_badge = "🔑 [관리자]" if existing_user.is_admin else ""
+            print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email}) {admin_badge}")
+        else:
+            # Create new user (신규 사용자만 DEV_ADMIN_ID 체크)
+            is_admin = (google_id == DEV_ADMIN_ID) if DEV_ADMIN_ID else False
+            new_user = User(
+                id=user_id,
+                auth_provider="google",
+                is_anonymous=False,
+                email=email,
+                name=name,
+                is_admin=is_admin
+            )
+            db.add(new_user)
+            admin_badge = "🔑 [관리자]" if is_admin else ""
+            print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email}) {admin_badge}")
+
+        db.commit()
+
+        # Get the final user object to return current is_admin value
+        final_user = db.query(User).filter(User.id == user_id).first()
+
+        # Return user information
+        return {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "picture": picture,
+            "is_admin": final_user.is_admin if final_user else False,
+            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ 인증 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
 
 @app.post("/auth/naver")
