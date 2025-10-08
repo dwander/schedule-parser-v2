@@ -7,7 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useEffect, ReactNode } from 'react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useEffect, ReactNode, useState } from 'react'
 
 interface AlertDialogProps {
   open: boolean
@@ -17,6 +18,8 @@ interface AlertDialogProps {
   confirmText?: string
   onConfirm?: () => void
   children?: ReactNode
+  showDontAskAgain?: boolean
+  onDontAskAgainChange?: (checked: boolean) => void
 }
 
 export function AlertDialog({
@@ -27,8 +30,15 @@ export function AlertDialog({
   confirmText = '확인',
   onConfirm,
   children,
+  showDontAskAgain = false,
+  onDontAskAgainChange,
 }: AlertDialogProps) {
+  const [dontAskAgain, setDontAskAgain] = useState(false)
+
   const handleConfirm = () => {
+    if (showDontAskAgain && dontAskAgain && onDontAskAgainChange) {
+      onDontAskAgainChange(true)
+    }
     onConfirm?.()
     onOpenChange(false)
   }
@@ -60,6 +70,21 @@ export function AlertDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         {children}
+        {showDontAskAgain && (
+          <div className="flex items-center space-x-2 px-6">
+            <Checkbox
+              id="dont-ask-again-alert"
+              checked={dontAskAgain}
+              onCheckedChange={(checked) => setDontAskAgain(checked === true)}
+            />
+            <label
+              htmlFor="dont-ask-again-alert"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              다시 알리지 않기
+            </label>
+          </div>
+        )}
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleConfirm}>
             {confirmText}
