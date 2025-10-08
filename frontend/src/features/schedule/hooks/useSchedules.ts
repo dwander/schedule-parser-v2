@@ -25,8 +25,11 @@ export function useAddSchedule() {
   return useMutation({
     mutationFn: addSchedule,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['schedules'] })
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      // Use setTimeout to avoid flushSync errors during rendering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['schedules'] })
+        queryClient.invalidateQueries({ queryKey: ['tags'], exact: false, refetchType: 'all' })
+      }, 0)
     },
   })
 }
@@ -37,8 +40,11 @@ export function useBatchAddSchedules() {
   return useMutation({
     mutationFn: addSchedules,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['schedules'] })
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      // Use setTimeout to avoid flushSync errors during rendering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['schedules'] })
+        queryClient.invalidateQueries({ queryKey: ['tags'], exact: false, refetchType: 'all' })
+      }, 0)
     },
   })
 }
@@ -49,8 +55,11 @@ export function useUpdateSchedule() {
   return useMutation({
     mutationFn: updateSchedule,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['schedules'] })
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      // Use setTimeout to avoid flushSync errors during rendering
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['schedules'] })
+        queryClient.invalidateQueries({ queryKey: ['tags'], exact: false, refetchType: 'all' })
+      }, 0)
     },
   })
 }

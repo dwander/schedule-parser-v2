@@ -9,8 +9,7 @@ import { DatePickerCell } from '@/features/schedule/components/DatePickerCell'
 import { TimePickerCell } from '@/features/schedule/components/TimePickerCell'
 import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw, ChevronLeft } from 'lucide-react'
 import { parseText, parseFile } from '../api/parserApi'
-import { addSchedules } from '@/features/schedule/api/scheduleApi'
-import { useQueryClient } from '@tanstack/react-query'
+import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { toast } from 'sonner'
 import type { NewSchedule } from '@/features/schedule/types/schedule'
 
@@ -27,7 +26,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [parsedData, setParsedData] = useState<any[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('text')
-  const queryClient = useQueryClient()
+  const batchAddSchedules = useBatchAddSchedules()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // 직접 입력 폼 상태
@@ -195,7 +194,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     }
   }, [existingSchedules])
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (activeTab === 'manual') {
       // 직접 입력 모드
       if (!manualForm.date || !manualForm.time || !manualForm.location) {
@@ -204,58 +203,62 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       }
 
       setIsParsing(true)
-      try {
-        // 신랑신부 합치기
-        const couple = [manualForm.groom, manualForm.bride].filter(Boolean).join(' ')
 
-        const newSchedule = {
-          date: manualForm.date,
-          time: manualForm.time,
-          location: manualForm.location,
-          couple: couple,
-          contact: manualForm.contact || undefined,
-          memo: manualForm.memo || undefined,
-          isDuplicate: false,
-        } as NewSchedule
+      // 신랑신부 합치기
+      const couple = [manualForm.groom, manualForm.bride].filter(Boolean).join(' ')
 
-        await addSchedules([newSchedule])
-        queryClient.invalidateQueries({ queryKey: ['schedules'] })
-        toast.success('스케줄이 추가되었습니다')
-        onOpenChange(false)
-        // 리셋
-        setManualForm({
-          date: '',
-          time: '',
-          location: '',
-          groom: '',
-          bride: '',
-          contact: '',
-          memo: ''
-        })
-      } catch (err) {
-        toast.error('스케줄 저장 중 오류가 발생했습니다')
-      } finally {
-        setIsParsing(false)
-      }
+      const newSchedule = {
+        date: manualForm.date,
+        time: manualForm.time,
+        location: manualForm.location,
+        couple: couple,
+        contact: manualForm.contact || undefined,
+        memo: manualForm.memo || undefined,
+        isDuplicate: false,
+      } as NewSchedule
+
+      batchAddSchedules.mutate([newSchedule], {
+        onSuccess: () => {
+          toast.success('스케줄이 추가되었습니다')
+          onOpenChange(false)
+          setIsParsing(false)
+          // 리셋
+          setManualForm({
+            date: '',
+            time: '',
+            location: '',
+            groom: '',
+            bride: '',
+            contact: '',
+            memo: ''
+          })
+        },
+        onError: () => {
+          toast.error('스케줄 저장 중 오류가 발생했습니다')
+          setIsParsing(false)
+        }
+      })
     } else {
       // 파싱 모드
       if (!parsedData || parsedData.length === 0) return
 
       setIsParsing(true)
-      try {
-        await addSchedules(parsedData as NewSchedule[])
-        queryClient.invalidateQueries({ queryKey: ['schedules'] })
-        toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
-        onOpenChange(false)
-        // 리셋
-        setText('')
-        setParsedData(null)
-        setError(null)
-      } catch (err) {
-        toast.error('스케줄 저장 중 오류가 발생했습니다')
-      } finally {
-        setIsParsing(false)
-      }
+
+      batchAddSchedules.mutate(parsedData as NewSchedule[], {
+        onSuccess: () => {
+          toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
+          onOpenChange(false)
+          setIsParsing(false)
+          // 리셋
+          setText('')
+          setParsedData(null)
+          setError(null)
+        },
+        onError: () => {
+          toast.error('스케줄 저장 중 오류가 발생했습니다')
+          setIsParsing(false)
+        }
+      })
     }
   }
 

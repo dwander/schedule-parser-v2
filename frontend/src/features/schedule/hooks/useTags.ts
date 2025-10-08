@@ -5,6 +5,7 @@ export function useTags(tagType?: 'brand' | 'album') {
   return useQuery({
     queryKey: ['tags', tagType],
     queryFn: () => fetchTags(tagType),
+    staleTime: 0, // Always refetch on invalidation
   })
 }
 

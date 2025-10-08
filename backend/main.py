@@ -2108,7 +2108,7 @@ async def empty_trash(
 # ==================== User Management API ====================
 
 @app.post("/api/users/init")
-async def init_user(request: Request):
+async def init_user(request: Request, db: Session = Depends(get_database)):
     """사용자 초기화 또는 로그인 시 호출"""
     try:
         data = await request.json()
@@ -2121,11 +2121,9 @@ async def init_user(request: Request):
         if not user_id:
             raise HTTPException(status_code=400, detail="user_id is required")
 
-        db_session = next(get_database())
-
         # 사용자 조회 또는 생성
         from database import User
-        user = db_session.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.id == user_id).first()
 
         if not user:
             # 신규 사용자 생성
@@ -2137,9 +2135,9 @@ async def init_user(request: Request):
                 name=name,
                 has_seen_sample_data=False
             )
-            db_session.add(user)
-            db_session.commit()
-            db_session.refresh(user)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
             logger.info(f"✅ New user created: {user_id} ({name or 'anonymous'})")
         else:
             # 기존 사용자 - last_login 및 프로필 업데이트
@@ -2149,7 +2147,7 @@ async def init_user(request: Request):
                 user.email = email
             if name:
                 user.name = name
-            db_session.commit()
+            db.commit()
             logger.info(f"✅ User logged in: {user_id} ({name or 'anonymous'})")
 
         return {"success": True, "user": user.to_dict()}
@@ -2159,12 +2157,11 @@ async def init_user(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/users/{user_id}")
-async def get_user(user_id: str):
+async def get_user(user_id: str, db: Session = Depends(get_database)):
     """사용자 정보 조회"""
     try:
-        db_session = next(get_database())
         from database import User
-        user = db_session.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.id == user_id).first()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -2178,18 +2175,17 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.patch("/api/users/{user_id}/sample-data")
-async def mark_sample_data_seen(user_id: str):
+async def mark_sample_data_seen(user_id: str, db: Session = Depends(get_database)):
     """샘플 데이터를 본 것으로 표시"""
     try:
-        db_session = next(get_database())
         from database import User
-        user = db_session.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.id == user_id).first()
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
         user.has_seen_sample_data = True
-        db_session.commit()
+        db.commit()
 
         return {"success": True, "user": user.to_dict()}
 
@@ -2200,19 +2196,18 @@ async def mark_sample_data_seen(user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/users")
-async def list_users():
+async def list_users(db: Session = Depends(get_database)):
     """모든 사용자 목록 조회 (관리자용)"""
     try:
-        db_session = next(get_database())
         from database import User, Schedule
 
         # 모든 사용자 조회
-        users = db_session.query(User).order_by(User.last_login.desc()).all()
+        users = db.query(User).order_by(User.last_login.desc()).all()
 
         # 각 사용자의 스케줄 개수 조회
         user_list = []
         for user in users:
-            schedule_count = db_session.query(Schedule).filter(Schedule.user_id == user.id).count()
+            schedule_count = db.query(Schedule).filter(Schedule.user_id == user.id).count()
             user_data = user.to_dict()
             user_data['schedule_count'] = schedule_count
             user_list.append(user_data)
@@ -2466,6 +2461,7 @@ def create_schedule(
             location=schedule.get('location', ''),
             couple=schedule.get('couple', ''),
             brand=schedule.get('brand', ''),
+            album=schedule.get('album', ''),
             cuts=schedule.get('cuts', 0),
             price=schedule.get('price', 0),
             manager=schedule.get('manager', ''),
@@ -2476,6 +2472,10 @@ def create_schedule(
         db.add(new_schedule)
         db.commit()
         db.refresh(new_schedule)
+
+        # Auto-create tags for brand and album
+        auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album)
+        db.commit()
 
         return {
             'id': str(new_schedule.id),
@@ -2668,6 +2668,9 @@ def batch_create_schedules(
 
             print(f"📝 Created schedule - couple: '{new_schedule.couple}'")
 
+            # Auto-create tags for brand and album
+            auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album)
+
             # Add to result list
             created_schedules.append({
                 'id': str(new_schedule.id),
@@ -2762,13 +2765,12 @@ def auto_create_tags_from_schedule(db_session, user_id: str, brand: str, album: 
 # ==================== Tag API ====================
 
 @app.get("/api/tags/{user_id}")
-async def get_tags(user_id: str, tag_type: Optional[str] = None):
+async def get_tags(user_id: str, tag_type: Optional[str] = None, db: Session = Depends(get_database)):
     """사용자의 태그 목록 조회"""
     try:
-        db_session = next(get_database())
         from database import Tag
 
-        query = db_session.query(Tag).filter(Tag.user_id == user_id)
+        query = db.query(Tag).filter(Tag.user_id == user_id)
 
         if tag_type:
             query = query.filter(Tag.tag_type == tag_type)
@@ -2785,10 +2787,9 @@ async def get_tags(user_id: str, tag_type: Optional[str] = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/tags/{user_id}")
-async def create_tag(user_id: str, tag_data: dict):
+async def create_tag(user_id: str, tag_data: dict, db: Session = Depends(get_database)):
     """새 태그 생성"""
     try:
-        db_session = next(get_database())
         from database import Tag
 
         tag_type = tag_data.get('tag_type')
@@ -2805,7 +2806,7 @@ async def create_tag(user_id: str, tag_data: dict):
         tag_value = re.sub(r'\s+', ' ', tag_value)
 
         # 중복 체크
-        existing = db_session.query(Tag).filter(
+        existing = db.query(Tag).filter(
             Tag.user_id == user_id,
             Tag.tag_type == tag_type,
             Tag.tag_value == tag_value
@@ -2821,28 +2822,27 @@ async def create_tag(user_id: str, tag_data: dict):
             tag_value=tag_value
         )
 
-        db_session.add(new_tag)
-        db_session.commit()
-        db_session.refresh(new_tag)
+        db.add(new_tag)
+        db.commit()
+        db.refresh(new_tag)
 
         return {"success": True, "tag": new_tag.to_dict(), "created": True}
 
     except HTTPException:
         raise
     except Exception as e:
-        db_session.rollback()
+        db.rollback()
         logger.error(f"❌ Create tag error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/tags/{user_id}/{tag_id}")
-async def delete_tag(user_id: str, tag_id: int):
+async def delete_tag(user_id: str, tag_id: int, db: Session = Depends(get_database)):
     """태그 삭제 및 관련 스케줄 업데이트"""
     try:
-        db_session = next(get_database())
         from database import Tag, Schedule
 
         # 태그 조회
-        tag = db_session.query(Tag).filter(
+        tag = db.query(Tag).filter(
             Tag.id == tag_id,
             Tag.user_id == user_id
         ).first()
@@ -2852,7 +2852,7 @@ async def delete_tag(user_id: str, tag_id: int):
 
         # 관련 스케줄 업데이트 (해당 태그를 사용하는 스케줄의 필드를 빈 문자열로)
         field_name = tag.tag_type  # 'brand' or 'album'
-        affected_schedules = db_session.query(Schedule).filter(
+        affected_schedules = db.query(Schedule).filter(
             Schedule.user_id == user_id,
             getattr(Schedule, field_name) == tag.tag_value
         ).all()
@@ -2861,8 +2861,8 @@ async def delete_tag(user_id: str, tag_id: int):
             setattr(schedule, field_name, '')
 
         # 태그 삭제
-        db_session.delete(tag)
-        db_session.commit()
+        db.delete(tag)
+        db.commit()
 
         return {
             "success": True,
@@ -2873,24 +2873,23 @@ async def delete_tag(user_id: str, tag_id: int):
     except HTTPException:
         raise
     except Exception as e:
-        db_session.rollback()
+        db.rollback()
         logger.error(f"❌ Delete tag error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/tags/{user_id}/sync")
-async def sync_tags_from_schedules(user_id: str):
+async def sync_tags_from_schedules(user_id: str, db: Session = Depends(get_database)):
     """기존 스케줄 데이터에서 태그 추출 및 동기화 (배치 최적화)"""
     try:
-        db_session = next(get_database())
         from database import Tag, Schedule
         import re
 
         # 1. 기존 태그를 한 번에 모두 가져오기 (메모리에 캐싱)
-        existing_tags = db_session.query(Tag).filter(Tag.user_id == user_id).all()
+        existing_tags = db.query(Tag).filter(Tag.user_id == user_id).all()
         existing_tag_set = {(tag.tag_type, tag.tag_value) for tag in existing_tags}
 
         # 2. 모든 스케줄에서 고유한 태그 추출
-        schedules = db_session.query(Schedule).filter(Schedule.user_id == user_id).all()
+        schedules = db.query(Schedule).filter(Schedule.user_id == user_id).all()
         unique_tags = set()
 
         for schedule in schedules:
@@ -2910,10 +2909,10 @@ async def sync_tags_from_schedules(user_id: str):
 
         for tag_type, tag_value in new_tags:
             new_tag = Tag(user_id=user_id, tag_type=tag_type, tag_value=tag_value)
-            db_session.add(new_tag)
+            db.add(new_tag)
             created_tags.append(tag_value)
 
-        db_session.commit()
+        db.commit()
 
         return {
             "success": True,
@@ -2922,7 +2921,7 @@ async def sync_tags_from_schedules(user_id: str):
         }
 
     except Exception as e:
-        db_session.rollback()
+        db.rollback()
         logger.error(f"❌ Sync tags error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

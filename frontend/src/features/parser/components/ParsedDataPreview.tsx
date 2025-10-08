@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
-import { useAddSchedule } from '@/features/schedule/hooks/useSchedules'
+import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { convertParsedDataToSchedules } from '../utils/convertParsedData'
+import { toast } from 'sonner'
 
 interface ParsedDataPreviewProps {
   parsedData: any[]
@@ -8,22 +9,20 @@ interface ParsedDataPreviewProps {
 }
 
 export function ParsedDataPreview({ parsedData, onSaved }: ParsedDataPreviewProps) {
-  const addSchedule = useAddSchedule()
+  const batchAddSchedules = useBatchAddSchedules()
 
-  const handleSaveAll = async () => {
+  const handleSaveAll = () => {
     const schedules = convertParsedDataToSchedules(parsedData)
 
-    try {
-      // 각 스케줄을 순차적으로 저장
-      for (const schedule of schedules) {
-        await addSchedule.mutateAsync(schedule)
+    batchAddSchedules.mutate(schedules, {
+      onSuccess: () => {
+        toast.success(`${schedules.length}개의 스케줄이 저장되었습니다.`)
+        onSaved()
+      },
+      onError: (error) => {
+        toast.error('저장 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
       }
-
-      alert(`${schedules.length}개의 스케줄이 저장되었습니다.`)
-      onSaved()
-    } catch (error) {
-      alert('저장 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'))
-    }
+    })
   }
 
   if (parsedData.length === 0) {
@@ -38,9 +37,9 @@ export function ParsedDataPreview({ parsedData, onSaved }: ParsedDataPreviewProp
         <p className="font-medium">파싱 결과: {schedules.length}개 스케줄</p>
         <Button
           onClick={handleSaveAll}
-          disabled={addSchedule.isPending}
+          disabled={batchAddSchedules.isPending}
         >
-          {addSchedule.isPending ? '저장 중...' : '모두 저장'}
+          {batchAddSchedules.isPending ? '저장 중...' : '모두 저장'}
         </Button>
       </div>
 
