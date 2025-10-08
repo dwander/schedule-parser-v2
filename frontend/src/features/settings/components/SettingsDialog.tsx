@@ -26,6 +26,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setTheme,
     fontSize,
     setFontSize,
+    weekStartsOn,
+    setWeekStartsOn,
     enabledCalendars,
     setEnabledCalendars,
   } = useSettingsStore()
@@ -110,6 +112,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <span>작게 (12px)</span>
               <span>크게 (24px)</span>
             </div>
+          </div>
+
+          {/* 주 시작 요일 */}
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">주 시작 요일</label>
+            <Select value={weekStartsOn.toString()} onValueChange={(value) => setWeekStartsOn(Number(value) as 0 | 1)}>
+              <SelectTrigger className="w-full focus:ring-1 focus:ring-ring/30 focus:outline-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">월요일</SelectItem>
+                <SelectItem value="0">일요일</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

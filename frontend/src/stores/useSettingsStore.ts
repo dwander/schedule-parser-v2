@@ -85,6 +85,10 @@ interface SettingsState {
   sortBy: 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc'
   setSortBy: (sort: 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc') => void
 
+  // 주 시작 요일 (0: 일요일, 1: 월요일)
+  weekStartsOn: 0 | 1
+  setWeekStartsOn: (day: 0 | 1) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -153,6 +157,7 @@ export const useSettingsStore = create<SettingsState>()(
       enabledCalendars: { google: true, naver: true },
       skipNaverCalendarConfirm: false,
       sortBy: 'date-desc',
+      weekStartsOn: 1, // 기본값: 월요일
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -176,6 +181,7 @@ export const useSettingsStore = create<SettingsState>()(
       setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
       setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
       setSortBy: (sort) => set({ sortBy: sort }),
+      setWeekStartsOn: (day) => set({ weekStartsOn: day }),
     }),
     {
       name: 'app-settings', // localStorage key

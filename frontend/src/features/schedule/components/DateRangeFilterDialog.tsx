@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { addWeeks, addMonths, addYears, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface DateRangeFilterDialogProps {
   open: boolean
@@ -27,6 +28,7 @@ export function DateRangeFilterDialog({
   dateRange,
   onDateRangeChange,
 }: DateRangeFilterDialogProps) {
+  const { weekStartsOn } = useSettingsStore()
   const [tempFrom, setTempFrom] = useState<Date | undefined>(dateRange.from || undefined)
   const [tempTo, setTempTo] = useState<Date | undefined>(dateRange.to || undefined)
   const [relativeTime, setRelativeTime] = useState<'last' | 'this' | 'next'>('this')
@@ -50,8 +52,8 @@ export function DateRangeFilterDialog({
         to = endOfDay(now)
         break
       case 'thisWeek':
-        from = startOfWeek(now, { weekStartsOn: 0 })
-        to = endOfWeek(now, { weekStartsOn: 0 })
+        from = startOfWeek(now, { weekStartsOn })
+        to = endOfWeek(now, { weekStartsOn })
         break
       case 'thisMonth':
         from = startOfMonth(now)
@@ -80,8 +82,8 @@ export function DateRangeFilterDialog({
 
     if (relativeTime === 'last') {
       if (relativeUnit === 'week') {
-        from = startOfWeek(addWeeks(now, -1), { weekStartsOn: 0 })
-        to = endOfWeek(addWeeks(now, -1), { weekStartsOn: 0 })
+        from = startOfWeek(addWeeks(now, -1), { weekStartsOn })
+        to = endOfWeek(addWeeks(now, -1), { weekStartsOn })
       } else if (relativeUnit === 'month') {
         from = startOfMonth(addMonths(now, -1))
         to = endOfMonth(addMonths(now, -1))
@@ -91,8 +93,8 @@ export function DateRangeFilterDialog({
       }
     } else if (relativeTime === 'this') {
       if (relativeUnit === 'week') {
-        from = startOfWeek(now, { weekStartsOn: 0 })
-        to = endOfWeek(now, { weekStartsOn: 0 })
+        from = startOfWeek(now, { weekStartsOn })
+        to = endOfWeek(now, { weekStartsOn })
       } else if (relativeUnit === 'month') {
         from = startOfMonth(now)
         to = endOfMonth(now)
@@ -103,8 +105,8 @@ export function DateRangeFilterDialog({
     } else {
       // next
       if (relativeUnit === 'week') {
-        from = startOfWeek(addWeeks(now, 1), { weekStartsOn: 0 })
-        to = endOfWeek(addWeeks(now, 1), { weekStartsOn: 0 })
+        from = startOfWeek(addWeeks(now, 1), { weekStartsOn })
+        to = endOfWeek(addWeeks(now, 1), { weekStartsOn })
       } else if (relativeUnit === 'month') {
         from = startOfMonth(addMonths(now, 1))
         to = endOfMonth(addMonths(now, 1))
