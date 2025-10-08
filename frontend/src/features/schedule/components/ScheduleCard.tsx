@@ -17,6 +17,7 @@ import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, Use
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -149,12 +150,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   // 폴더명 생성 및 클립보드 복사
   const handleFolderCopy = async () => {
     // 브랜드 매핑
-    const brandMap: Record<string, string> = {
-      '세컨플로루': '세컨',
-      '더그라피': '더그',
-      'A 세븐스프리미엄': '세프',
-    }
-    const brandPrefix = brandMap[schedule.brand] || ''
+    const brandPrefix = BRAND_FOLDER_PREFIX_MAP[schedule.brand] || ''
 
     // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
     const [hours, minutes] = schedule.time.split(':')

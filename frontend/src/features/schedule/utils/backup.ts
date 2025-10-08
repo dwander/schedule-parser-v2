@@ -1,4 +1,5 @@
 import type { Schedule } from '../types/schedule'
+import { BACKUP_VERSION } from '@/lib/constants/backup'
 
 export interface BackupData {
   version: string
@@ -12,7 +13,7 @@ export interface BackupData {
  */
 export function exportBackup(schedules: Schedule[], userId: string = 'unknown'): void {
   const backupData: BackupData = {
-    version: 'v2025.10',
+    version: BACKUP_VERSION,
     backup_date: new Date().toISOString(),
     user_id: userId,
     schedules: schedules

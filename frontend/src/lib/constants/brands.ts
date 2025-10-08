@@ -9,3 +9,12 @@ export const BRAND_COLORS: Record<Brand, string> = {
   Graphy: 'bg-green-500',
   '2ndFlow': 'bg-pink-500',
 }
+
+/**
+ * 브랜드명을 폴더 접두사로 변환하는 매핑
+ */
+export const BRAND_FOLDER_PREFIX_MAP: Record<string, string> = {
+  '세컨플로루': '세컨',
+  '더그라피': '더그',
+  'A 세븐스프리미엄': '세프',
+} as const

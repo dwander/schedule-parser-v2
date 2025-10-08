@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useSchedules, useUpdateSchedule } from '@/features/schedule/hooks/useSchedules'
 import { toast } from 'sonner'
+import { RAW_FILE_EXTENSIONS_REGEX, JPG_FILE_EXTENSIONS_REGEX } from '@/lib/constants/fileTypes'
 import {
   parseFolderName,
   findMatchingSchedule,
@@ -188,11 +189,8 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
       setSelectedFolder(folder.folderName)
 
       // RAW와 JPG 파일 분리
-      const rawExtensions = /\.(raw|cr2|nef|arw|dng|orf|rw2|pef|srw|x3f|raf|3fr|fff|erf|mrw|dcr|kdc|srf|arq)$/i
-      const jpgExtensions = /\.(jpg|jpeg)$/i
-
-      const rawOnly = folder.mismatchFiles.filter(file => rawExtensions.test(file))
-      const jpgOnly = folder.mismatchFiles.filter(file => jpgExtensions.test(file))
+      const rawOnly = folder.mismatchFiles.filter(file => RAW_FILE_EXTENSIONS_REGEX.test(file))
+      const jpgOnly = folder.mismatchFiles.filter(file => JPG_FILE_EXTENSIONS_REGEX.test(file))
 
       setMismatchDetail({ rawOnly, jpgOnly })
     }
