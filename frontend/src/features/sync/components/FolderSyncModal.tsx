@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -259,21 +260,39 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <FolderOpen className="h-5 w-5" />
-            폴더 동기화
-          </DialogTitle>
-          <DialogDescription>
-            촬영 폴더를 분석하여 스케줄의 컷 수를 자동으로 업데이트합니다
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex-1 flex gap-4 overflow-hidden">
+    <ContentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      className="sm:max-w-6xl"
+      title="폴더 동기화"
+      subtitle="촬영 폴더를 분석하여 스케줄의 컷 수를 자동으로 업데이트합니다"
+      showFooter={folders.length > 0}
+      footerContent={
+        <div className="flex gap-2 w-full">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFolders([])
+              setSelectedFolder(null)
+              setMismatchDetail(null)
+            }}
+            className="flex-1"
+          >
+            초기화
+          </Button>
+          <Button
+            onClick={handleSync}
+            className="flex-1"
+            disabled={matchedFolders.length === 0}
+          >
+            {matchedFolders.length}개 스케줄 업데이트
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex gap-4 min-h-[500px] max-h-[60vh]">
           {/* 왼쪽: 드롭존 & 리스트 */}
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-4">
             {/* 드롭존 */}
             {folders.length === 0 && (
               <div
@@ -399,7 +418,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
 
           {/* 오른쪽: 불일치 상세 정보 (선택 시에만 표시) */}
           {selectedFolder && mismatchDetail && (
-            <div className="w-96 border-l pl-4 flex flex-col gap-4 overflow-hidden">
+            <div className="w-96 border-l pl-4 flex flex-col gap-4">
               <div>
                 <h3 className="font-semibold flex items-center gap-2 mb-1">
                   <AlertTriangle className="h-4 w-4 text-orange-600" />
@@ -486,33 +505,8 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
               </Button>
             </div>
           )}
-        </div>
-
-        {/* 하단 액션 버튼 */}
-        {folders.length > 0 && (
-          <div className="flex gap-2 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFolders([])
-                setSelectedFolder(null)
-                setMismatchDetail(null)
-              }}
-              className="flex-1"
-            >
-              초기화
-            </Button>
-            <Button
-              onClick={handleSync}
-              className="flex-1"
-              disabled={matchedFolders.length === 0}
-            >
-              {matchedFolders.length}개 스케줄 업데이트
-            </Button>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ContentModal>
   )
 }
 
