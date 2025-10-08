@@ -388,7 +388,7 @@ function AppContent() {
         onOpenChange={setBackupRestoreOpen}
       />
 
-      <Toaster position="top-right" />
+      <Toaster position="top-center" />
       {testPanelVisible && <DialogTestPanel />}
       <ReactQueryDevtools initialIsOpen={false} />
     </>
