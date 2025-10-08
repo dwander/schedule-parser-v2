@@ -70,13 +70,13 @@ export function ContentModal({
     if (!open) return
 
     // 모달이 열릴 때 히스토리 추가
-    const modalState = { modal: true }
+    const modalState = { modal: true, timestamp: Date.now() }
     window.history.pushState(modalState, '')
 
     // 뒤로가기 이벤트 리스너
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = () => {
+      // 뒤로가기로 모달을 닫을 때만 처리
       if (open) {
-        e.preventDefault()
         onOpenChange(false)
       }
     }
@@ -85,15 +85,13 @@ export function ContentModal({
 
     return () => {
       window.removeEventListener('popstate', handlePopState)
+
+      // 클린업 시 모달이 여전히 열려있다면 히스토리 정리
+      if (open && window.history.state?.modal) {
+        window.history.back()
+      }
     }
   }, [open, onOpenChange])
-
-  // 모달이 닫힐 때 히스토리 정리
-  useEffect(() => {
-    if (!open && window.history.state?.modal) {
-      window.history.back()
-    }
-  }, [open])
 
   const handleClose = () => {
     onOpenChange(false)
