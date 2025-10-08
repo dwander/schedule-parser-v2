@@ -51,8 +51,8 @@ SCHEDULES_DATA_DIR = 'data'
 @router.post("/api/save-schedules")
 def save_schedules_to_server(request: SaveSchedulesRequest):
     """Save schedules to persistent storage with user-specific storage."""
-    # Import helper function from main
-    from main import save_to_persistent_storage
+    # Import helper function from legacy
+    from legacy import save_to_persistent_storage
 
     # 로그 수집을 위한 리스트
     debug_logs = []
@@ -99,7 +99,7 @@ def save_schedules_to_server(request: SaveSchedulesRequest):
 @router.post("/api/check-sync-metadata")
 def check_sync_metadata(request: LoadSchedulesRequest):
     """클라우드 메타데이터만 확인하여 동기화 필요 여부 판단"""
-    from main import get_drive_service, find_or_create_app_folder, load_metadata_from_drive
+    from legacy import get_drive_service, find_or_create_app_folder, load_metadata_from_drive
 
     try:
         user_id = request.user_id
@@ -151,7 +151,7 @@ def check_sync_metadata(request: LoadSchedulesRequest):
 @router.post("/api/load-schedules")
 def load_schedules_from_server(request: LoadSchedulesRequest):
     """Load latest schedules from Google Drive with local fallback."""
-    from main import get_drive_service, find_or_create_app_folder, load_from_drive
+    from legacy import get_drive_service, find_or_create_app_folder, load_from_drive
 
     try:
         user_id = request.user_id
