@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DEBOUNCE } from '@/lib/constants/timing'
 
 interface SearchInputProps {
   value: string
@@ -25,7 +26,7 @@ export const SearchInput = memo(function SearchInput({ value, onChange }: Search
       if (localValue !== value) {
         onChange(localValue)
       }
-    }, 300)
+    }, DEBOUNCE.SEARCH)
 
     return () => clearTimeout(timeoutId)
   }, [localValue, onChange, value])

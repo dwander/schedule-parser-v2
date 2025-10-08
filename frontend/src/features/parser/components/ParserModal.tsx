@@ -13,6 +13,7 @@ import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { toast } from 'sonner'
 import type { NewSchedule, Schedule } from '@/features/schedule/types/schedule'
 import type { ParsedScheduleData } from '../types/parser'
+import { DEBOUNCE } from '@/lib/constants/timing'
 
 interface ParserModalProps {
   open: boolean
@@ -102,7 +103,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
 
     parseTimerRef.current = setTimeout(() => {
       handleParse(text)
-    }, 800) // 800ms 후 자동 파싱
+    }, DEBOUNCE.PARSER_AUTO)
 
     return () => {
       if (parseTimerRef.current) {

@@ -13,6 +13,7 @@ import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDial
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Moon, Sun, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
+import { UI_TIMERS } from '@/lib/constants/timing'
 
 export function DialogTestPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -74,7 +75,7 @@ export function DialogTestPanel() {
       } else {
         // 서비스워커 등록 - 페이지 새로고침 필요
         toast.info('Service Worker 등록을 위해 페이지를 새로고침합니다')
-        setTimeout(() => window.location.reload(), 1000)
+        setTimeout(() => window.location.reload(), UI_TIMERS.RELOAD_DELAY)
       }
     } catch (error) {
       console.error('Service Worker toggle error:', error)

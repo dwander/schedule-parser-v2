@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
+import { UI_TIMERS } from '@/lib/constants/timing'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -204,7 +205,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
     longPressTimerRef.current = setTimeout(() => {
       onToggleCheckboxVisibility()
-    }, 500) // 500ms 롱프레스
+    }, UI_TIMERS.LONG_PRESS)
   }
 
   const handleHeaderPointerUp = () => {
