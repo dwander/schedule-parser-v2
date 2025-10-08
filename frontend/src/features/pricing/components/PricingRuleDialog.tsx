@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, X, AlertCircle, Upload, ArrowLeft } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Plus, Trash2, Save, X, AlertCircle, Upload } from 'lucide-react'
+import { ContentModal } from '@/components/common/ContentModal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -356,33 +351,29 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-md:border-0 max-md:shadow-none max-md:left-0 max-md:top-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-screen max-md:w-screen max-md:max-w-none max-md:max-h-none max-md:rounded-none md:max-w-3xl md:max-h-[90vh] overflow-y-auto p-0"
-        hideClose
-      >
-        {/* 커스텀 헤더 */}
-        <div className="sticky top-0 bg-background z-10">
-          <div className="flex items-center gap-3 px-3 py-4 md:px-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-9 w-9 -ml-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
+    <>
+      <ContentModal
+        open={open}
+        onOpenChange={onOpenChange}
+        size="fullscreen-mobile"
+        className="sm:max-w-3xl"
+        title="촬영비 단가 설정"
+        subtitle="조건별 촬영 단가를 설정하고 기존 스케줄에 일괄 적용할 수 있습니다."
+        showFooter={true}
+        footerContent={
+          <div className="flex gap-2 w-full">
+            <div className="flex-1"></div>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={applying}>
+              닫기
             </Button>
-            <div className="flex-1">
-              <DialogTitle className="text-left">촬영비 단가 설정</DialogTitle>
-              <DialogDescription className="text-left">
-                조건별 촬영 단가를 설정하고 기존 스케줄에 일괄 적용할 수 있습니다.
-              </DialogDescription>
-            </div>
+            {rules.length > 0 && (
+              <Button onClick={handleApplyToSchedules} disabled={applying}>
+                {applying ? '적용 중...' : '기존 스케줄에 적용'}
+              </Button>
+            )}
           </div>
-        </div>
-
-        <div className="px-[5px] pb-[5px] md:px-6 md:pb-6">
-
+        }
+      >
         <div className="space-y-4 md:space-y-6">
           {/* 단가 규칙 입력 폼 */}
           <Card className="max-md:border-0 max-md:shadow-none max-md:bg-transparent max-md:px-2 max-md:py-4 md:p-4">
@@ -702,20 +693,8 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
               </AlertDescription>
             </Alert>
           )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={applying}>
-              닫기
-            </Button>
-            {rules.length > 0 && (
-              <Button onClick={handleApplyToSchedules} disabled={applying}>
-                {applying ? '적용 중...' : '기존 스케줄에 적용'}
-              </Button>
-            )}
-          </div>
         </div>
-        </div>
-      </DialogContent>
+      </ContentModal>
 
       {/* 스케줄 적용 확인 다이얼로그 */}
       <ConfirmDialog
@@ -739,6 +718,6 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
         variant="destructive"
         onConfirm={confirmDeleteRule}
       />
-    </Dialog>
+    </>
   )
 }
