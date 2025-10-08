@@ -20,6 +20,7 @@ import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
 import { UI_TIMERS } from '@/lib/constants/timing'
+import { PHONE_NUMBER_LENGTH } from '@/lib/constants/validation'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -383,9 +384,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     } else {
                       const numbers = value.replace(/\D/g, '')
                       let formatted = numbers
-                      if (numbers.length === 11) {
+                      if (numbers.length === PHONE_NUMBER_LENGTH.MOBILE) {
                         formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                      } else if (numbers.length === 10) {
+                      } else if (numbers.length === PHONE_NUMBER_LENGTH.LANDLINE) {
                         formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
                       }
                       updateSchedule.mutate({
@@ -398,9 +399,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     const str = String(val)
                     if (str.includes('@')) return str
                     const numbers = str.replace(/\D/g, '')
-                    if (numbers.length === 11) {
+                    if (numbers.length === PHONE_NUMBER_LENGTH.MOBILE) {
                       return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                    } else if (numbers.length === 10) {
+                    } else if (numbers.length === PHONE_NUMBER_LENGTH.LANDLINE) {
                       return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
                     }
                     return str
