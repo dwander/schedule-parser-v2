@@ -6,6 +6,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { useQueryClient } from '@tanstack/react-query'
+import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
 
 interface LandingPageProps {
   onContinueAnonymous: () => void
@@ -24,7 +25,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
     '구글/네이버 캘린더 연동',
   ]
 
-  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+  const handleGoogleLoginSuccess = async (credentialResponse: GoogleCredentialResponse) => {
     try {
       if (!credentialResponse.credential) {
         throw new Error('No credential received')

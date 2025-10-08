@@ -16,6 +16,7 @@ import { getAnonymousUserId, clearAnonymousData } from '@/lib/utils/userUtils'
 import { migrateSchedules } from '@/features/schedule/api/scheduleApi'
 import { MigrateDataDialog } from './MigrateDataDialog'
 import { useQueryClient } from '@tanstack/react-query'
+import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
 
 interface LoginDialogProps {
   open: boolean
@@ -125,7 +126,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     onOpenChange(false)
   }
 
-  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+  const handleGoogleLoginSuccess = async (credentialResponse: GoogleCredentialResponse) => {
     try {
       if (!credentialResponse.credential) {
         throw new Error('No credential received')

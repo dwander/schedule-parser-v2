@@ -249,7 +249,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
       }
     }
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const last = event.results.length - 1
       const transcript = event.results[last][0].transcript
       const isFinal = event.results[last].isFinal
@@ -294,7 +294,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
       }
     }
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       // 무시해도 되는 에러들 (자동 재시작됨)
       if (event.error === 'no-speech' || event.error === 'aborted') {
         return

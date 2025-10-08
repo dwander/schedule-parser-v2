@@ -24,7 +24,8 @@ import {
   MessageSquare,
   AlertCircle,
   FileText,
-  Phone
+  Phone,
+  type LucideIcon
 } from 'lucide-react'
 
 interface PhotoNoteDialogProps {
@@ -41,7 +42,7 @@ function SectionCard({
   show = true,
   isEditMode
 }: {
-  icon: any
+  icon: LucideIcon
   title: string
   children: React.ReactNode
   show?: boolean
@@ -246,17 +247,17 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     target.style.height = `${target.scrollHeight}px`
   }
 
-  const updateFieldLocal = (path: string, value: any) => {
+  const updateFieldLocal = (path: string, value: unknown) => {
     const pathArray = path.split('.')
     const newData = { ...noteData }
 
-    let current: any = newData
+    let current = newData as Record<string, unknown>
     for (let i = 0; i < pathArray.length - 1; i++) {
       if (!current[pathArray[i]]) {
         current[pathArray[i]] = {}
       }
-      current[pathArray[i]] = { ...current[pathArray[i]] }
-      current = current[pathArray[i]]
+      current[pathArray[i]] = { ...(current[pathArray[i]] as Record<string, unknown>) }
+      current = current[pathArray[i]] as Record<string, unknown>
     }
 
     current[pathArray[pathArray.length - 1]] = value
@@ -264,7 +265,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   }
 
   // 모든 문자열 값을 trim 처리하는 헬퍼 함수
-  const trimPhotoNoteData = (data: any): any => {
+  const trimPhotoNoteData = (data: unknown): unknown => {
     if (typeof data === 'string') {
       return data.trim()
     }
@@ -272,9 +273,9 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
       return data.map(trimPhotoNoteData)
     }
     if (data !== null && typeof data === 'object') {
-      const trimmed: any = {}
-      for (const key in data) {
-        trimmed[key] = trimPhotoNoteData(data[key])
+      const trimmed: Record<string, unknown> = {}
+      for (const key in data as Record<string, unknown>) {
+        trimmed[key] = trimPhotoNoteData((data as Record<string, unknown>)[key])
       }
       return trimmed
     }
@@ -316,12 +317,12 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
     })
   }
 
-  const getValue = (path: string): any => {
+  const getValue = (path: string): string => {
     const pathArray = path.split('.')
-    let current: any = noteData
+    let current: unknown = noteData
     for (const key of pathArray) {
-      if (!current || current[key] === undefined) return ''
-      current = current[key]
+      if (!current || typeof current !== 'object' || !(key in current)) return ''
+      current = (current as Record<string, unknown>)[key]
     }
     return current
   }

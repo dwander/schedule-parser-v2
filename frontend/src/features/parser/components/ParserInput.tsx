@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { parseText } from '../api/parserApi'
+import type { ParsedScheduleData } from '../types/parser'
 
 interface ParserInputProps {
-  onParsed: (data: any[]) => void
+  onParsed: (data: ParsedScheduleData[]) => void
 }
 
 export function ParserInput({ onParsed }: ParserInputProps) {

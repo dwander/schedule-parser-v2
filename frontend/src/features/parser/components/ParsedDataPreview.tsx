@@ -2,9 +2,10 @@ import { Button } from '@/components/ui/button'
 import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { convertParsedDataToSchedules } from '../utils/convertParsedData'
 import { toast } from 'sonner'
+import type { ParsedScheduleData } from '../types/parser'
 
 interface ParsedDataPreviewProps {
-  parsedData: any[]
+  parsedData: ParsedScheduleData[]
   onSaved: () => void
 }
 

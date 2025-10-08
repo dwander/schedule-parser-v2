@@ -133,13 +133,16 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       } else {
         toast.error('일정 추가에 실패했습니다')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('네이버 캘린더 추가 실패:', error)
-      if (error.response?.status === 401) {
-        toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
-      } else {
-        toast.error('네이버 캘린더 추가 중 오류가 발생했습니다')
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number } }
+        if (axiosError.response?.status === 401) {
+          toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
+          return
+        }
       }
+      toast.error('네이버 캘린더 추가 중 오류가 발생했습니다')
     }
   }
 

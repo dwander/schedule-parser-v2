@@ -11,19 +11,20 @@ import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw, Chevro
 import { parseText, parseFile } from '../api/parserApi'
 import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { toast } from 'sonner'
-import type { NewSchedule } from '@/features/schedule/types/schedule'
+import type { NewSchedule, Schedule } from '@/features/schedule/types/schedule'
+import type { ParsedScheduleData } from '../types/parser'
 
 interface ParserModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  existingSchedules: any[] // 중복 체크용
+  existingSchedules: Schedule[]
 }
 
 export function ParserModal({ open, onOpenChange, existingSchedules }: ParserModalProps) {
   const [text, setText] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
-  const [parsedData, setParsedData] = useState<any[] | null>(null)
+  const [parsedData, setParsedData] = useState<ParsedScheduleData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('text')
   const batchAddSchedules = useBatchAddSchedules()

@@ -1,9 +1,10 @@
 import type { NewSchedule } from '@/features/schedule/types/schedule'
+import type { ParsedScheduleData } from '../types/parser'
 
 /**
  * 파서에서 반환된 데이터를 NewSchedule 형식으로 변환
  */
-export function convertParsedDataToSchedules(parsedData: any[]): NewSchedule[] {
+export function convertParsedDataToSchedules(parsedData: ParsedScheduleData[]): NewSchedule[] {
   return parsedData.map((item) => {
     return {
       date: item.date || '',

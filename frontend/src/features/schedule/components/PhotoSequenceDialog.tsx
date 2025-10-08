@@ -25,6 +25,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -293,7 +294,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   )
 
   // 드래그 종료 핸들러
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {

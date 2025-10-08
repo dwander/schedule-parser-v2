@@ -89,7 +89,12 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
       const allScheduleFolders: Array<{
         entry: FileSystemDirectoryEntry
         fullPath: string
-        parsedData: any
+        parsedData: {
+          date: string
+          time: string
+          couple?: string
+          cutsFromName?: number
+        }
       }> = []
       const processedFolders = new Set<string>()
 
