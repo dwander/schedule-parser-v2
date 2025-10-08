@@ -140,7 +140,7 @@ ENABLE_LOCAL_BACKUP = settings.ENABLE_LOCAL_BACKUP
 # --- Data Models ---
 class GoogleAuthRequest(BaseModel):
     code: str
-    redirect_uri: str = None  # 프론트엔드에서 사용한 redirect_uri를 받음
+    redirect_uri: Optional[str] = None  # 프론트엔드에서 사용한 redirect_uri를 받음
 
 class GoogleTokenRequest(BaseModel):
     credential: str  # ID Token (JWT)

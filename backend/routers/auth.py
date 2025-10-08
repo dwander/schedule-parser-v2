@@ -33,7 +33,7 @@ FRONTEND_URL = settings.FRONTEND_URL
 # Data Models
 class GoogleAuthRequest(BaseModel):
     code: str
-    redirect_uri: str = None
+    redirect_uri: Optional[str] = None
 
 
 class GoogleTokenRequest(BaseModel):

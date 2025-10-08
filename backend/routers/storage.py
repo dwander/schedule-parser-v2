@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Union, List, Optional, Any
 from datetime import datetime
 import os
 import json
@@ -19,18 +19,18 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # Data Models
 class SaveSchedulesRequest(BaseModel):
-    schedules: any  # Union[List[Dict], str] - schedules or compressed data
+    schedules: Union[List[Dict], str] = None  # schedules or compressed data
     user_id: str
-    access_token: str = None
-    refresh_token: str = None
-    device_uuid: str = None
-    schedules_data: Dict = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    device_uuid: Optional[str] = None
+    schedules_data: Optional[Dict] = None
 
 
 class LoadSchedulesRequest(BaseModel):
     user_id: str
     access_token: str
-    refresh_token: str = None
+    refresh_token: Optional[str] = None
 
 
 class PersistentSaveRequest(BaseModel):
