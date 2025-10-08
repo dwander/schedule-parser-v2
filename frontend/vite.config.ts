@@ -8,12 +8,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
-    checker({
-      typescript: true,
-      overlay: {
-        initialIsOpen: false, // 에러 발생 시 자동으로 오버레이 표시
-      },
-    }),
+    // checker({
+    //   typescript: true,
+    //   overlay: {
+    //     initialIsOpen: false, // 에러 발생 시 자동으로 오버레이 표시
+    //   },
+    // }),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
