@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { ContentModal } from '@/components/common/ContentModal'
 import { useUsers } from '../hooks/useUsers'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -48,16 +42,16 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>회원 관리</DialogTitle>
-          <DialogDescription>
-            등록된 회원 목록을 확인할 수 있습니다.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-4">
+    <ContentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="fullscreen-mobile"
+      className="sm:max-w-6xl"
+      title="회원 관리"
+      subtitle="등록된 회원 목록을 확인할 수 있습니다."
+      showFooter={false}
+    >
+      <div>
           {/* 권한 없음 */}
           {!hasAccess && (
             <div className="text-center py-8 text-destructive">
@@ -139,8 +133,7 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
               </div>
             </div>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </ContentModal>
   )
 }
