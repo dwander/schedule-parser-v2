@@ -63,7 +63,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
   const [showTrainingManager, setShowTrainingManager] = useState(false)
   const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
-  const [showVoiceHintDialog, setShowVoiceHintDialog] = useState(false)
   const [showRecognizedText, setShowRecognizedText] = useState(false)
   const [displayedText, setDisplayedText] = useState('')
   const [matchedItemText, setMatchedItemText] = useState('')
@@ -193,33 +192,22 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       return
     }
 
-    // 음성 인식을 켜려고 할 때 힌트 표시 (한 번만)
-    const hintDismissed = localStorage.getItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_HINT_DISMISSED)
-    if (!voiceEnabled && !hintDismissed) {
-      setShowVoiceHintDialog(true)
-      return
-    }
-
     setVoiceEnabled((prev) => !prev)
-  }
-
-  // 힌트 다이얼로그 확인 후 음성 인식 켜기
-  const handleVoiceHintConfirm = () => {
-    setVoiceEnabled(true)
-  }
-
-  // 다시 알리지 않기 체크 시
-  const handleDontAskAgain = (checked: boolean) => {
-    if (checked) {
-      localStorage.setItem(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_HINT_DISMISSED, 'true')
-    }
   }
 
   // 훈련 모드 시작
   const startTraining = (itemId: string) => {
-    setTrainingTargetId(itemId)
-    setCollectedPhrases([])
-    setExpandedTrainingId(null)
+    // 같은 카드를 다시 롱프레스하면 마킹 해제
+    if (trainingTargetId === itemId) {
+      setTrainingTargetId(null)
+      setCollectedPhrases([])
+      setExpandedTrainingId(null)
+    } else {
+      // 다른 카드로 마킹 이동
+      setTrainingTargetId(itemId)
+      setCollectedPhrases([])
+      setExpandedTrainingId(null)
+    }
   }
 
   // 훈련 모드 종료
@@ -292,6 +280,20 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   useEffect(() => {
     if (!voiceEnabled && trainingTargetId) {
       endTraining()
+    }
+  }, [voiceEnabled])
+
+  // 음성 인식 켜지면 힌트 표시
+  useEffect(() => {
+    if (voiceEnabled) {
+      setDisplayedText('카드를 길게 누르면 훈련 모드로 진입합니다.')
+      setShowRecognizedText(true)
+
+      const timer = setTimeout(() => {
+        setShowRecognizedText(false)
+      }, PHOTO_SEQUENCE_TIMERS.FADE_OUT)
+
+      return () => clearTimeout(timer)
     }
   }, [voiceEnabled])
 
@@ -431,7 +433,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           <div className="border-b pb-4">
             {/* 인식된 텍스트 표시 */}
             <div className={`text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
-              <div className={`text-xl font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <div className={`text-base font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {displayedText}
               </div>
             </div>
@@ -460,6 +462,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                       key={item.id}
                       item={item}
                       isLocked={isLocked}
+                      voiceEnabled={voiceEnabled}
                       onToggleComplete={toggleComplete}
                       onDelete={deleteItem}
                       trainingTargetId={trainingTargetId}
@@ -518,17 +521,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         onOpenChange={setVoiceNotSupportedOpen}
         title="음성 인식 지원 안 됨"
         description="현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome, Edge, Safari 등의 브라우저를 사용해주세요."
-      />
-
-      {/* 음성 인식 힌트 */}
-      <AlertDialog
-        open={showVoiceHintDialog}
-        onOpenChange={setShowVoiceHintDialog}
-        title="음성 인식 사용 안내"
-        description="음성 인식 도중에 카드를 길게 누르면 훈련 모드로 진입합니다."
-        onConfirm={handleVoiceHintConfirm}
-        showDontAskAgain={true}
-        onDontAskAgainChange={handleDontAskAgain}
       />
     </>
   )

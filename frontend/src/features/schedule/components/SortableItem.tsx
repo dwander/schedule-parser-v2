@@ -10,6 +10,7 @@ import { PHOTO_SEQUENCE_TIMERS } from '@/lib/constants/photoSequence'
 interface SortableItemProps {
   item: PhotoSequenceItem
   isLocked: boolean
+  voiceEnabled: boolean
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
   trainingTargetId: string | null
@@ -24,6 +25,7 @@ interface SortableItemProps {
 export function SortableItem({
   item,
   isLocked,
+  voiceEnabled,
   onToggleComplete,
   onDelete,
   trainingTargetId,
@@ -45,6 +47,7 @@ export function SortableItem({
 
   const [editablePhrases, setEditablePhrases] = useState<string[]>([])
   const longPressTimer = useRef<NodeJS.Timeout | null>(null)
+  const longPressExecuted = useRef(false)
 
   // 펼쳐질 때 편집 가능한 복사본 생성
   useEffect(() => {
@@ -54,8 +57,9 @@ export function SortableItem({
   }, [isExpanded, initialPhrases])
 
   const handlePointerDown = () => {
-    if (!isLocked && !trainingTargetId) {
+    if (!isLocked && voiceEnabled) {
       longPressTimer.current = setTimeout(() => {
+        longPressExecuted.current = true
         onStartTraining(item.id)
       }, PHOTO_SEQUENCE_TIMERS.LONG_PRESS)
     }
@@ -66,6 +70,17 @@ export function SortableItem({
       clearTimeout(longPressTimer.current)
       longPressTimer.current = null
     }
+  }
+
+  const handleClick = () => {
+    // 롱프레스가 실행되었으면 클릭 무시
+    if (longPressExecuted.current) {
+      longPressExecuted.current = false
+      return
+    }
+    // 마킹된 카드는 클릭 무시
+    if (isTraining) return
+    onToggleComplete(item.id)
   }
 
   const handleRemovePhrase = (index: number) => {
@@ -92,7 +107,7 @@ export function SortableItem({
       className={`${isDragging ? 'opacity-50' : ''}`}
     >
       <div
-        onClick={() => !isTraining && onToggleComplete(item.id)}
+        onClick={handleClick}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
