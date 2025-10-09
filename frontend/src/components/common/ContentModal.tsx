@@ -35,6 +35,9 @@ interface ContentModalProps {
   className?: string
   contentClassName?: string
   hideClose?: boolean
+
+  // History management
+  useHistory?: boolean // 브라우저 히스토리 관리 활성화 여부 (기본값: true)
 }
 
 const sizeClasses: Record<ContentModalSize, string> = {
@@ -62,6 +65,7 @@ export function ContentModal({
   className,
   contentClassName,
   hideClose = false,
+  useHistory = true,
 }: ContentModalProps) {
   const isFullscreenMobile = size === 'fullscreen-mobile'
   const onOpenChangeRef = useRef(onOpenChange)
@@ -73,7 +77,7 @@ export function ContentModal({
 
   // 브라우저 히스토리 관리
   useEffect(() => {
-    if (!open) return
+    if (!open || !useHistory) return
 
     // 모달이 열릴 때 히스토리 추가
     const modalState = { modal: true, timestamp: Date.now() }
@@ -95,7 +99,7 @@ export function ContentModal({
         window.history.back()
       }
     }
-  }, [open])
+  }, [open, useHistory])
 
   const handleClose = () => {
     onOpenChange(false)
