@@ -20,6 +20,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
 
   const features = [
     '카카오톡 메시지 붙여넣기로 빠른 스케줄 등록',
+    'Chat GPT API로 다양한 유형의 카카오톡 메세지 인식',
     '촬영노트 - 촬영 상세상담 내용 작성',
     '폴더 동기화 - jpg/raw 불일치 탐지, 촬영컷수 자동 업데이트',
     '원판순서 체크리스트 - 음성인식 자동화',
