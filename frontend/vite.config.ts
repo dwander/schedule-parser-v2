@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
           name: '본식스냅러',
           short_name: '본식스냅러',
           description: '웨딩 촬영 스케줄 관리 애플리케이션',
+          theme_color: '#fcfcfc',
           background_color: '#fcfcfc',
           display: 'standalone',
           orientation: 'portrait',
