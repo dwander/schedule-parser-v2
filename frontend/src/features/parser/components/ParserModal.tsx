@@ -425,8 +425,8 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             </Select>
             <p className="text-xs text-muted-foreground">
               {engine === 'classic' && '빠르고 정확한 패턴 기반 파싱'}
-              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석'}
-              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용)'}
+              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석 (최대 3개, 2000자 제한)'}
+              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용, 최대 3개, 2000자 제한)'}
             </p>
           </div>
 
@@ -469,8 +469,8 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             </Select>
             <p className="text-xs text-muted-foreground">
               {engine === 'classic' && '빠르고 정확한 패턴 기반 파싱'}
-              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석'}
-              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용)'}
+              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석 (최대 3개, 2000자 제한)'}
+              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용, 최대 3개, 2000자 제한)'}
             </p>
           </div>
 
