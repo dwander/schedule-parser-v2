@@ -32,18 +32,6 @@ function ThemeSynchronizer() {
     }
   }, [nextTheme, storeTheme, setStoreTheme])
 
-  // 테마 변경 시 OS 상태바 색상 업데이트
-  useEffect(() => {
-    if (!resolvedTheme) return
-
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
-    const themeColor = resolvedTheme === 'dark' ? '#101419' : '#fcfcfc'
-
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', themeColor)
-    }
-  }, [resolvedTheme])
-
   return null
 }
 
