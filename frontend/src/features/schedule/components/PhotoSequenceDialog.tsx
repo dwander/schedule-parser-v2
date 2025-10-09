@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -379,48 +379,80 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       onOpenChange={onOpenChange}
       size="fullscreen-mobile"
       className="md:max-w-2xl md:min-w-[500px] md:h-[90vh]"
-      title=" "
-      headerAction={
-        <div className="flex items-center gap-1">
-          {isListening && (
-            <span className="text-sm text-muted-foreground">듣는 중</span>
+      headerContent={
+        <div className="flex items-center gap-3 w-full">
+          {/* 뒤로가기 버튼 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 -ml-2"
+            onClick={() => onOpenChange(false)}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+
+          {/* 템플릿 선택 (잠금 모드가 아닐 때만) */}
+          {!isLocked ? (
+            <div className="flex-1 min-w-0">
+              <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+                <SelectTrigger className="w-auto">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PHOTO_SEQUENCE_TEMPLATES).map(([key, template]) => (
+                    <SelectItem key={key} value={key}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="flex-1 min-w-0"></div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleVoice}
-            className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''} ${isListening ? 'animate-pulse' : ''}`}
-            title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
-          >
-            {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowTrainingManager(true)}
-            className="h-9 w-9"
-            title="훈련 데이터 관리"
-          >
-            <CassetteTape className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleLock}
-            className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
-            title={isLocked ? "잠금 해제" : "잠금"}
-          >
-            {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleReset}
-            className="h-9 w-9"
-            title="모두 초기화"
-          >
-            <RotateCcw className="h-5 w-5" />
-          </Button>
+
+          {/* 오른쪽 액션 버튼들 */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isListening && (
+              <span className="text-sm text-muted-foreground">듣는 중</span>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleVoice}
+              className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''} ${isListening ? 'animate-pulse' : ''}`}
+              title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
+            >
+              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTrainingManager(true)}
+              className="h-9 w-9"
+              title="훈련 데이터 관리"
+            >
+              <CassetteTape className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLock}
+              className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
+              title={isLocked ? "잠금 해제" : "잠금"}
+            >
+              {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleReset}
+              className="h-9 w-9"
+              title="모두 초기화"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       }
       showFooter={!isLocked}
@@ -454,24 +486,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 {displayedText}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* 템플릿 선택 (매칭 텍스트 표시 중이 아닐 때만) */}
-        {!isLocked && !(voiceEnabled && displayedText && showRecognizedText) && (
-          <div className="pb-4 flex justify-end">
-            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-              <SelectTrigger className="w-auto">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(PHOTO_SEQUENCE_TEMPLATES).map(([key, template]) => (
-                  <SelectItem key={key} value={key}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         )}
 
