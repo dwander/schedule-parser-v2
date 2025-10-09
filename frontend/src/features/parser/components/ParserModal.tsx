@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import type { NewSchedule, Schedule } from '@/features/schedule/types/schedule'
 import type { ParsedScheduleData } from '../types/parser'
 import { DEBOUNCE } from '@/lib/constants/timing'
+import { convertParsedDataToSchedules } from '../utils/convertParsedData'
 
 interface ParserModalProps {
   open: boolean
@@ -23,17 +24,20 @@ interface ParserModalProps {
   existingSchedules: Schedule[]
 }
 
+// 필수 필드 검증 상수
+const DATE_PATTERN = /^\d{4}\.\d{2}\.\d{2}$/
+const TIME_PATTERN = /^\d{2}:\d{2}$/
+const INVALID_COUPLE_TEXT = '없음'
+
 // 필수 필드 4개 검증 함수 (백엔드 로직과 동일)
 function hasRequiredFields(schedule: ParsedScheduleData): boolean {
   // 날짜 검증: YYYY.MM.DD 형식
-  const datePattern = /^\d{4}\.\d{2}\.\d{2}$/
-  if (!schedule.date || !datePattern.test(schedule.date)) {
+  if (!schedule.date || !DATE_PATTERN.test(schedule.date)) {
     return false
   }
 
   // 시간 검증: HH:MM 형식
-  const timePattern = /^\d{2}:\d{2}$/
-  if (!schedule.time || !timePattern.test(schedule.time)) {
+  if (!schedule.time || !TIME_PATTERN.test(schedule.time)) {
     return false
   }
 
@@ -43,7 +47,7 @@ function hasRequiredFields(schedule: ParsedScheduleData): boolean {
   }
 
   // 신랑신부 검증: 빈 문자열이 아니고 "없음"이 포함되지 않아야 함
-  if (!schedule.couple || schedule.couple.includes('없음')) {
+  if (!schedule.couple || schedule.couple.includes(INVALID_COUPLE_TEXT)) {
     return false
   }
 
@@ -356,7 +360,10 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
 
       setIsParsing(true)
 
-      batchAddSchedules.mutate(parsedData as NewSchedule[], {
+      // ParsedScheduleData[]를 NewSchedule[]로 변환
+      const schedulesToAdd = convertParsedDataToSchedules(parsedData)
+
+      batchAddSchedules.mutate(schedulesToAdd, {
         onSuccess: () => {
           toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
           onOpenChange(false)

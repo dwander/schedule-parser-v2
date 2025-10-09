@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api/client'
 import type { ParsedScheduleData } from '../types/parser'
 
-export type ParserEngine = 'classic' | 'ai_only' | 'hybrid'
+export type ParserEngine = 'classic' | 'ai_only' | 'llm' | 'hybrid'
 
 export interface ParseTextRequest {
   text: string

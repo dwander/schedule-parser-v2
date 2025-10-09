@@ -4,18 +4,22 @@
 
 /**
  * 백엔드 파서에서 반환하는 원시 데이터 구조
+ * (백엔드 Schedule.to_dict() 응답과 일치)
  */
 export interface ParsedScheduleData {
   date: string
+  location: string
   time: string
-  venue: string
   couple: string
-  cutsCount: number
-  price: number
-  contractor: string
+  contact: string
   brand: string
-  comments?: string
-  needs_review?: boolean
+  album: string
+  photographer: string
+  memo: string
+  manager: string
+  price: number
+  needs_review: boolean
+  review_reason: string
 }
 
 /**

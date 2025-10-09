@@ -1538,20 +1538,38 @@ def is_meaningful_schedule_spacy(text: str, entities: Dict[str, List[str]]) -> b
 
 def has_required_fields(schedule: Dict) -> bool:
     """
-    필수 필드 4개(날짜, 시간, 장소, 신랑신부)가 모두 있는지 확인
+    필수 필드 4개(날짜, 시간, 장소, 신랑신부)가 모두 **유효한 값**으로 있는지 확인
 
     Args:
         schedule: 검증할 스케줄 딕셔너리
 
     Returns:
-        bool: 필수 필드가 모두 있으면 True, 하나라도 없으면 False
+        bool: 필수 필드가 모두 유효한 값으로 있으면 True, 하나라도 없거나 무효하면 False
     """
-    return bool(
-        schedule.get('date') and
-        schedule.get('time') and
-        schedule.get('location') and
-        schedule.get('couple')
-    )
+    # 날짜 검증: YYYY.MM.DD 형식이어야 함
+    date = schedule.get('date', '')
+    if not date or not is_valid_date(date):
+        return False
+
+    # 시간 검증: HH:MM 형식이어야 함
+    time = schedule.get('time', '')
+    if not time or not is_valid_time(time):
+        return False
+
+    # 장소 검증: 빈 문자열이 아니어야 함
+    location = schedule.get('location', '')
+    if not location:
+        return False
+
+    # 신랑신부 검증: 유효한 이름 형식이어야 하고 "없음"이 아니어야 함
+    couple = schedule.get('couple', '')
+    if not couple or not is_valid_couple(couple):
+        return False
+    # "없음" 패턴 제외
+    if '없음' in couple:
+        return False
+
+    return True
 
 def parse_schedules_hybrid_llm(raw_text: str) -> List[Dict]:
     """

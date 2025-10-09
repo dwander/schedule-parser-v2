@@ -9,13 +9,16 @@ export function convertParsedDataToSchedules(parsedData: ParsedScheduleData[]): 
     return {
       date: item.date || '',
       time: item.time || '',
-      location: item.venue || '',
+      location: item.location || '',
       couple: item.couple || '',
-      cuts: item.cutsCount || 0,
+      contact: item.contact || '',
+      cuts: 0, // ParsedScheduleData에는 cuts 필드가 없으므로 기본값 사용
       price: item.price || 0,
-      manager: item.contractor || '',
-      brand: item.brand || '',
-      memo: item.comments || '',
+      manager: item.manager || '',
+      brand: item.brand as any, // Brand 타입으로 강제 변환 (백엔드에서 유효한 값 반환)
+      album: item.album || '',
+      photographer: item.photographer || '',
+      memo: item.memo || '',
       isDuplicate: item.needs_review || false,
     }
   })
