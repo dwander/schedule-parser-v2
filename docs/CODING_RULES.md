@@ -187,6 +187,79 @@ npm run dev  # 기존 프로세스가 남아있어 5174로 실행됨
 - 여러 개의 좀비 프로세스 방지
 - 일관된 개발 환경 유지
 
+## 컴포넌트 사용 규칙
+
+### 다이얼로그/모달 컴포넌트
+
+#### ✅ ContentModal 사용 (권장)
+모든 다이얼로그는 `ContentModal` 컴포넌트를 사용합니다:
+
+```tsx
+import { ContentModal } from '@/components/common/ContentModal'
+
+export function MyDialog({ open, onOpenChange }: MyDialogProps) {
+  return (
+    <ContentModal
+      open={open}
+      onOpenChange={onOpenChange}
+      size="lg"
+      title="제목"
+      subtitle="서브타이틀 (선택)"
+      showFooter={true}
+      footerContent={
+        <div className="flex gap-2">
+          <Button onClick={handleSave}>저장</Button>
+        </div>
+      }
+    >
+      {/* 내용 */}
+      <div>콘텐츠</div>
+    </ContentModal>
+  )
+}
+```
+
+**ContentModal의 장점**:
+- 일관된 UI/UX (뒤로가기 버튼, 헤더, 푸터 레이아웃)
+- 브라우저 히스토리 관리 자동화 (뒤로가기로 모달 닫기)
+- `fullscreen-mobile` 지원 (모바일에서 전체화면, 데스크톱에서 다이얼로그)
+- 선언적 API로 더 깔끔한 코드
+
+**사용 가능한 props**:
+- `size`: `'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | 'fullscreen-mobile'`
+- `title`: 제목 (문자열)
+- `subtitle`: 서브타이틀 (문자열 또는 ReactNode)
+- `headerContent`: 커스텀 헤더 (ReactNode)
+- `headerAction`: 헤더 오른쪽 액션 (예: 토글 버튼)
+- `showFooter`: 푸터 표시 여부 (boolean)
+- `footerContent`: 푸터 내용 (ReactNode)
+
+#### ❌ Dialog 컴포넌트 직접 사용 금지
+```tsx
+// ❌ 잘못된 예시 - Dialog를 직접 사용하지 마세요
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+
+export function BadDialog() {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>...</DialogHeader>
+        ...
+      </DialogContent>
+    </Dialog>
+  )
+}
+```
+
+**이유**:
+- ContentModal이 표준화된 UX를 제공
+- 브라우저 히스토리 관리가 자동으로 처리됨
+- 중복 코드 감소
+- 모바일 최적화가 내장됨
+
+#### 예외 상황
+`ConfirmDialog`나 `AlertDialog` 같은 특수 목적 다이얼로그는 제외됩니다.
+
 ## 참고 자료
 
 - [Tailwind CSS 문서](https://tailwindcss.com/docs)

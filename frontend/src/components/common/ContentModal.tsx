@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -64,6 +64,12 @@ export function ContentModal({
   hideClose = false,
 }: ContentModalProps) {
   const isFullscreenMobile = size === 'fullscreen-mobile'
+  const onOpenChangeRef = useRef(onOpenChange)
+
+  // onOpenChange ref 업데이트
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange
+  }, [onOpenChange])
 
   // 브라우저 히스토리 관리
   useEffect(() => {
@@ -76,9 +82,7 @@ export function ContentModal({
     // 뒤로가기 이벤트 리스너
     const handlePopState = () => {
       // 뒤로가기로 모달을 닫을 때만 처리
-      if (open) {
-        onOpenChange(false)
-      }
+      onOpenChangeRef.current(false)
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -87,11 +91,11 @@ export function ContentModal({
       window.removeEventListener('popstate', handlePopState)
 
       // 클린업 시 모달이 여전히 열려있다면 히스토리 정리
-      if (open && window.history.state?.modal) {
+      if (window.history.state?.modal) {
         window.history.back()
       }
     }
-  }, [open, onOpenChange])
+  }, [open])
 
   const handleClose = () => {
     onOpenChange(false)

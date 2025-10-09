@@ -58,11 +58,28 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   )
   const updateTrainingDataMutation = useUpdateVoiceTrainingData()
 
-  const [items, setItems] = useState<PhotoSequenceItem[]>(() =>
-    schedule.photoSequence || generatePhotoSequence()
-  )
+  const [items, setItems] = useState<PhotoSequenceItem[]>(() => {
+    // currentTemplate을 먼저 확인
+    if (schedule.currentTemplate === 'CUSTOM' && schedule.photoSequence) {
+      // 사용자 지정 템플릿
+      return schedule.photoSequence
+    } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
+      // 템플릿 1,2,3
+      const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
+      return generatePhotoSequence(template.items)
+    }
+    // 기본 템플릿
+    return generatePhotoSequence()
+  })
   const [newItemText, setNewItemText] = useState('')
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>('POSE_FIRST')
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>(() => {
+    // currentTemplate을 먼저 확인
+    if (schedule.currentTemplate) {
+      return schedule.currentTemplate as TemplateKey
+    }
+    // 기본값
+    return 'POSE_FIRST'
+  })
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
 
@@ -91,27 +108,37 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 모달이 열릴 때만 초기화
   useEffect(() => {
     if (open) {
-      setItems(schedule.photoSequence || generatePhotoSequence())
+      // currentTemplate을 먼저 확인
+      if (schedule.currentTemplate === 'CUSTOM' && schedule.photoSequence) {
+        // 사용자 지정 템플릿
+        setItems(schedule.photoSequence)
+        setSelectedTemplate('CUSTOM')
+      } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
+        // 템플릿 1,2,3
+        const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
+        setItems(generatePhotoSequence(template.items))
+        setSelectedTemplate(schedule.currentTemplate as TemplateKey)
+      } else {
+        // 기본 템플릿
+        setItems(generatePhotoSequence())
+        setSelectedTemplate('POSE_FIRST')
+      }
     }
-  }, [open])  // open만 의존성으로 설정
-
-  // schedule.photoSequence가 변경되면 items 업데이트
-  useEffect(() => {
-    if (open && schedule.photoSequence) {
-      setItems(schedule.photoSequence)
-    }
-  }, [schedule.photoSequence])
+  }, [open, schedule.currentTemplate])
 
   // 활성 항목과 삭제된 항목 분리
   const activeItems = items.filter(item => !item.deleted)
   const deletedItems = items.filter(item => item.deleted)
 
-  // 실시간 저장
+  // 실시간 저장 (사용자 조작 시)
   const saveToServer = (updatedItems: PhotoSequenceItem[]) => {
     updateSchedule.mutate({
       id: schedule.id,
       photoSequence: updatedItems,
+      currentTemplate: 'CUSTOM', // 사용자 조작 시 사용자 지정으로 변경
     })
+    // 로컬 상태도 업데이트
+    setSelectedTemplate('CUSTOM')
   }
 
   // 체크 토글 (실시간 저장)
@@ -365,11 +392,31 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 템플릿 변경 핸들러
   const handleTemplateChange = (templateKey: TemplateKey) => {
+    // CUSTOM 선택 시: DB에 저장된 사용자 지정 데이터 불러오기
+    if (templateKey === 'CUSTOM') {
+      if (schedule.photoSequence) {
+        setItems(schedule.photoSequence)
+        setSelectedTemplate('CUSTOM')
+        // current_template을 CUSTOM으로 업데이트
+        updateSchedule.mutate({
+          id: schedule.id,
+          currentTemplate: 'CUSTOM',
+        })
+      }
+      return
+    }
+
+    // 템플릿 1,2,3 선택 시: 미리 정의된 템플릿 적용
     setSelectedTemplate(templateKey)
     const template = PHOTO_SEQUENCE_TEMPLATES[templateKey]
     const newItems = generatePhotoSequence(template.items)
     setItems(newItems)
-    saveToServer(newItems)
+
+    // current_template만 업데이트 (photoSequence는 건드리지 않음)
+    updateSchedule.mutate({
+      id: schedule.id,
+      currentTemplate: templateKey,
+    })
   }
 
   return (

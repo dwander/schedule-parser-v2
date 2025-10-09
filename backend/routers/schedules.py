@@ -78,6 +78,7 @@ def get_schedules(
                 'memo': schedule.memo or "",
                 'photoNote': schedule.photo_note,
                 'photoSequence': schedule.photo_sequence,
+                'currentTemplate': schedule.current_template,
                 'isDuplicate': schedule.needs_review,
                 'createdAt': schedule.created_at.isoformat() if schedule.created_at else None,
                 'updatedAt': schedule.updated_at.isoformat() if schedule.updated_at else None,
@@ -193,6 +194,8 @@ def update_schedule(
             existing.photo_note = schedule['photoNote']
         if 'photoSequence' in schedule:
             existing.photo_sequence = schedule['photoSequence']
+        if 'currentTemplate' in schedule:
+            existing.current_template = schedule['currentTemplate']
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
 
@@ -219,6 +222,7 @@ def update_schedule(
             'memo': existing.memo,
             'photoNote': existing.photo_note,
             'photoSequence': existing.photo_sequence,
+            'currentTemplate': existing.current_template,
             'isDuplicate': existing.needs_review,
             'createdAt': existing.created_at.isoformat() if existing.created_at else None,
             'updatedAt': existing.updated_at.isoformat() if existing.updated_at else None,

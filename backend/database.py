@@ -180,6 +180,9 @@ class Schedule(Base):
     # Photo sequence field (JSON data)
     photo_sequence = Column(JSON, nullable=True)
 
+    # Current template for photo sequence
+    current_template = Column(String(50), nullable=True)  # POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
+
     # New fields
     cuts = Column(Integer, nullable=False, default=0)  # 컷 수
     folder_name = Column(String(500), nullable=False, default="")  # 폴더명
@@ -204,6 +207,7 @@ class Schedule(Base):
         field_mapping = {
             'photo_note': 'photoNote',
             'photo_sequence': 'photoSequence',
+            'current_template': 'currentTemplate',
             'folder_name': 'folderName',
         }
 
@@ -231,6 +235,7 @@ class Schedule(Base):
         field_mapping = {
             'photoNote': 'photo_note',
             'photoSequence': 'photo_sequence',
+            'currentTemplate': 'current_template',
             'folderName': 'folder_name',
         }
 
@@ -297,6 +302,9 @@ class TrashSchedule(Base):
     # Photo sequence field (JSON data)
     photo_sequence = Column(JSON, nullable=True)
 
+    # Current template for photo sequence
+    current_template = Column(String(50), nullable=True)  # POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
+
     # New fields
     cuts = Column(Integer, nullable=False, default=0)
     folder_name = Column(String(500), nullable=False, default="")
@@ -333,6 +341,7 @@ class TrashSchedule(Base):
             'review_reason': self.review_reason,
             'photoNote': self.photo_note,
             'photoSequence': self.photo_sequence,
+            'currentTemplate': self.current_template,
             'cuts': self.cuts,
             'folderName': self.folder_name,
             'deletedAt': self.deleted_at.isoformat() if self.deleted_at else None,
@@ -361,6 +370,7 @@ class TrashSchedule(Base):
             review_reason=schedule.review_reason,
             photo_note=schedule.photo_note,
             photo_sequence=schedule.photo_sequence,
+            current_template=schedule.current_template,
             cuts=schedule.cuts,
             folder_name=schedule.folder_name,
             created_at=schedule.created_at,
@@ -478,6 +488,34 @@ def run_migrations():
                 """))
                 db.commit()
                 logger.info("✅ Added 'voice_training_data' column to users table")
+
+            # Add 'current_template' column to schedules table if not exists
+            try:
+                db.execute(text("""
+                    SELECT current_template FROM schedules LIMIT 1
+                """))
+            except Exception:
+                # Column doesn't exist, add it
+                logger.info("Adding 'current_template' column to schedules table...")
+                db.execute(text("""
+                    ALTER TABLE schedules ADD COLUMN current_template VARCHAR(50)
+                """))
+                db.commit()
+                logger.info("✅ Added 'current_template' column to schedules table")
+
+            # Add 'current_template' column to trash_schedules table if not exists
+            try:
+                db.execute(text("""
+                    SELECT current_template FROM trash_schedules LIMIT 1
+                """))
+            except Exception:
+                # Column doesn't exist, add it
+                logger.info("Adding 'current_template' column to trash_schedules table...")
+                db.execute(text("""
+                    ALTER TABLE trash_schedules ADD COLUMN current_template VARCHAR(50)
+                """))
+                db.commit()
+                logger.info("✅ Added 'current_template' column to trash_schedules table")
         finally:
             db.close()
 
@@ -593,7 +631,7 @@ class ScheduleService:
             allowed_fields = [
                 'date', 'location', 'time', 'couple', 'contact', 'brand',
                 'album', 'photographer', 'memo', 'manager', 'price',
-                'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'cuts', 'folder_name'
+                'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'current_template', 'cuts', 'folder_name'
             ]
 
             if field not in allowed_fields:
@@ -734,6 +772,7 @@ class ScheduleService:
                 review_reason=trash_item.review_reason,
                 photo_note=trash_item.photo_note,
                 photo_sequence=trash_item.photo_sequence,
+                current_template=trash_item.current_template,
                 cuts=trash_item.cuts,
                 folder_name=trash_item.folder_name,
             )
@@ -783,6 +822,7 @@ class ScheduleService:
                     review_reason=trash_item.review_reason,
                     photo_note=trash_item.photo_note,
                     photo_sequence=trash_item.photo_sequence,
+                    current_template=trash_item.current_template,
                     cuts=trash_item.cuts,
                     folder_name=trash_item.folder_name,
                 )
@@ -837,6 +877,7 @@ class ScheduleService:
                     review_reason=trash_item.review_reason,
                     photo_note=trash_item.photo_note,
                     photo_sequence=trash_item.photo_sequence,
+                    current_template=trash_item.current_template,
                     cuts=trash_item.cuts,
                     folder_name=trash_item.folder_name,
                 )

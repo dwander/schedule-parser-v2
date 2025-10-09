@@ -67,6 +67,7 @@ export interface Schedule {
   memo?: string
   photoNote?: PhotoNote
   photoSequence?: PhotoSequenceItem[]
+  currentTemplate?: string // POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
   isDuplicate: boolean
   createdAt: string
   updatedAt: string
