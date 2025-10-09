@@ -4,7 +4,7 @@ export const DEFAULT_PHOTO_SEQUENCE: Omit<PhotoSequenceItem, 'id'>[] = [
   { text: '신랑신부 포즈컷', completed: false, order: 1 },
   { text: '신부 독사진', completed: false, order: 2 },
   { text: '신랑신부 정면', completed: false, order: 3 },
-  { text: '양가혼주', completed: false, order: 4 },
+  { text: '양가 혼주', completed: false, order: 4 },
   { text: '전체 가족 친척', completed: false, order: 5 },
   { text: '신랑측 직계가족', completed: false, order: 6 },
   { text: '신부측 직계가족', completed: false, order: 7 },
