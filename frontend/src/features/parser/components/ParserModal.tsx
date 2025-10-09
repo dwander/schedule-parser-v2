@@ -31,6 +31,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('text')
   const [engine, setEngine] = useState<'classic' | 'llm' | 'hybrid'>('classic')
+  const [parsingStep, setParsingStep] = useState<'classic' | 'gpt' | null>(null)
   const batchAddSchedules = useBatchAddSchedules()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
   const { user } = useAuthStore()
@@ -57,9 +58,26 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setIsParsing(true)
     setError(null)
     setParsedData(null)
+    setParsingStep(null)
 
     try {
-      const result = await parseText(input, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseText(input, 'classic')
+
+        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
+        if (!result.success || !result.data || result.data.length === 0) {
+          setParsingStep('gpt')
+          result = await parseText(input, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseText(input, engine)
+      }
 
       if (result.success && result.data) {
         // 중복 체크 (날짜 + 장소 + 시간으로 판단)
@@ -95,6 +113,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       setError(err instanceof Error ? err.message : '파싱 중 오류가 발생했습니다')
     } finally {
       setIsParsing(false)
+      setParsingStep(null)
     }
   }
 
@@ -136,9 +155,26 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setIsParsing(true)
     setError(null)
     setParsedData(null)
+    setParsingStep(null)
 
     try {
-      const result = await parseFile(file, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseFile(file, 'classic')
+
+        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
+        if (!result.success || !result.data || result.data.length === 0) {
+          setParsingStep('gpt')
+          result = await parseFile(file, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseFile(file, engine)
+      }
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -166,6 +202,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       setError(err instanceof Error ? err.message : '파일 파싱 중 오류가 발생했습니다')
     } finally {
       setIsParsing(false)
+      setParsingStep(null)
     }
   }, [existingSchedules, engine])
 
@@ -176,9 +213,26 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setIsParsing(true)
     setError(null)
     setParsedData(null)
+    setParsingStep(null)
 
     try {
-      const result = await parseFile(file, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseFile(file, 'classic')
+
+        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
+        if (!result.success || !result.data || result.data.length === 0) {
+          setParsingStep('gpt')
+          result = await parseFile(file, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseFile(file, engine)
+      }
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -206,6 +260,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       setError(err instanceof Error ? err.message : '파일 파싱 중 오류가 발생했습니다')
     } finally {
       setIsParsing(false)
+      setParsingStep(null)
     }
   }, [existingSchedules, engine])
 
@@ -388,7 +443,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm">
-                    {engine === 'hybrid' ? 'Classic으로 시도 중... 필요시 GPT-4로 재분석합니다' : '파싱 중...'}
+                    {parsingStep === 'classic' && 'Classic으로 시도 중...'}
+                    {parsingStep === 'gpt' && 'GPT-4로 재분석 중...'}
+                    {!parsingStep && '파싱 중...'}
                   </span>
                 </div>
               </div>
