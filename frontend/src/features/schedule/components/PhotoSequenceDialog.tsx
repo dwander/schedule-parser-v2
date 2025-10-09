@@ -8,8 +8,15 @@ import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
 import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X } from 'lucide-react'
-import { generatePhotoSequence } from '../constants/photoSequenceTemplates'
+import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
 import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG } from '@/lib/constants/photoSequence'
 import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
@@ -55,6 +62,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     schedule.photoSequence || generatePhotoSequence()
   )
   const [newItemText, setNewItemText] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>('POSE_FIRST')
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
 
@@ -355,6 +363,15 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     }
   }
 
+  // 템플릿 변경 핸들러
+  const handleTemplateChange = (templateKey: TemplateKey) => {
+    setSelectedTemplate(templateKey)
+    const template = PHOTO_SEQUENCE_TEMPLATES[templateKey]
+    const newItems = generatePhotoSequence(template.items)
+    setItems(newItems)
+    saveToServer(newItems)
+  }
+
   return (
     <>
     <ContentModal
@@ -437,6 +454,24 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 {displayedText}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 템플릿 선택 (매칭 텍스트 표시 중이 아닐 때만) */}
+        {!isLocked && !(voiceEnabled && displayedText && showRecognizedText) && (
+          <div className="pb-4 flex justify-end">
+            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+              <SelectTrigger className="w-auto">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(PHOTO_SEQUENCE_TEMPLATES).map(([key, template]) => (
+                  <SelectItem key={key} value={key}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
