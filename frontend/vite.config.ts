@@ -5,27 +5,31 @@ import checker from 'vite-plugin-checker'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    // checker({
-    //   typescript: true,
-    //   overlay: {
-    //     initialIsOpen: false, // 에러 발생 시 자동으로 오버레이 표시
-    //   },
-    // }),
-    VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
-      manifest: {
-        name: '본식스냅러',
-        short_name: '본식스냅러',
-        description: '웨딩 촬영 스케줄 관리 애플리케이션',
-        background_color: '#fcfcfc',
-        display: 'standalone',
-        orientation: 'portrait',
-        start_url: '/',
+export default defineConfig(({ mode }) => {
+  // 환경변수에서 버전 가져오기
+  const version = process.env.VITE_APP_VERSION || 'dev'
+
+  return {
+    plugins: [
+      react(),
+      // checker({
+      //   typescript: true,
+      //   overlay: {
+      //     initialIsOpen: false, // 에러 발생 시 자동으로 오버레이 표시
+      //   },
+      // }),
+      VitePWA({
+        registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        manifest: {
+          name: '본식스냅러',
+          short_name: '본식스냅러',
+          description: '웨딩 촬영 스케줄 관리 애플리케이션',
+          background_color: '#fcfcfc',
+          display: 'standalone',
+          orientation: 'portrait',
+          start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -61,7 +65,7 @@ export default defineConfig({
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: `google-fonts-cache-${version}`,
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
@@ -75,7 +79,7 @@ export default defineConfig({
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: `gstatic-fonts-cache-${version}`,
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
@@ -90,7 +94,7 @@ export default defineConfig({
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: `api-cache-${version}`,
               networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 50,
@@ -116,4 +120,4 @@ export default defineConfig({
     },
     host: true, // 네트워크에서 접근 가능하도록 설정
   },
-})
+}})
