@@ -57,16 +57,20 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       const result = await parseText(input, 'classic')
 
       if (result.success && result.data) {
-        // 중복 체크 (날짜 + 장소로 판단)
+        // 중복 체크 (날짜 + 장소 + 시간으로 판단)
         const duplicates = result.data.filter(parsed =>
           existingSchedules.some(existing =>
-            existing.date === parsed.date && existing.location === parsed.location
+            existing.date === parsed.date &&
+            existing.location === parsed.location &&
+            existing.time === parsed.time
           )
         )
 
         const unique = result.data.filter(parsed =>
           !existingSchedules.some(existing =>
-            existing.date === parsed.date && existing.location === parsed.location
+            existing.date === parsed.date &&
+            existing.location === parsed.location &&
+            existing.time === parsed.time
           )
         )
 
@@ -134,7 +138,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
           !existingSchedules.some(existing =>
-            existing.date === parsed.date && existing.location === parsed.location
+            existing.date === parsed.date &&
+            existing.location === parsed.location &&
+            existing.time === parsed.time
           )
         )
 
@@ -172,7 +178,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
           !existingSchedules.some(existing =>
-            existing.date === parsed.date && existing.location === parsed.location
+            existing.date === parsed.date &&
+            existing.location === parsed.location &&
+            existing.time === parsed.time
           )
         )
 
@@ -264,13 +272,13 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     }
   }
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setText('')
     setParsedData(null)
     setError(null)
-  }
+  }, [])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setText('')
     setParsedData(null)
     setError(null)
@@ -284,7 +292,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       memo: ''
     })
     onOpenChange(false)
-  }
+  }, [onOpenChange])
 
   return (
     <ContentModal
