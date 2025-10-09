@@ -14,12 +14,11 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck } from 'lucide-react'
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
-import { UI_TIMERS } from '@/lib/constants/timing'
 import { PHONE_NUMBER_LENGTH } from '@/lib/constants/validation'
 
 interface ScheduleCardProps {
@@ -41,7 +40,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
   const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // 구글 캘린더 URL 생성 함수
   const generateGoogleCalendarUrl = () => {
@@ -194,28 +192,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     onToggleCheckboxVisibility()
   }
 
-  // 카드 롱프레스 핸들러 (체크박스 visibility 토글)
-  const handleCardPointerDown = (e: React.PointerEvent) => {
-    const target = e.target as HTMLElement
-
-    // EditableCell 내부 input이나 버튼 클릭은 제외 (체크박스는 허용)
-    if (target.closest('button, [role="button"]') ||
-        (target.tagName === 'INPUT' && target.getAttribute('type') !== 'checkbox')) {
-      return
-    }
-
-    longPressTimerRef.current = setTimeout(() => {
-      onToggleCheckboxVisibility()
-    }, UI_TIMERS.LONG_PRESS)
-  }
-
-  const handleHeaderPointerUp = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
-  }
-
   // 촬영노트 데이터 존재 여부 확인
   const hasPhotoNoteData = useMemo(() => {
     const note = schedule.photoNote
@@ -259,9 +235,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         }
       `}
       onDoubleClick={handleCardDoubleClick}
-      onPointerDown={handleCardPointerDown}
-      onPointerUp={handleHeaderPointerUp}
-      onPointerLeave={handleHeaderPointerUp}
     >
       {/* Header */}
       <div className="flex items-start gap-3 p-4 pb-3">
