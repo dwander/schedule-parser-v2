@@ -5,11 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePickerCell } from '@/features/schedule/components/DatePickerCell'
 import { TimePickerCell } from '@/features/schedule/components/TimePickerCell'
 import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react'
 import { parseText, parseFile } from '../api/parserApi'
 import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { toast } from 'sonner'
 import type { NewSchedule, Schedule } from '@/features/schedule/types/schedule'
 import type { ParsedScheduleData } from '../types/parser'
@@ -28,8 +30,11 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [parsedData, setParsedData] = useState<ParsedScheduleData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('text')
+  const [engine, setEngine] = useState<'classic' | 'llm' | 'hybrid'>('classic')
   const batchAddSchedules = useBatchAddSchedules()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const { user } = useAuthStore()
+  const isAdmin = user?.isAdmin || false
 
   // 직접 입력 폼 상태
   const [manualForm, setManualForm] = useState({
@@ -54,7 +59,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsedData(null)
 
     try {
-      const result = await parseText(input, 'classic')
+      const result = await parseText(input, engine)
 
       if (result.success && result.data) {
         // 중복 체크 (날짜 + 장소 + 시간으로 판단)
@@ -114,7 +119,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         clearTimeout(parseTimerRef.current)
       }
     }
-  }, [text, existingSchedules])
+  }, [text, existingSchedules, engine])
 
   const handleFileDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
@@ -133,7 +138,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsedData(null)
 
     try {
-      const result = await parseFile(file, 'classic')
+      const result = await parseFile(file, engine)
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -162,7 +167,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     } finally {
       setIsParsing(false)
     }
-  }, [existingSchedules])
+  }, [existingSchedules, engine])
 
   const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -173,7 +178,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsedData(null)
 
     try {
-      const result = await parseFile(file, 'classic')
+      const result = await parseFile(file, engine)
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -202,7 +207,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     } finally {
       setIsParsing(false)
     }
-  }, [existingSchedules])
+  }, [existingSchedules, engine])
 
   const handleSave = () => {
     if (activeTab === 'manual') {
@@ -350,6 +355,26 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         </TabsList>
 
         <TabsContent value="text" className="flex flex-col gap-4">
+          {/* 파서 엔진 선택 */}
+          <div className="space-y-2">
+            <Label htmlFor="parser-engine">파서 엔진</Label>
+            <Select value={engine} onValueChange={(value) => setEngine(value as typeof engine)}>
+              <SelectTrigger id="parser-engine">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="classic">Classic (정규표현식)</SelectItem>
+                <SelectItem value="hybrid">Hybrid (클래식+GPT)</SelectItem>
+                {isAdmin && <SelectItem value="llm">GPT-4</SelectItem>}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {engine === 'classic' && '빠르고 정확한 패턴 기반 파싱'}
+              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석'}
+              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용)'}
+            </p>
+          </div>
+
           <div className="relative min-h-[300px]">
             <textarea
               value={text}
@@ -362,7 +387,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-md">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">파싱 중...</span>
+                  <span className="text-sm">
+                    {engine === 'hybrid' ? 'Classic으로 시도 중... 필요시 GPT-4로 재분석합니다' : '파싱 중...'}
+                  </span>
                 </div>
               </div>
             )}
@@ -370,6 +397,26 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         </TabsContent>
 
         <TabsContent value="file" className="flex flex-col gap-4">
+          {/* 파서 엔진 선택 */}
+          <div className="space-y-2">
+            <Label htmlFor="parser-engine-file">파서 엔진</Label>
+            <Select value={engine} onValueChange={(value) => setEngine(value as typeof engine)}>
+              <SelectTrigger id="parser-engine-file">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="classic">Classic (정규표현식)</SelectItem>
+                <SelectItem value="hybrid">Hybrid (클래식+GPT)</SelectItem>
+                {isAdmin && <SelectItem value="llm">GPT-4</SelectItem>}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {engine === 'classic' && '빠르고 정확한 패턴 기반 파싱'}
+              {engine === 'hybrid' && '정규표현식으로 시도 후 필요시 GPT-4로 재분석'}
+              {engine === 'llm' && 'GPT-4 기반 파싱 (관리자 전용)'}
+            </p>
+          </div>
+
           <div
             onDragOver={(e) => {
               e.preventDefault()

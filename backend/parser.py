@@ -1536,6 +1536,93 @@ def is_meaningful_schedule_spacy(text: str, entities: Dict[str, List[str]]) -> b
 
 # === Parser Engine Selection Functions ===
 
+def parse_schedules_hybrid_llm(raw_text: str) -> List[Dict]:
+    """
+    하이브리드 파서 (Classic + GPT-4)
+    먼저 Classic 파서를 시도하고, 실패하거나 결과가 없으면 GPT-4 파서로 fallback
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # 먼저 Classic 시도
+    logger.info("Hybrid: Trying Classic parser first...")
+    classic_result = parse_schedules_classic_only(raw_text)
+
+    # Classic이 성공했으면 결과 반환 (에러가 아니고, 결과가 있는 경우)
+    if classic_result and len(classic_result) > 0:
+        # 에러 응답이 아닌지 확인
+        if not isinstance(classic_result, dict) or not classic_result.get('error'):
+            logger.info(f"Hybrid: Classic parser succeeded with {len(classic_result)} schedules")
+            return classic_result
+
+    # Classic이 실패하거나 결과가 없으면 GPT-4 시도
+    logger.info("Hybrid: Classic parser failed or returned no results. Falling back to GPT-4...")
+    return parse_schedules_llm(raw_text)
+
+def parse_schedules_llm(raw_text: str) -> List[Dict]:
+    """
+    GPT-4 기반 파서 (OpenAI GPT-4.1-nano)
+    Structured Outputs로 정확한 JSON 스키마 보장
+    """
+    try:
+        from services.llm_parser import parse_with_llm, normalize_schedule_data
+        import asyncio
+
+        # async 함수 실행
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(parse_with_llm(raw_text))
+        loop.close()
+
+        if not result:
+            return []
+
+        # 정규화
+        normalized = normalize_schedule_data(result)
+
+        # Schedule 객체로 변환
+        schedule = Schedule(
+            date=normalized.get('date', ''),
+            location=clean_location(normalized.get('location', '')),
+            time=normalized.get('time', ''),
+            couple=normalized.get('couple', ''),
+            contact=normalized.get('contact', ''),
+            brand=normalized.get('brand', ''),
+            album=normalized.get('album', ''),
+            photographer=normalized.get('photographer', ''),
+            manager=normalized.get('manager', ''),
+            memo=normalized.get('memo', ''),
+            price=0,  # 나중에 계산
+            needs_review=False,
+            review_reason=""
+        )
+
+        # 촬영단가 계산
+        if schedule.brand and schedule.album and schedule.date:
+            schedule.price = calculate_price(schedule.brand, schedule.album, schedule.date)
+
+        # 필수 필드 검증
+        missing_fields = []
+        if not schedule.date:
+            missing_fields.append("날짜")
+        if not schedule.time:
+            missing_fields.append("시간")
+        if not schedule.location:
+            missing_fields.append("장소")
+        if not schedule.couple:
+            missing_fields.append("신랑신부")
+
+        if missing_fields:
+            schedule.needs_review = True
+            schedule.review_reason = f"LLM 파싱: 필수 필드 누락 - {', '.join(missing_fields)}"
+
+        return [schedule.to_dict()]
+
+    except ImportError:
+        return {"error": "LLM 파서를 사용할 수 없습니다. OpenAI 패키지가 설치되어 있는지 확인하세요.", "success": False}
+    except Exception as e:
+        return {"error": f"LLM 파서 오류: {str(e)}", "success": False}
+
 def parse_schedules_classic_only(raw_text: str) -> List[Dict]:
     """클래식 파서만 사용 (패턴 1-3만, NLP 비활성화)"""
     chat_format = detect_chat_format(raw_text)

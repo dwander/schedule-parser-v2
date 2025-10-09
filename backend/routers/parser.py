@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 
-from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only
+from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only, parse_schedules_llm, parse_schedules_hybrid_llm
 from schemas.parser import ParseTextRequest
 
 router = APIRouter()
@@ -38,12 +38,16 @@ def parse_from_text(request: ParseTextRequest):
             data = parse_schedules_classic_only(text)
             print(f"📜 Classic parser result: {len(data)} schedules")
         elif engine == "ai_only":
-            print("🤖 Running AI-only parser...")
+            print("🤖 Running AI-only parser (spaCy)...")
             data = parse_schedules_ai_only(text)
             print(f"🤖 AI parser result: {len(data)} schedules")
+        elif engine == "llm":
+            print("🧠 Running GPT-4 parser...")
+            data = parse_schedules_llm(text)
+            print(f"🧠 GPT-4 parser result: {len(data)} schedules")
         elif engine == "hybrid":
-            print("🔀 Running hybrid parser...")
-            data = parse_schedules(text)
+            print("🔀 Running hybrid parser (Classic+GPT-4)...")
+            data = parse_schedules_hybrid_llm(text)
             print(f"🔀 Hybrid parser result: {len(data)} schedules")
         else:
             return {"error": f"Unknown parser engine: {engine}", "success": False}
@@ -72,12 +76,16 @@ async def parse_uploaded_file(file: UploadFile = File(...), engine: str = "class
             data = parse_schedules_classic_only(raw_content)
             print(f"📜 Classic parser result: {len(data)} schedules")
         elif engine == "ai_only":
-            print("🤖 Running AI-only parser on uploaded file...")
+            print("🤖 Running AI-only parser (spaCy) on uploaded file...")
             data = parse_schedules_ai_only(raw_content)
             print(f"🤖 AI parser result: {len(data)} schedules")
+        elif engine == "llm":
+            print("🧠 Running GPT-4 parser on uploaded file...")
+            data = parse_schedules_llm(raw_content)
+            print(f"🧠 GPT-4 parser result: {len(data)} schedules")
         elif engine == "hybrid":
-            print("🔀 Running hybrid parser on uploaded file...")
-            data = parse_schedules(raw_content)
+            print("🔀 Running hybrid parser (Classic+GPT-4) on uploaded file...")
+            data = parse_schedules_hybrid_llm(raw_content)
             print(f"🔀 Hybrid parser result: {len(data)} schedules")
         else:
             return {"error": f"Unknown parser engine: {engine}", "success": False}

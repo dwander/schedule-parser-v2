@@ -42,6 +42,7 @@ mdurl==0.1.2
 murmurhash==1.0.13
 numpy==2.3.3
 oauthlib==3.3.1
+openai>=2.0.0
 packaging==25.0
 peewee==3.18.2
 preshed==3.0.10
