@@ -112,7 +112,7 @@ export function ContentModal({
           // 패딩 조정
           'p-4',
           sizeClasses[size],
-          isFullscreenMobile && 'w-full h-full max-h-full rounded-none sm:w-[calc(100%-2rem)] sm:rounded-lg sm:max-h-[85vh] p-0 sm:p-4',
+          isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-lg sm:border sm:max-h-[85vh] p-0 sm:p-4',
           className
         )}
         hideClose={true}
