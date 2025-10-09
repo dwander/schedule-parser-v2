@@ -1,6 +1,7 @@
 import { ListPlus, FolderSync, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from './UserMenu'
+import { useEffect, useState } from 'react'
 
 interface AppHeaderProps {
   onAddClick?: () => void
@@ -11,12 +12,34 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount = 0, onDeleteClick }: AppHeaderProps) {
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 0
+      setIsScrolled(prev => prev !== scrolled ? scrolled : prev)
+    }
+
+    // 초기 상태 확인
+    handleScroll()
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
     <header className="sticky top-0 z-40">
       {/* Safe area for mobile status bar */}
       <div className="h-[env(safe-area-inset-top)]" />
 
-      <div className="flex h-14 items-center justify-between px-[0.625rem] bg-background/60 backdrop-blur-sm">
+      <div
+        className="flex h-14 items-center justify-between px-[0.625rem] bg-background/60 backdrop-blur-sm transition-shadow duration-300 ease-in-out"
+        style={{
+          boxShadow: isScrolled
+            ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+            : '0 0 0 0 rgba(0, 0, 0, 0)'
+        }}
+      >
         {/* Left: User Menu */}
         <UserMenu
           onFolderSyncClick={onFolderSyncClick}
