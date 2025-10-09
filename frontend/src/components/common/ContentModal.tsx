@@ -126,33 +126,42 @@ export function ContentModal({
             {headerContent ? (
               headerContent
             ) : (
-              <div className="flex items-center gap-3">
-                {/* 뒤로가기 버튼 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 -ml-2"
-                  onClick={handleClose}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-
-                {/* 타이틀 & 서브타이틀 */}
-                <div className="flex-1 min-w-0">
-                  {title && <DialogTitle className="text-left">{title}</DialogTitle>}
-                  {subtitle && (
-                    typeof subtitle === 'string' ? (
-                      <p className="text-sm text-muted-foreground text-left mt-1">{subtitle}</p>
-                    ) : (
-                      <div className="text-left mt-1">{subtitle}</div>
-                    )
+              <div className="space-y-2">
+                {/* 첫 번째 줄: 뒤로가기 + 타이틀 */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 -ml-2"
+                    onClick={handleClose}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  {title && (
+                    <DialogTitle className="text-left flex-1 min-w-0">{title}</DialogTitle>
                   )}
                 </div>
 
-                {/* 오른쪽 액션 (토글 버튼 등) */}
-                {headerAction && (
-                  <div className="flex-shrink-0">
-                    {headerAction}
+                {/* 두 번째 줄: 서브타이틀 + 액션버튼 */}
+                {(subtitle || headerAction) && (
+                  <div className="flex items-center gap-3 pl-11">
+                    {/* 서브타이틀 */}
+                    {subtitle && (
+                      <div className="flex-1 min-w-0">
+                        {typeof subtitle === 'string' ? (
+                          <p className="text-sm text-muted-foreground text-left">{subtitle}</p>
+                        ) : (
+                          <div className="text-left">{subtitle}</div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 오른쪽 액션 (토글 버튼 등) */}
+                    {headerAction && (
+                      <div className="flex-shrink-0">
+                        {headerAction}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
