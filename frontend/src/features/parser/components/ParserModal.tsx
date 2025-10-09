@@ -61,23 +61,8 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      let result
-
-      if (engine === 'hybrid') {
-        // Hybrid: 먼저 Classic 시도
-        setParsingStep('classic')
-        result = await parseText(input, 'classic')
-
-        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
-        if (!result.success || !result.data || result.data.length === 0) {
-          setParsingStep('gpt')
-          result = await parseText(input, 'llm')
-        }
-        setParsingStep(null)
-      } else {
-        // Classic 또는 LLM 단독 모드
-        result = await parseText(input, engine)
-      }
+      // 백엔드에서 하이브리드 로직 처리
+      const result = await parseText(input, engine)
 
       if (result.success && result.data) {
         // 중복 체크 (날짜 + 장소 + 시간으로 판단)
@@ -158,23 +143,8 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      let result
-
-      if (engine === 'hybrid') {
-        // Hybrid: 먼저 Classic 시도
-        setParsingStep('classic')
-        result = await parseFile(file, 'classic')
-
-        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
-        if (!result.success || !result.data || result.data.length === 0) {
-          setParsingStep('gpt')
-          result = await parseFile(file, 'llm')
-        }
-        setParsingStep(null)
-      } else {
-        // Classic 또는 LLM 단독 모드
-        result = await parseFile(file, engine)
-      }
+      // 백엔드에서 하이브리드 로직 처리
+      const result = await parseFile(file, engine)
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -216,23 +186,8 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      let result
-
-      if (engine === 'hybrid') {
-        // Hybrid: 먼저 Classic 시도
-        setParsingStep('classic')
-        result = await parseFile(file, 'classic')
-
-        // Classic이 실패하거나 결과가 없으면 GPT-4로 재시도
-        if (!result.success || !result.data || result.data.length === 0) {
-          setParsingStep('gpt')
-          result = await parseFile(file, 'llm')
-        }
-        setParsingStep(null)
-      } else {
-        // Classic 또는 LLM 단독 모드
-        result = await parseFile(file, engine)
-      }
+      // 백엔드에서 하이브리드 로직 처리
+      const result = await parseFile(file, engine)
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
