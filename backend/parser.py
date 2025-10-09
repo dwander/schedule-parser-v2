@@ -1562,68 +1562,33 @@ def parse_schedules_hybrid_llm(raw_text: str) -> List[Dict]:
 def parse_schedules_llm(raw_text: str) -> List[Dict]:
     """
     GPT-4 기반 파서 (OpenAI GPT-4.1-nano)
-    Structured Outputs로 정확한 JSON 스키마 보장
-    여러 스케줄을 한 번에 파싱 가능
+    GPT-4가 Classic parser 형식으로 변환 → Classic parser가 즉시 재파싱
     """
     try:
-        from services.llm_parser import parse_with_llm, normalize_schedule_data
+        from services.llm_parser import parse_with_llm
         import asyncio
+        import logging
+        logger = logging.getLogger(__name__)
 
-        # async 함수 실행
+        # async 함수 실행: GPT-4가 Classic parser 형식으로 변환
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        schedules_data = loop.run_until_complete(parse_with_llm(raw_text))
+        converted_text = loop.run_until_complete(parse_with_llm(raw_text))
         loop.close()
 
-        if not schedules_data:
+        if not converted_text:
+            logger.error("GPT-4 conversion returned empty result")
             return []
 
-        # 모든 스케줄을 Schedule 객체로 변환
-        parsed_schedules = []
+        logger.info(f"GPT-4 converted text to Classic format ({len(converted_text)} chars)")
+        logger.debug(f"Converted text:\n{converted_text}")
 
-        for schedule_data in schedules_data:
-            # 정규화
-            normalized = normalize_schedule_data(schedule_data)
+        # Classic parser로 즉시 재파싱
+        logger.info("Re-parsing with Classic parser...")
+        parsed_schedules = parse_schedules_classic_only(converted_text)
 
-            # Schedule 객체로 변환
-            schedule = Schedule(
-                date=normalized.get('date', ''),
-                location=clean_location(normalized.get('location', '')),
-                time=normalized.get('time', ''),
-                couple=normalized.get('couple', ''),
-                contact=normalized.get('contact', ''),
-                brand=normalized.get('brand', ''),
-                album=normalized.get('album', ''),
-                photographer=normalized.get('photographer', ''),
-                manager=normalized.get('manager', ''),
-                memo=normalized.get('memo', ''),
-                price=0,  # 나중에 계산
-                needs_review=False,
-                review_reason=""
-            )
-
-            # 촬영단가 계산
-            if schedule.brand and schedule.album and schedule.date:
-                schedule.price = calculate_price(schedule.brand, schedule.album, schedule.date)
-
-            # 필수 필드 검증
-            missing_fields = []
-            if not schedule.date:
-                missing_fields.append("날짜")
-            if not schedule.time:
-                missing_fields.append("시간")
-            if not schedule.location:
-                missing_fields.append("장소")
-            if not schedule.couple:
-                missing_fields.append("신랑신부")
-
-            if missing_fields:
-                schedule.needs_review = True
-                schedule.review_reason = f"GPT-4 파싱: 필수 필드 누락 - {', '.join(missing_fields)}"
-
-            parsed_schedules.append(schedule)
-
-        return [sch.to_dict() for sch in parsed_schedules]
+        logger.info(f"Classic parser found {len(parsed_schedules)} schedules")
+        return parsed_schedules
 
     except ImportError:
         return {"error": "LLM 파서를 사용할 수 없습니다. OpenAI 패키지가 설치되어 있는지 확인하세요.", "success": False}
