@@ -218,9 +218,6 @@ export function AppSidebar({ open, onClose, onSettingsClick, onFolderSyncClick, 
             </p>
           </div>
         </div>
-
-        {/* Safe area for mobile bottom */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
       </aside>
 
       {/* Login Dialog */}

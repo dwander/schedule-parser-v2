@@ -301,7 +301,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] p-0"
+              className="h-screen pt-[env(safe-area-inset-top)] p-0"
               hideClose
             >
               {/* 커스텀 헤더 */}
@@ -404,7 +404,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] p-0"
+          className="h-screen pt-[env(safe-area-inset-top)] p-0"
           hideClose
         >
           {/* 커스텀 헤더 */}

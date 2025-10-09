@@ -69,9 +69,6 @@ export function AppFooter({ stats }: AppFooterProps) {
           })}
         </div>
       </div>
-
-      {/* Safe area for mobile bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)]" />
     </footer>
   )
 }
