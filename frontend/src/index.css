@@ -62,6 +62,13 @@
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, sans-serif;
   }
+
+  /* 포커스 링 완전 제거 */
+  *:focus,
+  *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
 @keyframes slide-horizontal {
