@@ -107,39 +107,39 @@ SCHEDULE_SCHEMA = {
 }
 
 
-SYSTEM_PROMPT = """당신은 웨딩 촬영 스케줄 파싱 전문가입니다.
+SYSTEM_PROMPT = """You are a wedding photography schedule parsing expert.
 
-카카오톡 메시지에서 **최대 3개까지의 스케줄**을 찾아 배열로 반환하세요.
-각 스케줄에서 다음 정보를 추출:
+Extract **up to 3 schedules maximum** from Korean KakaoTalk messages and return as an array.
 
-- 날짜: YYYY.MM.DD 형식으로 변환
-- 시간: HH:MM 형식 (24시간제)
-- 장소: 예식장 이름
-- 신랑신부: "신랑 신부" 형식 (공백으로 분리, 하트 기호 사용하지 말 것)
-- 연락처: 전화번호 또는 이메일
-- 브랜드: 원본 텍스트 그대로 (예: "K 세븐스", "B 세븐스", "A 세븐스프리미엄", "더그라피", "세컨플로우"). 대괄호[]는 제거. 약어로 변환하지 말 것
-- 앨범: 앨범 종류 (예: "30P", "기본30P")
-- 작가: 촬영 작가 이름
-- 컷수: 숫자만 추출
-- 촬영비: 숫자만 추출 (만원 → 10000)
-- 담당자: 담당자 이름 (예: "w웨딩 장서영")
-- 메모: 기타 중요 정보 (선촬영, 폐백, 플래시컷 등)
+Extract these fields for each schedule:
+- date: Convert to YYYY.MM.DD format
+- time: HH:MM format (24-hour)
+- location: Venue name
+- couple: "Groom Bride" format (space-separated, NO heart symbols)
+- contact: Phone number or email
+- brand: Original text as-is (e.g., "K 세븐스", "B 세븐스", "A 세븐스프리미엄", "더그라피", "세컨플로우"). Remove brackets []. DO NOT abbreviate
+- album: Album type (e.g., "30P", "기본30P")
+- photographer: Photographer name
+- cuts: Number only
+- price: Number only (만원 → 10000)
+- manager: Manager name (e.g., "w웨딩 장서영")
+- memo: Other important info (선촬영, 폐백, 플래시컷, etc.)
 
-시간 변환 예시:
+Time conversion examples:
 - "오후 2시" → "14:00"
 - "낮 12시" → "12:00"
 - "2시 30분" → "14:30"
 - "오전 11시반" → "11:30"
 
-브랜드 예시:
-- "K [ 세븐스 ]" → "K 세븐스" (대괄호만 제거)
-- "B 세븐스" → "B 세븐스" (그대로)
-- "A 세븐스프리미엄" → "A 세븐스프리미엄" (그대로)
+Brand examples:
+- "K [ 세븐스 ]" → "K 세븐스" (remove brackets only)
+- "B 세븐스" → "B 세븐스" (keep as-is)
+- "A 세븐스프리미엄" → "A 세븐스프리미엄" (keep as-is)
 
-**중요**:
-- 메시지에 여러 스케줄이 있으면 찾아서 배열에 포함하세요.
-- **단, 최대 3개까지만** 파싱하세요. 3개 이상이면 처음 3개만 반환하세요.
-- 정보가 없는 필드는 빈 문자열("") 또는 0으로 설정하세요.
+**IMPORTANT**:
+- Extract all schedules found in the message and include in array
+- **BUT limit to 3 schedules maximum**. If more than 3, return only the first 3
+- Set empty string ("") or 0 for missing fields
 """
 
 
@@ -177,7 +177,7 @@ async def parse_with_llm(message: str) -> Optional[Dict[str, Any]]:
             model="gpt-4.1-nano",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"다음 메시지를 파싱해주세요:\n\n{message}"}
+                {"role": "user", "content": f"Parse this message:\n\n{message}"}
             ],
             response_format=SCHEDULE_SCHEMA,
             temperature=0  # 일관성을 위해 0으로 설정
