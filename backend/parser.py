@@ -1536,10 +1536,27 @@ def is_meaningful_schedule_spacy(text: str, entities: Dict[str, List[str]]) -> b
 
 # === Parser Engine Selection Functions ===
 
+def has_required_fields(schedule: Dict) -> bool:
+    """
+    필수 필드 4개(날짜, 시간, 장소, 신랑신부)가 모두 있는지 확인
+
+    Args:
+        schedule: 검증할 스케줄 딕셔너리
+
+    Returns:
+        bool: 필수 필드가 모두 있으면 True, 하나라도 없으면 False
+    """
+    return bool(
+        schedule.get('date') and
+        schedule.get('time') and
+        schedule.get('location') and
+        schedule.get('couple')
+    )
+
 def parse_schedules_hybrid_llm(raw_text: str) -> List[Dict]:
     """
     하이브리드 파서 (Classic + GPT-4)
-    먼저 Classic 파서를 시도하고, 실패하거나 결과가 없으면 GPT-4 파서로 fallback
+    먼저 Classic 파서를 시도하고, 필수 필드 4개(날짜, 시간, 장소, 신랑신부)를 파싱하지 못했으면 GPT-4 파서로 fallback
     """
     import logging
     logger = logging.getLogger(__name__)
@@ -1548,15 +1565,23 @@ def parse_schedules_hybrid_llm(raw_text: str) -> List[Dict]:
     logger.info("Hybrid: Trying Classic parser first...")
     classic_result = parse_schedules_classic_only(raw_text)
 
-    # Classic이 성공했으면 결과 반환 (에러가 아니고, 결과가 있는 경우)
+    # Classic이 성공했으면 필수 필드 검증
     if classic_result and len(classic_result) > 0:
         # 에러 응답이 아닌지 확인
         if not isinstance(classic_result, dict) or not classic_result.get('error'):
-            logger.info(f"Hybrid: Classic parser succeeded with {len(classic_result)} schedules")
-            return classic_result
+            # 모든 스케줄이 필수 필드 4개(날짜, 시간, 장소, 신랑신부)를 가지고 있는지 확인
+            all_have_required = all(has_required_fields(sch) for sch in classic_result)
 
-    # Classic이 실패하거나 결과가 없으면 GPT-4 시도
-    logger.info("Hybrid: Classic parser failed or returned no results. Falling back to GPT-4...")
+            if all_have_required:
+                logger.info(f"Hybrid: Classic parser succeeded with {len(classic_result)} schedules (all have required fields)")
+                return classic_result
+            else:
+                # 필수 필드가 누락된 스케줄 로깅
+                missing_count = sum(1 for sch in classic_result if not has_required_fields(sch))
+                logger.info(f"Hybrid: Classic parser returned {len(classic_result)} schedules, but {missing_count} are missing required fields")
+
+    # Classic이 실패하거나 결과가 없거나 필수 필드가 누락된 경우 GPT-4 시도
+    logger.info("Hybrid: Classic parser failed or missing required fields. Falling back to GPT-4...")
     return parse_schedules_llm(raw_text)
 
 def parse_schedules_llm(raw_text: str) -> List[Dict]:
