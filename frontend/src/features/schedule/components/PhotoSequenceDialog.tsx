@@ -482,7 +482,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
         {/* 삭제된 항목 배지 */}
         {!isLocked && deletedItems.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-[15px] pr-[5px] pb-[10px] pl-[5px]">
             {deletedItems.map((item) => (
               <Badge
                 key={item.id}

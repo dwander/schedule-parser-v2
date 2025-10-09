@@ -118,7 +118,7 @@ export function SortableItem({
           )}
         </div>
 
-        {!isLocked && (
+        {!isLocked && !item.completed && (
           <Button
             variant="ghost"
             size="icon"
