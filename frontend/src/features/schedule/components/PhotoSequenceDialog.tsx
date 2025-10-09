@@ -15,6 +15,8 @@ import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG
 import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
 import { SortableItem } from './SortableItem'
 import { TrainingDataManager } from './TrainingDataManager'
+import { useVoiceTrainingData, useUpdateVoiceTrainingData } from '@/features/auth/hooks/useUsers'
+import { useAuthStore } from '@/stores/useAuthStore'
 import {
   DndContext,
   closestCenter,
@@ -41,16 +43,21 @@ interface PhotoSequenceDialogProps {
 
 export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSequenceDialogProps) {
   const updateSchedule = useUpdateSchedule()
+  const { user } = useAuthStore()
+
+  // 모달이 열릴 때만 서버 데이터 조회
+  const { data: serverTrainingData, isLoading: isLoadingTrainingData } = useVoiceTrainingData(
+    open && user?.id ? user.id : undefined
+  )
+  const updateTrainingDataMutation = useUpdateVoiceTrainingData()
+
   const [items, setItems] = useState<PhotoSequenceItem[]>(() =>
     schedule.photoSequence || generatePhotoSequence()
   )
   const [newItemText, setNewItemText] = useState('')
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
-  const [trainingData, setTrainingData] = useLocalStorage<VoiceTrainingData>(
-    PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_TRAINING,
-    DEFAULT_VOICE_TRAINING
-  )
+
   const [trainingTargetId, setTrainingTargetId] = useState<string | null>(null)
   const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
@@ -60,6 +67,19 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [showRecognizedText, setShowRecognizedText] = useState(false)
   const [displayedText, setDisplayedText] = useState('')
   const [matchedItemText, setMatchedItemText] = useState('')
+
+  // 서버에서 로드한 데이터 또는 기본값 사용 (항상 서버 데이터 우선)
+  const trainingData = serverTrainingData || DEFAULT_VOICE_TRAINING
+
+  // 모달이 열리고 서버 데이터를 로드했을 때 NULL이면 기본값을 DB에 주입
+  useEffect(() => {
+    if (open && user?.id && !isLoadingTrainingData && serverTrainingData === null) {
+      updateTrainingDataMutation.mutate({
+        userId: user.id,
+        data: DEFAULT_VOICE_TRAINING
+      })
+    }
+  }, [open, user?.id, isLoadingTrainingData, serverTrainingData])
 
   // 모달이 열릴 때만 초기화
   useEffect(() => {
@@ -210,14 +230,34 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     setTrainingTargetId(null)
   }
 
-  // 훈련 데이터 저장
+  // 훈련 데이터 저장 (서버에만 저장, React Query가 자동 업데이트)
   const saveTrainingData = (itemText: string, selectedPhrases: string[]) => {
-    setTrainingData({
+    const updatedData = {
       ...trainingData,
       [itemText]: selectedPhrases,
-    })
+    }
+
+    // 서버에 저장 (로그인한 사용자만)
+    if (user?.id) {
+      updateTrainingDataMutation.mutate({
+        userId: user.id,
+        data: updatedData
+      })
+    }
+
     setExpandedTrainingId(null)
     setCollectedPhrases([])
+  }
+
+  // TrainingDataManager에서 저장 시 호출되는 함수
+  const handleSaveTrainingManager = (data: VoiceTrainingData) => {
+    // 서버에 저장만 (로그인한 사용자만)
+    if (user?.id) {
+      updateTrainingDataMutation.mutate({
+        userId: user.id,
+        data
+      })
+    }
   }
 
   // 음성 인식 매칭 콜백
@@ -468,7 +508,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         open={showTrainingManager}
         onOpenChange={setShowTrainingManager}
         trainingData={trainingData}
-        onSave={setTrainingData}
+        onSave={handleSaveTrainingManager}
         items={activeItems}
       />
 

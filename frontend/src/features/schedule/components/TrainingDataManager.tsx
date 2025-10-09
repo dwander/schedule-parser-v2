@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { ContentModal } from '@/components/common/ContentModal'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, ChevronLeft } from 'lucide-react'
 import type { PhotoSequenceItem } from '../types/schedule'
 import type { VoiceTrainingData } from '../types/voiceRecognition'
 import { DEFAULT_VOICE_TRAINING } from '../types/voiceRecognition'
@@ -106,25 +106,26 @@ export function TrainingDataManager({
   }
 
   return (
-    <ContentModal
-      open={open}
-      onOpenChange={onOpenChange}
-      size="fullscreen-mobile"
-      title="훈련 데이터 관리"
-      showFooter={true}
-      footerContent={
-        <div className="flex gap-2 w-full">
-          <Button variant="outline" onClick={handleResetClick}>
-            초기화
-          </Button>
-          <div className="flex-1"></div>
-          <Button onClick={handleSave}>
-            저장
-          </Button>
-        </div>
-      }
-    >
-        <div className="divide-y">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full h-full max-h-full max-w-full sm:max-w-2xl sm:max-h-[85vh] sm:h-auto p-0 sm:p-6">
+        {/* Header */}
+        <DialogHeader className="pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 -ml-2"
+              onClick={handleClose}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <DialogTitle>훈련 데이터 관리</DialogTitle>
+          </div>
+        </DialogHeader>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-2">
+          <div className="divide-y">
             {items.map((item) => (
               <div key={item.id} className="py-4 first:pt-0 last:pb-0">
                 <div className="font-medium mb-3">{item.text}</div>
@@ -195,7 +196,22 @@ export function TrainingDataManager({
                 </div>
               </div>
             ))}
+          </div>
         </div>
-    </ContentModal>
+
+        {/* Footer */}
+        <DialogFooter className="pt-4 border-t px-4 pb-4 sm:px-0 sm:pb-0">
+          <div className="flex gap-2 w-full">
+            <Button variant="outline" onClick={handleResetClick}>
+              초기화
+            </Button>
+            <div className="flex-1"></div>
+            <Button onClick={handleSave}>
+              저장
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -119,3 +119,49 @@ async def mark_sample_data_seen(user_id: str, db: Session = Depends(get_database
     except Exception as e:
         logger.error(f"❌ Mark sample data seen error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/users/{user_id}/voice-training")
+async def get_voice_training_data(user_id: str, db: Session = Depends(get_database)):
+    """음성 인식 훈련 데이터 조회"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"success": True, "voice_training_data": user.voice_training_data}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Get voice training data error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/api/users/{user_id}/voice-training")
+async def update_voice_training_data(user_id: str, request: Request, db: Session = Depends(get_database)):
+    """음성 인식 훈련 데이터 업데이트"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        data = await request.json()
+        voice_training_data = data.get("voice_training_data")
+
+        if voice_training_data is None:
+            raise HTTPException(status_code=400, detail="voice_training_data is required")
+
+        user.voice_training_data = voice_training_data
+        db.commit()
+
+        logger.info(f"✅ Updated voice training data for user: {user_id}")
+        return {"success": True, "voice_training_data": user.voice_training_data}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Update voice training data error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

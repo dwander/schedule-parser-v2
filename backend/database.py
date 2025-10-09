@@ -37,6 +37,9 @@ class User(Base):
     # Sample data flag
     has_seen_sample_data = Column(Boolean, nullable=False, default=False)
 
+    # Voice recognition training data
+    voice_training_data = Column(JSON, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -51,6 +54,7 @@ class User(Base):
             'name': self.name,
             'is_admin': self.is_admin,
             'has_seen_sample_data': self.has_seen_sample_data,
+            'voice_training_data': self.voice_training_data,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
         }
@@ -448,17 +452,32 @@ def run_migrations():
         db = SessionLocal()
         try:
             # Add 'hall' column to pricing_rules table if not exists
-            db.execute(text("""
-                SELECT hall FROM pricing_rules LIMIT 1
-            """))
-        except Exception:
-            # Column doesn't exist, add it
-            logger.info("Adding 'hall' column to pricing_rules table...")
-            db.execute(text("""
-                ALTER TABLE pricing_rules ADD COLUMN hall VARCHAR(255)
-            """))
-            db.commit()
-            logger.info("✅ Added 'hall' column to pricing_rules table")
+            try:
+                db.execute(text("""
+                    SELECT hall FROM pricing_rules LIMIT 1
+                """))
+            except Exception:
+                # Column doesn't exist, add it
+                logger.info("Adding 'hall' column to pricing_rules table...")
+                db.execute(text("""
+                    ALTER TABLE pricing_rules ADD COLUMN hall VARCHAR(255)
+                """))
+                db.commit()
+                logger.info("✅ Added 'hall' column to pricing_rules table")
+
+            # Add 'voice_training_data' column to users table if not exists
+            try:
+                db.execute(text("""
+                    SELECT voice_training_data FROM users LIMIT 1
+                """))
+            except Exception:
+                # Column doesn't exist, add it
+                logger.info("Adding 'voice_training_data' column to users table...")
+                db.execute(text("""
+                    ALTER TABLE users ADD COLUMN voice_training_data JSON
+                """))
+                db.commit()
+                logger.info("✅ Added 'voice_training_data' column to users table")
         finally:
             db.close()
 
