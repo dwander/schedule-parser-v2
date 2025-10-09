@@ -23,6 +23,33 @@ interface ParserModalProps {
   existingSchedules: Schedule[]
 }
 
+// 필수 필드 4개 검증 함수 (백엔드 로직과 동일)
+function hasRequiredFields(schedule: ParsedScheduleData): boolean {
+  // 날짜 검증: YYYY.MM.DD 형식
+  const datePattern = /^\d{4}\.\d{2}\.\d{2}$/
+  if (!schedule.date || !datePattern.test(schedule.date)) {
+    return false
+  }
+
+  // 시간 검증: HH:MM 형식
+  const timePattern = /^\d{2}:\d{2}$/
+  if (!schedule.time || !timePattern.test(schedule.time)) {
+    return false
+  }
+
+  // 장소 검증: 빈 문자열이 아니어야 함
+  if (!schedule.location) {
+    return false
+  }
+
+  // 신랑신부 검증: 빈 문자열이 아니고 "없음"이 포함되지 않아야 함
+  if (!schedule.couple || schedule.couple.includes('없음')) {
+    return false
+  }
+
+  return true
+}
+
 export function ParserModal({ open, onOpenChange, existingSchedules }: ParserModalProps) {
   const [text, setText] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -61,8 +88,28 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      // 백엔드에서 하이브리드 로직 처리
-      const result = await parseText(input, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseText(input, 'classic')
+
+        // Classic이 실패하거나 결과가 없거나 필수 필드가 누락되면 GPT-4로 재시도
+        const needsGPT = !result.success ||
+                        !result.data ||
+                        result.data.length === 0 ||
+                        !result.data.every(hasRequiredFields)
+
+        if (needsGPT) {
+          setParsingStep('gpt')
+          result = await parseText(input, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseText(input, engine)
+      }
 
       if (result.success && result.data) {
         // 중복 체크 (날짜 + 장소 + 시간으로 판단)
@@ -143,8 +190,28 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      // 백엔드에서 하이브리드 로직 처리
-      const result = await parseFile(file, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseFile(file, 'classic')
+
+        // Classic이 실패하거나 결과가 없거나 필수 필드가 누락되면 GPT-4로 재시도
+        const needsGPT = !result.success ||
+                        !result.data ||
+                        result.data.length === 0 ||
+                        !result.data.every(hasRequiredFields)
+
+        if (needsGPT) {
+          setParsingStep('gpt')
+          result = await parseFile(file, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseFile(file, engine)
+      }
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
@@ -186,8 +253,28 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     setParsingStep(null)
 
     try {
-      // 백엔드에서 하이브리드 로직 처리
-      const result = await parseFile(file, engine)
+      let result
+
+      if (engine === 'hybrid') {
+        // Hybrid: 먼저 Classic 시도
+        setParsingStep('classic')
+        result = await parseFile(file, 'classic')
+
+        // Classic이 실패하거나 결과가 없거나 필수 필드가 누락되면 GPT-4로 재시도
+        const needsGPT = !result.success ||
+                        !result.data ||
+                        result.data.length === 0 ||
+                        !result.data.every(hasRequiredFields)
+
+        if (needsGPT) {
+          setParsingStep('gpt')
+          result = await parseFile(file, 'llm')
+        }
+        setParsingStep(null)
+      } else {
+        // Classic 또는 LLM 단독 모드
+        result = await parseFile(file, engine)
+      }
 
       if (result.success && result.data) {
         const unique = result.data.filter(parsed =>
