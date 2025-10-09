@@ -107,9 +107,9 @@ export function TrainingDataManager({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-h-full max-w-full sm:max-w-2xl sm:max-h-[85vh] sm:h-auto p-0 sm:p-6">
+      <DialogContent className="w-full h-full max-h-full max-w-full sm:max-w-2xl sm:max-h-[85vh] sm:h-auto p-0 sm:p-6 flex flex-col gap-0">
         {/* Header */}
-        <DialogHeader className="pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0">
+        <DialogHeader className="pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -124,7 +124,7 @@ export function TrainingDataManager({
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-2">
+        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 sm:px-2">
           <div className="divide-y">
             {items.map((item) => (
               <div key={item.id} className="py-4 first:pt-0 last:pb-0">
@@ -200,7 +200,7 @@ export function TrainingDataManager({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="pt-4 border-t px-4 pb-4 sm:px-0 sm:pb-0">
+        <DialogFooter className="pt-4 border-t px-4 pb-4 sm:px-0 sm:pb-0 flex-shrink-0">
           <div className="flex gap-2 w-full">
             <Button variant="outline" onClick={handleResetClick}>
               초기화
