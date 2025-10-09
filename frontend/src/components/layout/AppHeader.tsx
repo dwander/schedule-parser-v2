@@ -16,7 +16,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = window.scrollY > 0
+      const scrolled = window.scrollY > 20
       setIsScrolled(prev => prev !== scrolled ? scrolled : prev)
     }
 
@@ -33,10 +33,15 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
       <div className="h-[env(safe-area-inset-top)]" />
 
       <div
-        className="flex h-14 items-center justify-between px-[0.625rem] bg-background/60 backdrop-blur-sm transition-shadow duration-300 ease-in-out"
+        className={`
+          flex h-14 items-center justify-between px-[0.625rem]
+          bg-background/60 backdrop-blur-sm
+          transition-all duration-500 ease-in-out
+          ${isScrolled ? 'border-b-2 border-white/20 dark:border-white/10' : 'border-b-2 border-transparent'}
+        `}
         style={{
           boxShadow: isScrolled
-            ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+            ? '0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.15)'
             : '0 0 0 0 rgba(0, 0, 0, 0)'
         }}
       >
