@@ -459,65 +459,54 @@ def run_migrations():
         Base.metadata.create_all(bind=engine)
 
         # Manual migrations for adding new columns
-        db = SessionLocal()
-        try:
-            # Add 'hall' column to pricing_rules table if not exists
-            try:
-                db.execute(text("""
-                    SELECT hall FROM pricing_rules LIMIT 1
-                """))
-            except Exception:
-                # Column doesn't exist, add it
-                logger.info("Adding 'hall' column to pricing_rules table...")
-                db.execute(text("""
-                    ALTER TABLE pricing_rules ADD COLUMN hall VARCHAR(255)
-                """))
-                db.commit()
-                logger.info("✅ Added 'hall' column to pricing_rules table")
+        # PostgreSQL에서는 각 마이그레이션을 독립적인 세션으로 처리해야 함
+        migrations = [
+            {
+                'name': 'hall column in pricing_rules',
+                'check_query': 'SELECT hall FROM pricing_rules LIMIT 1',
+                'alter_query': 'ALTER TABLE pricing_rules ADD COLUMN hall VARCHAR(255)'
+            },
+            {
+                'name': 'voice_training_data column in users',
+                'check_query': 'SELECT voice_training_data FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN voice_training_data JSON'
+            },
+            {
+                'name': 'current_template column in schedules',
+                'check_query': 'SELECT current_template FROM schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE schedules ADD COLUMN current_template VARCHAR(50)'
+            },
+            {
+                'name': 'current_template column in trash_schedules',
+                'check_query': 'SELECT current_template FROM trash_schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE trash_schedules ADD COLUMN current_template VARCHAR(50)'
+            }
+        ]
 
-            # Add 'voice_training_data' column to users table if not exists
+        for migration in migrations:
+            db = SessionLocal()
             try:
-                db.execute(text("""
-                    SELECT voice_training_data FROM users LIMIT 1
-                """))
+                # Check if column exists
+                db.execute(text(migration['check_query']))
+                db.close()
+                # Column exists, skip
             except Exception:
-                # Column doesn't exist, add it
-                logger.info("Adding 'voice_training_data' column to users table...")
-                db.execute(text("""
-                    ALTER TABLE users ADD COLUMN voice_training_data JSON
-                """))
-                db.commit()
-                logger.info("✅ Added 'voice_training_data' column to users table")
+                # Column doesn't exist, add it with a new session
+                db.rollback()  # PostgreSQL 트랜잭션 롤백
+                db.close()
 
-            # Add 'current_template' column to schedules table if not exists
-            try:
-                db.execute(text("""
-                    SELECT current_template FROM schedules LIMIT 1
-                """))
-            except Exception:
-                # Column doesn't exist, add it
-                logger.info("Adding 'current_template' column to schedules table...")
-                db.execute(text("""
-                    ALTER TABLE schedules ADD COLUMN current_template VARCHAR(50)
-                """))
-                db.commit()
-                logger.info("✅ Added 'current_template' column to schedules table")
-
-            # Add 'current_template' column to trash_schedules table if not exists
-            try:
-                db.execute(text("""
-                    SELECT current_template FROM trash_schedules LIMIT 1
-                """))
-            except Exception:
-                # Column doesn't exist, add it
-                logger.info("Adding 'current_template' column to trash_schedules table...")
-                db.execute(text("""
-                    ALTER TABLE trash_schedules ADD COLUMN current_template VARCHAR(50)
-                """))
-                db.commit()
-                logger.info("✅ Added 'current_template' column to trash_schedules table")
-        finally:
-            db.close()
+                # New session for ALTER TABLE
+                db = SessionLocal()
+                try:
+                    logger.info(f"Adding {migration['name']}...")
+                    db.execute(text(migration['alter_query']))
+                    db.commit()
+                    logger.info(f"✅ Added {migration['name']}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to add {migration['name']}: {e}")
+                    db.rollback()
+                finally:
+                    db.close()
 
         logger.info("ℹ️  Database schema synchronized using SQLAlchemy ORM")
 
