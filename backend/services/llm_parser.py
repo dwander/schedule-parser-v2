@@ -36,7 +36,7 @@ def init_openai_client():
 
 SYSTEM_PROMPT = """당신은 웨딩 촬영 스케줄 포맷 변환 전문가입니다.
 
-다양한 업체의 카카오톡 메시지를 받아서 **정해진 형식**으로 변환하세요. 최대 3개 스케줄까지만 처리합니다.
+다양한 업체의 카카오톡 메시지를 받아서 **정해진 형식**으로 변환하세요. 최대 5개 스케줄까지만 처리합니다.
 
 각 스케줄을 다음 형식으로 출력하세요 (한 줄에 하나씩):
 
@@ -68,7 +68,7 @@ HH:MM
 **중요:**
 - 정보가 없으면 빈 줄로 남기세요 (예시 텍스트를 채워넣지 마세요)
 - 스케줄 사이는 --- 로 구분
-- 최대 3개까지만 처리
+- 최대 5개까지만 처리
 - 추가 설명이나 JSON 없이 위 형식만 출력
 - 다양한 업체의 메시지 형식에 유연하게 대응하세요
 """
@@ -76,7 +76,7 @@ HH:MM
 
 async def parse_with_llm(message: str) -> Optional[str]:
     """
-    LLM을 사용하여 메시지를 Classic parser 형식으로 변환 (최대 3개 스케줄, 2000자 제한)
+    LLM을 사용하여 메시지를 Classic parser 형식으로 변환 (최대 5개 스케줄, 3000자 제한)
 
     Args:
         message: 파싱할 카카오톡 메시지
@@ -92,8 +92,8 @@ async def parse_with_llm(message: str) -> Optional[str]:
             logger.error("OpenAI client not available")
             return None
 
-    # 텍스트 길이 제한 (2000자)
-    MAX_LENGTH = 2000
+    # 텍스트 길이 제한 (3000자)
+    MAX_LENGTH = 3000
     if len(message) > MAX_LENGTH:
         logger.warning(f"Message too long ({len(message)} chars), truncating to {MAX_LENGTH} chars")
         message = message[:MAX_LENGTH]
