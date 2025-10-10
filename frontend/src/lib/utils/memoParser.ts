@@ -5,10 +5,9 @@
  */
 
 export interface ParsedMemoItem {
-  type: 'key-value' | 'section'
+  type: 'key-value'
   title?: string
   content: string
-  rawLines?: string[] // 원본 라인 (섹션인 경우)
 }
 
 /**
@@ -43,8 +42,6 @@ export function parseMemo(memo: string): ParsedMemoItem[] {
 
   const items: ParsedMemoItem[] = []
   const lines = memo.split('\n')
-
-  let currentSection: ParsedMemoItem | null = null
   let i = 0
 
   while (i < lines.length) {
@@ -53,42 +50,44 @@ export function parseMemo(memo: string): ParsedMemoItem[] {
 
     // 빈 줄 스킵
     if (!trimmedLine) {
-      // 섹션 내부가 아니면 스킵
-      if (!currentSection) {
-        i++
-        continue
-      }
-      // 섹션 내부면 빈 줄도 포함
-      if (currentSection) {
-        currentSection.rawLines!.push(line)
-        i++
-        continue
-      }
+      i++
+      continue
     }
 
-    // 섹션 헤더 감지: [제목]
+    // 섹션 헤더 감지: [제목] → 일반 key-value로 처리
     const sectionMatch = trimmedLine.match(/^\[([^\]]+)\]$/)
     if (sectionMatch) {
-      // 이전 섹션 저장
-      if (currentSection) {
-        currentSection.content = currentSection.rawLines!.join('\n').trim()
-        items.push(currentSection)
+      const title = sectionMatch[1].trim()
+      const contentLines: string[] = []
+
+      // 다음 섹션이나 키-값 쌍이 나올 때까지 내용 수집
+      let j = i + 1
+      while (j < lines.length) {
+        const nextLine = lines[j]
+        const nextTrimmed = nextLine.trim()
+
+        // 다음 섹션이나 키-값 쌍을 만나면 중단
+        if (nextTrimmed.match(/^\[/) || nextTrimmed.match(/^[^:]+:/)) {
+          break
+        }
+
+        contentLines.push(nextLine)
+        j++
       }
 
-      // 새 섹션 시작
-      currentSection = {
-        type: 'section',
-        title: sectionMatch[1].trim(),
-        content: '',
-        rawLines: []
-      }
-      i++
+      items.push({
+        type: 'key-value',
+        title,
+        content: contentLines.join('\n').trim()
+      })
+
+      i = j
       continue
     }
 
     // 키-값 쌍 감지: "키: 값"
     const keyValueMatch = trimmedLine.match(/^([^:]+):\s*(.*)$/)
-    if (keyValueMatch && !currentSection) {
+    if (keyValueMatch) {
       const title = keyValueMatch[1].trim()
       let content = keyValueMatch[2].trim()
 
@@ -115,16 +114,9 @@ export function parseMemo(memo: string): ParsedMemoItem[] {
       continue
     }
 
-    // 섹션 내용 (현재 섹션이 있는 경우)
-    if (currentSection) {
-      currentSection.rawLines!.push(line)
-      i++
-      continue
-    }
-
     // 어디에도 속하지 않는 일반 텍스트는 content만 있는 항목으로 추가
     // (구조화되지 않은 memo인 경우)
-    if (trimmedLine && !currentSection) {
+    if (trimmedLine) {
       // 연속된 일반 텍스트 수집
       const textLines = [line]
       let j = i + 1
@@ -151,12 +143,6 @@ export function parseMemo(memo: string): ParsedMemoItem[] {
     i++
   }
 
-  // 마지막 섹션 저장
-  if (currentSection) {
-    currentSection.content = currentSection.rawLines!.join('\n').trim()
-    items.push(currentSection)
-  }
-
   return items
 }
 
@@ -168,14 +154,11 @@ export function isMemoEmpty(items: ParsedMemoItem[]): boolean {
 }
 
 /**
- * 구조화된 memo가 있는지 확인 (키-값 또는 섹션이 있으면 true)
+ * 구조화된 memo가 있는지 확인 (제목이 있는 키-값 쌍이 있으면 true)
  */
 export function hasStructuredMemo(memo: string): boolean {
   if (!memo || !memo.trim()) return false
 
   const items = parseMemo(memo)
-  return items.some(item =>
-    item.type === 'section' ||
-    (item.type === 'key-value' && !!item.title)
-  )
+  return items.some(item => !!item.title)
 }

@@ -79,8 +79,8 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
                 return (
                   <div key={index}>
-                    {/* 키-값 (제목 있음) */}
-                    {item.type === 'key-value' && item.title && !isLongContent && (
+                    {/* 제목 있음 + 짧은 내용 → 한 줄 */}
+                    {item.title && !isLongContent && (
                       <dl className="flex gap-2">
                         <dt className="font-medium text-foreground flex-shrink-0">
                           {item.title}:
@@ -91,8 +91,8 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                       </dl>
                     )}
 
-                    {/* 키-값 (제목 있음, 긴 내용) → 블록 형태 */}
-                    {item.type === 'key-value' && item.title && isLongContent && (
+                    {/* 제목 있음 + 긴 내용 → 블록 형태 (왼쪽 보더) */}
+                    {item.title && isLongContent && (
                       <div className="border-l-2 border-muted-foreground/30 pl-2">
                         <h5 className="font-medium text-foreground mb-1">
                           {item.title}
@@ -103,23 +103,11 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                       </div>
                     )}
 
-                    {/* 일반 텍스트 (제목 없음) */}
-                    {item.type === 'key-value' && !item.title && (
+                    {/* 제목 없음 (일반 텍스트) */}
+                    {!item.title && (
                       <p className="text-muted-foreground whitespace-pre-wrap">
                         {item.content}
                       </p>
-                    )}
-
-                    {/* 섹션 ([제목]) */}
-                    {item.type === 'section' && (
-                      <div className="border-l-2 border-primary/30 pl-2">
-                        <h4 className="font-semibold text-foreground mb-1">
-                          {item.title}
-                        </h4>
-                        <div className="text-muted-foreground whitespace-pre-wrap text-xs">
-                          {item.content}
-                        </div>
-                      </div>
                     )}
                   </div>
                 )
