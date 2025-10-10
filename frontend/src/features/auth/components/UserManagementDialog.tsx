@@ -3,6 +3,7 @@ import { useUsers } from '../hooks/useUsers'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { DATETIME } from '@/lib/constants/datetime'
+import { parseISO, format, addHours, isValid } from 'date-fns'
 
 interface UserManagementDialogProps {
   open: boolean
@@ -24,21 +25,24 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return '-'
 
-    // UTC 시간임을 명시하기 위해 'Z' 추가 (없는 경우)
-    const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
-    const date = new Date(utcString)
+    try {
+      // parseISO는 ISO 8601 형식을 안전하게 파싱 (Z 없어도 UTC로 가정)
+      const utcDate = parseISO(dateString)
 
-    // 9시간 추가 (UTC → KST)
-    const kstDate = new Date(date.getTime() + DATETIME.KST_OFFSET_MS)
+      if (!isValid(utcDate)) {
+        console.error('Invalid date:', dateString)
+        return '-'
+      }
 
-    // YYYY-MM-DD HH:mm 형식으로 포맷
-    const year = kstDate.getUTCFullYear()
-    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(kstDate.getUTCDate()).padStart(2, '0')
-    const hours = String(kstDate.getUTCHours()).padStart(2, '0')
-    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0')
+      // 9시간 추가 (UTC → KST)
+      const kstDate = addHours(utcDate, 9)
 
-    return `${year}-${month}-${day} ${hours}:${minutes}`
+      // YYYY-MM-DD HH:mm 형식으로 포맷
+      return format(kstDate, 'yyyy-MM-dd HH:mm')
+    } catch (error) {
+      console.error('Date parsing error:', error, dateString)
+      return '-'
+    }
   }
 
   return (
