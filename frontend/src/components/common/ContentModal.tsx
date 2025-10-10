@@ -47,7 +47,7 @@ const sizeClasses: Record<ContentModalSize, string> = {
   'xl': 'sm:max-w-xl',
   '2xl': 'sm:max-w-2xl',
   'full': 'sm:max-w-[90vw] sm:h-[90vh]',
-  'fullscreen-mobile': 'w-full h-full max-w-full sm:max-w-2xl sm:h-auto sm:max-h-[85vh] p-0 sm:p-6',
+  'fullscreen-mobile': 'w-full h-full max-w-full sm:max-w-[900px] sm:h-auto sm:max-h-[85vh] p-0 sm:p-6',
 }
 
 export function ContentModal({
