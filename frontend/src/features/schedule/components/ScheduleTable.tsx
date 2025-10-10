@@ -187,10 +187,12 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             variant="outline"
             size="sm"
             onClick={() => setDateRangeDialogOpen(true)}
-            className="flex-shrink-0 gap-2"
+            className={`flex-shrink-0 overflow-hidden ${searchExpanded ? 'gap-0' : 'gap-2'}`}
           >
-            <Calendar className="h-4 w-4" />
-            <span className={searchExpanded ? 'hidden' : ''}>
+            <Calendar className="h-4 w-4 flex-shrink-0" />
+            <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+              searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+            }`}>
               {dateRange.from && dateRange.to
                 ? `${dateRange.from.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')} ~ ${dateRange.to.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`
                 : '전체기간'}
@@ -203,10 +205,12 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-shrink-0 gap-2"
+                className={`flex-shrink-0 overflow-hidden ${searchExpanded ? 'gap-0' : 'gap-2'}`}
               >
-                <ArrowUpDown className="h-4 w-4" />
-                <span className={searchExpanded ? 'hidden' : ''}>{currentSortLabel}</span>
+                <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
+                <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+                  searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+                }`}>{currentSortLabel}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

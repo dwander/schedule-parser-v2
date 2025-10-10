@@ -47,14 +47,6 @@ export const SearchInput = memo(function SearchInput({ value, onChange, onExpand
         expanded ? 'w-full sm:w-64' : 'w-10'
       }`}
     >
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setExpanded(!expanded)}
-        className="flex-shrink-0 hover:bg-transparent h-8 w-8 p-0"
-      >
-        <Search className="h-4 w-4" />
-      </Button>
       <input
         ref={inputRef}
         value={localValue}
@@ -65,10 +57,18 @@ export const SearchInput = memo(function SearchInput({ value, onChange, onExpand
           }
         }}
         placeholder="검색..."
-        className={`px-2 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
+        className={`pl-2 pr-0 py-1.5 text-sm bg-transparent text-foreground focus:outline-none transition-all duration-300 ${
           expanded ? 'w-full opacity-100' : 'w-0 opacity-0'
         }`}
       />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setExpanded(!expanded)}
+        className="flex-shrink-0 hover:bg-transparent h-8 w-8 p-0 pr-2"
+      >
+        <Search className="h-4 w-4" />
+      </Button>
     </div>
   )
 })
