@@ -26,11 +26,12 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
     if (!dateString) return '-'
 
     try {
-      // parseISO는 ISO 8601 형식을 안전하게 파싱 (Z 없어도 UTC로 가정)
-      const utcDate = parseISO(dateString)
+      // parseISO는 ISO 8601 형식을 로컬 타임존으로 파싱
+      // 백엔드에서 UTC 시간을 보내므로 'Z'를 추가해서 UTC임을 명시
+      const utcString = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+      const utcDate = parseISO(utcString)
 
       if (!isValid(utcDate)) {
-        console.error('Invalid date:', dateString)
         return '-'
       }
 
@@ -40,7 +41,6 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
       // YYYY-MM-DD HH:mm 형식으로 포맷
       return format(kstDate, 'yyyy-MM-dd HH:mm')
     } catch (error) {
-      console.error('Date parsing error:', error, dateString)
       return '-'
     }
   }
