@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { CheckCircle2 } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { GoogleLogin } from '@react-oauth/google'
 import { toast } from 'sonner'
 import axios from 'axios'
@@ -99,17 +99,22 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
             alt="본식스냅러 로고"
             className="h-32 w-32 mx-auto object-contain"
           />
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground">
-            본식스냅러
-          </h1>
+          <div className="space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              본식스냅러
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              본식스냅 촬영 스케줄 관리
+            </p>
+          </div>
         </div>
 
         {/* 기능 목록 */}
         <div className="grid gap-3">
           {features.map((feature, index) => (
             <div key={index} className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground">{feature}</span>
+              <Check className="h-3.5 w-3.5 text-primary/60 flex-shrink-0 mt-0.5" />
+              <span className="text-xs sm:text-sm text-foreground">{feature}</span>
             </div>
           ))}
         </div>
@@ -140,7 +145,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-11 text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
+              className="w-[348px] h-[39px] text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
               onClick={handleNaverLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -154,7 +159,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-11 text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
+              className="w-[348px] h-[39px] text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
               onClick={handleKakaoLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
