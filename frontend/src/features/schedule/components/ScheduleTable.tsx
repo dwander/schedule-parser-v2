@@ -42,6 +42,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const { isLoading, error } = useSchedules()
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
+  const [searchExpanded, setSearchExpanded] = useState(false)
   const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
   const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
   const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
@@ -189,7 +190,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             className="flex-shrink-0 gap-2"
           >
             <Calendar className="h-4 w-4" />
-            <span>
+            <span className={searchExpanded ? 'hidden' : ''}>
               {dateRange.from && dateRange.to
                 ? `${dateRange.from.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')} ~ ${dateRange.to.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`
                 : '전체기간'}
@@ -205,7 +206,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                 className="flex-shrink-0 gap-2"
               >
                 <ArrowUpDown className="h-4 w-4" />
-                <span>{currentSortLabel}</span>
+                <span className={searchExpanded ? 'hidden' : ''}>{currentSortLabel}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -228,7 +229,11 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
           </DropdownMenu>
 
           {/* Search Input Component */}
-          <SearchInput value={globalFilter} onChange={onGlobalFilterChange} />
+          <SearchInput
+            value={globalFilter}
+            onChange={onGlobalFilterChange}
+            onExpandedChange={setSearchExpanded}
+          />
 
         <div className="flex items-center gap-1 ml-auto">
           <DropdownMenu>

@@ -6,9 +6,10 @@ import { DEBOUNCE } from '@/lib/constants/timing'
 interface SearchInputProps {
   value: string
   onChange: (value: string) => void
+  onExpandedChange?: (expanded: boolean) => void
 }
 
-export const SearchInput = memo(function SearchInput({ value, onChange }: SearchInputProps) {
+export const SearchInput = memo(function SearchInput({ value, onChange, onExpandedChange }: SearchInputProps) {
   const [expanded, setExpanded] = useState(false)
   const [localValue, setLocalValue] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -18,7 +19,9 @@ export const SearchInput = memo(function SearchInput({ value, onChange }: Search
     if (expanded && inputRef.current) {
       inputRef.current.focus()
     }
-  }, [expanded])
+    // 확장 상태 변경 알림
+    onExpandedChange?.(expanded)
+  }, [expanded, onExpandedChange])
 
   // 디바운싱된 변경 전파
   useEffect(() => {
