@@ -189,7 +189,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             className="flex-shrink-0 gap-2"
           >
             <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">
+            <span>
               {dateRange.from && dateRange.to
                 ? `${dateRange.from.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')} ~ ${dateRange.to.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`
                 : '전체기간'}
