@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { MemoEditDialog } from './MemoEditDialog'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { parseMemo, hasStructuredMemo } from '@/lib/utils/memoParser'
 
 interface MemoCellProps {
   value: string
@@ -43,6 +44,10 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
     )
   }
 
+  // memo 파싱
+  const parsedMemo = useMemo(() => parseMemo(value), [value])
+  const isStructured = useMemo(() => hasStructuredMemo(value), [value])
+
   // 카드 모드 (확장/축소 기능)
   return (
     <>
@@ -50,13 +55,57 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
         <div
           ref={textRef}
           onClick={() => setDialogOpen(true)}
-          className={`cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors text-muted-foreground text-sm ${
-            isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
-          }`}
-          style={!isExpanded ? { maxHeight: 'calc(2 * 1.5em - 2px)' } : undefined}
+          className="cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors"
         >
-          {value || '클릭하여 입력'}
+          {!value && (
+            <span className="text-muted-foreground text-sm">클릭하여 입력</span>
+          )}
+
+          {value && !isStructured && (
+            <div
+              className={`text-muted-foreground text-sm ${
+                isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
+              }`}
+            >
+              {value}
+            </div>
+          )}
+
+          {value && isStructured && (
+            <div className={`space-y-2 text-sm ${isExpanded ? '' : 'line-clamp-6'}`}>
+              {parsedMemo.map((item, index) => (
+                <div key={index}>
+                  {item.type === 'key-value' && item.title && (
+                    <dl className="flex gap-2">
+                      <dt className="font-medium text-foreground flex-shrink-0">
+                        {item.title}:
+                      </dt>
+                      <dd className="text-muted-foreground whitespace-pre-wrap">
+                        {item.content}
+                      </dd>
+                    </dl>
+                  )}
+                  {item.type === 'key-value' && !item.title && (
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {item.content}
+                    </p>
+                  )}
+                  {item.type === 'section' && (
+                    <div className="border-l-2 border-primary/30 pl-2">
+                      <h4 className="font-semibold text-foreground mb-1">
+                        {item.title}
+                      </h4>
+                      <div className="text-muted-foreground whitespace-pre-wrap text-xs">
+                        {item.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
         {isTruncated && !isExpanded && (
           <button
             onClick={(e) => {
