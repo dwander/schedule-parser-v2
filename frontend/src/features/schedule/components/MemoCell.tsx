@@ -15,14 +15,27 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const [isTruncated, setIsTruncated] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
 
+  // memo 파싱 (useEffect보다 먼저 선언)
+  const parsedMemo = useMemo(() => parseMemo(value), [value])
+  const isStructured = useMemo(() => hasStructuredMemo(value), [value])
+
   // 텍스트가 잘렸는지 확인
   useEffect(() => {
-    if (!cardMode || !textRef.current) return
+    if (!cardMode) return
 
-    const element = textRef.current
-    const isOverflowing = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
-    setIsTruncated(isOverflowing)
-  }, [value, cardMode, isExpanded])
+    // 구조화된 메모: 아이템 개수로 판단 (3개 초과 시 잘림)
+    if (isStructured) {
+      setIsTruncated(parsedMemo.length > 3)
+      return
+    }
+
+    // 일반 텍스트: scrollHeight로 판단
+    if (textRef.current) {
+      const element = textRef.current
+      const isOverflowing = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
+      setIsTruncated(isOverflowing)
+    }
+  }, [value, cardMode, isExpanded, isStructured, parsedMemo.length])
 
   if (!cardMode) {
     // 테이블 모드 (기존 동작)
@@ -43,10 +56,6 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
       </>
     )
   }
-
-  // memo 파싱
-  const parsedMemo = useMemo(() => parseMemo(value), [value])
-  const isStructured = useMemo(() => hasStructuredMemo(value), [value])
 
   // 카드 모드 (확장/축소 기능)
   return (
@@ -101,9 +110,14 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           {value && isStructured && (
             <div
               ref={textRef}
-              className={`space-y-2 text-sm ${isExpanded ? '' : 'line-clamp-2'}`}
+              className="space-y-2 text-sm"
             >
               {parsedMemo.map((item, index) => {
+                // 접힌 상태에서는 첫 3개 아이템만 표시
+                if (!isExpanded && index >= 3) {
+                  return null
+                }
+
                 // 내용 길이 판단: 25자 이상 또는 줄바꿈 포함 시 블록 형태
                 const isLongContent = item.content.length > 25 || item.content.includes('\n')
 
