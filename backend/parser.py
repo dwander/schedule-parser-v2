@@ -327,19 +327,24 @@ def parse_brand_album(line: str) -> (str, str):
 
 def detect_chat_format(raw_text: str) -> str:
     """
-    Detect if the chat log is from desktop, mobile, or compact format.
-    Returns 'desktop', 'mobile', 'compact', or 'unknown'.
+    Detect if the chat log is from desktop, mobile, compact, or structured format.
+    Returns 'desktop', 'mobile', 'compact', 'structured', or 'unknown'.
     """
     lines = raw_text.splitlines()[:50]  # Check first 50 lines for format detection
 
     desktop_pattern_count = 0
     mobile_pattern_count = 0
     compact_pattern_count = 0
+    structured_pattern_count = 0
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
+
+        # Structured format: key-value pairs like "예식일:", "식시간:", "신랑신부님:" etc
+        if re.search(r'^(예식일|식시간|예식장|신랑신부님?|사진업체|플래너|담당감독|상품|촬영범위|페이)\s*[:：]', line):
+            structured_pattern_count += 1
 
         # Desktop format: [Speaker] [오전/오후 HH:MM] content
         if re.search(r'^\[([^\]]+)\]\s*\[(오전|오후)\s*\d{1,2}:\d{2}\]', line):
@@ -360,7 +365,10 @@ def detect_chat_format(raw_text: str) -> str:
               re.search(r'^\d{1,2}월\d{1,2}일\s+[가-힣]+', line)):
             compact_pattern_count += 1
 
-    if compact_pattern_count > 0:
+    # Structured format has highest priority if detected (needs at least 3 key-value pairs)
+    if structured_pattern_count >= 3:
+        return 'structured'
+    elif compact_pattern_count > 0:
         return 'compact'
     elif desktop_pattern_count > mobile_pattern_count:
         return 'desktop'
@@ -554,6 +562,184 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
         except Exception as e:
             pass
 
+    return schedules
+
+def parse_structured_format(raw_text: str) -> List[Schedule]:
+    """
+    Parse structured key-value format like:
+    예식일: 2025.09.20
+    식시간: 13:30
+    예식장: 한화리조트 몬테로소(지1층)
+    신랑신부님: 오왕석 & 김지원
+    사진업체: 세컨플로우
+    페이: 25
+    """
+    schedules = []
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+
+    # 키-값 쌍을 저장할 딕셔너리
+    data = {}
+    current_key = None
+    current_value = []
+
+    # 모든 라인을 순회하며 키-값 쌍 추출
+    for line in lines:
+        # 키-값 패턴 매칭
+        key_value_match = re.match(r'^(예식일|식시간|예식장|신랑신부님?|사진업체|플래너|담당감독|상품|촬영범위|페이|상품구성|SNS동의|웨딩카|연락처)\s*[:：]\s*(.*)$', line)
+
+        if key_value_match:
+            # 이전 키-값 저장
+            if current_key and current_value:
+                data[current_key] = '\n'.join(current_value).strip()
+
+            # 새로운 키-값 시작
+            current_key = key_value_match.group(1)
+            value = key_value_match.group(2).strip()
+            current_value = [value] if value else []
+        elif current_key:
+            # 여러 줄에 걸친 값 (섹션 헤더나 특수 패턴 제외)
+            if not line.startswith('[') and not line.startswith('-') and not line.startswith('*'):
+                current_value.append(line)
+
+    # 마지막 키-값 저장
+    if current_key and current_value:
+        data[current_key] = '\n'.join(current_value).strip()
+
+    # 필수 필드 확인
+    if not any(key in data for key in ['예식일', '식시간', '예식장']):
+        return []  # 필수 필드가 없으면 빈 리스트 반환
+
+    # Schedule 객체 생성
+    schedule = Schedule()
+
+    # 날짜 추출 (예식일)
+    if '예식일' in data:
+        date_text = data['예식일']
+        # YYYY.MM.DD 또는 YYYY-MM-DD 형식
+        date_match = re.search(r'(\d{4})[.\-](\d{1,2})[.\-](\d{1,2})', date_text)
+        if date_match:
+            year, month, day = date_match.groups()
+            schedule.date = f"{year}.{int(month):02d}.{int(day):02d}"
+
+    # 시간 추출 (식시간)
+    if '식시간' in data:
+        time_text = data['식시간']
+        # HH:MM 형식
+        time_match = re.search(r'(\d{1,2}):(\d{2})', time_text)
+        if time_match:
+            hour, minute = time_match.groups()
+            schedule.time = f"{int(hour):02d}:{int(minute):02d}"
+
+    # 장소 추출 (예식장)
+    if '예식장' in data:
+        schedule.location = clean_location(data['예식장'])
+
+    # 신랑신부 추출
+    if '신랑신부님' in data or '신랑신부' in data:
+        couple_text = data.get('신랑신부님', data.get('신랑신부', ''))
+        # & 또는 공백으로 구분된 이름 추출
+        couple_text = couple_text.replace('&', ' ').strip()
+        # 한글 이름만 추출
+        names = re.findall(r'[가-힣]{2,4}', couple_text)
+        if len(names) >= 2:
+            schedule.couple = f"{names[0]} {names[1]}"
+        elif len(names) == 1:
+            schedule.couple = names[0]
+
+    # 브랜드 추출 (사진업체)
+    if '사진업체' in data:
+        brand_text = data['사진업체']
+        # 기존 브랜드 패턴 사용
+        for pattern in BRAND_PATTERNS:
+            if re.search(pattern, brand_text, re.IGNORECASE):
+                schedule.brand = re.search(pattern, brand_text, re.IGNORECASE).group(0)
+                schedule.brand = schedule.brand.replace('[', '').replace(']', '').strip()
+                break
+        # 패턴에 없으면 그대로 사용
+        if not schedule.brand:
+            schedule.brand = brand_text.strip()
+
+    # 상품에서 앨범 정보 추출
+    if '상품' in data:
+        product_text = data['상품']
+        # 앨범 패턴 매칭
+        for pattern in ALBUM_PATTERNS:
+            album_match = re.search(pattern, product_text, re.IGNORECASE)
+            if album_match:
+                schedule.album = album_match.group(0).upper()
+                break
+
+    # 촬영비 추출 (페이)
+    if '페이' in data:
+        price_text = data['페이']
+        # 숫자만 추출
+        price_match = re.search(r'(\d+)', price_text)
+        if price_match:
+            # 만원 단위로 추정 (페이: 25 -> 250000)
+            schedule.price = int(price_match.group(1)) * 10000
+
+    # 연락처 추출
+    if '연락처' in data:
+        schedule.contact = parse_contact(data['연락처'])
+    else:
+        # 담당감독에서 연락처 추출 시도
+        if '담당감독' in data:
+            contact = parse_contact(data['담당감독'])
+            if contact:
+                schedule.contact = contact
+
+    # 계약자/플래너 추출
+    if '플래너' in data:
+        schedule.manager = data['플래너']
+    elif '담당감독' in data:
+        # 담당감독에서 이름만 추출 (연락처 제외)
+        manager_text = data['담당감독']
+        # 연락처 제거
+        manager_text = re.sub(r'010[- .]?\d{4}[- .]?\d{4}', '', manager_text)
+        # 괄호 내용 제거
+        manager_text = re.sub(r'\([^)]*\)', '', manager_text)
+        schedule.manager = manager_text.strip()
+
+    # 메모 생성 (추가 정보들)
+    memo_parts = []
+    memo_keys = ['촬영범위', '상품구성', 'SNS동의', '웨딩카', '신부님 전달사항', '식순', '촬영 요구사항']
+
+    for key in memo_keys:
+        if key in data and data[key]:
+            memo_parts.append(f"{key}: {data[key]}")
+
+    # 섹션 내용 추출 ([신부님 전달사항], [식순], [촬영 요구사항])
+    section_pattern = r'\[(.*?)\](.*?)(?=\[|$)'
+    sections = re.findall(section_pattern, raw_text, re.DOTALL)
+    for section_title, section_content in sections:
+        section_title = section_title.strip()
+        section_content = section_content.strip()
+        if section_content and section_title not in ['']:
+            memo_parts.append(f"[{section_title}]\n{section_content}")
+
+    if memo_parts:
+        schedule.memo = '\n\n'.join(memo_parts)
+
+    # 필수 필드 누락 체크
+    missing_fields = []
+    if not schedule.date:
+        missing_fields.append("날짜")
+    if not schedule.time:
+        missing_fields.append("시간")
+    if not schedule.location:
+        missing_fields.append("장소")
+    if not schedule.couple:
+        missing_fields.append("신랑신부")
+
+    if missing_fields:
+        schedule.needs_review = True
+        schedule.review_reason = f"구조화된 형식: 필수 필드 누락 - {', '.join(missing_fields)}"
+
+    # 촬영단가 자동 계산 (브랜드, 앨범, 날짜가 있으면)
+    if schedule.brand and schedule.album and schedule.date and not schedule.price:
+        schedule.price = calculate_price(schedule.brand, schedule.album, schedule.date)
+
+    schedules.append(schedule)
     return schedules
 
 def extract_korean_words(text: str) -> List[str]:
@@ -1266,6 +1452,11 @@ def parse_schedules(raw_text: str) -> List[Dict]:
     # Detect format first
     chat_format = detect_chat_format(raw_text)
 
+    # Handle structured format (key-value pairs)
+    if chat_format == 'structured':
+        parsed_schedules = parse_structured_format(raw_text)
+        return [sch.to_dict() for sch in parsed_schedules]
+
     # Handle compact format directly
     if chat_format == 'compact':
         parsed_schedules = parse_compact_format(raw_text)
@@ -1641,6 +1832,11 @@ def parse_schedules_llm(raw_text: str) -> List[Dict]:
 def parse_schedules_classic_only(raw_text: str) -> List[Dict]:
     """클래식 파서만 사용 (패턴 1-3만, NLP 비활성화)"""
     chat_format = detect_chat_format(raw_text)
+
+    # Handle structured format (key-value pairs)
+    if chat_format == 'structured':
+        parsed_schedules = parse_structured_format(raw_text)
+        return [sch.to_dict() for sch in parsed_schedules]
 
     if chat_format == 'compact':
         parsed_schedules = parse_compact_format(raw_text)
