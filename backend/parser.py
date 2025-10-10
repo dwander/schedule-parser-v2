@@ -675,9 +675,33 @@ def parse_structured_format(raw_text: str) -> List[Schedule]:
             mapped_keys.add(key)
             break
 
-    # === 브랜드 & 앨범 추출 (영상 업체 특화) ===
-    # "상품" 필드가 있으면 브랜드와 앨범 분리 시도
-    if '상품' in data:
+    # === 브랜드 추출 ===
+    for key in ['브랜드']:
+        if key in data:
+            schedule.brand = data[key].strip()
+            mapped_keys.add(key)
+            break
+
+    # === 앨범 추출 ===
+    for key in ['앨범']:
+        if key in data:
+            schedule.album = data[key].strip()
+            mapped_keys.add(key)
+            break
+
+    # === 컷수 추출 ===
+    for key in ['컷수', '컷']:
+        if key in data:
+            cuts_text = data[key]
+            cuts_match = re.search(r'(\d+)', cuts_text)
+            if cuts_match:
+                schedule.cuts = int(cuts_match.group(1))
+                mapped_keys.add(key)
+            break
+
+    # === 상품 필드 추출 (레거시 지원: 영상 업체 특화) ===
+    # "상품" 필드가 있고 브랜드/앨범이 아직 없으면 분리 시도
+    if '상품' in data and not schedule.brand:
         product_text = data['상품']
         mapped_keys.add('상품')
 
