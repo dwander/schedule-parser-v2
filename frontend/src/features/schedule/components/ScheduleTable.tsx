@@ -7,7 +7,7 @@ import { ScheduleCard } from './ScheduleCard'
 import { SearchInput } from './SearchInput'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
-import { Trash2, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check } from 'lucide-react'
+import { Trash2, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check, ChevronRight, ChevronLeft } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -43,6 +43,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
   const [searchExpanded, setSearchExpanded] = useState(false)
+  const [dateRangeCollapsed, setDateRangeCollapsed] = useState(true)
   const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
   const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
   const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
@@ -51,6 +52,14 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const dateRange = {
     from: dateRangeFilter.from ? new Date(dateRangeFilter.from) : null,
     to: dateRangeFilter.to ? new Date(dateRangeFilter.to) : null,
+  }
+
+  // 날짜를 YY.MM.DD 형식으로 포맷
+  const formatShortDate = (date: Date) => {
+    const year = date.getFullYear() % 100 // 마지막 2자리
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}.${month}.${day}`
   }
 
   // 정렬 옵션 정의
@@ -182,22 +191,44 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
       <div className="space-y-4 w-full">
         {/* Search and Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Date Range Filter Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDateRangeDialogOpen(true)}
-            className={`flex-shrink-0 overflow-hidden ${searchExpanded ? 'gap-0' : 'gap-2'}`}
-          >
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
-              searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-            }`}>
-              {dateRange.from && dateRange.to
-                ? `${dateRange.from.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')} ~ ${dateRange.to.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}`
-                : '전체기간'}
-            </span>
-          </Button>
+          {/* Date Range Filter Split Button */}
+          <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
+            {/* Main Button - Calendar Icon + Date Text */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDateRangeDialogOpen(true)}
+              className={`rounded-none hover:bg-accent overflow-hidden transition-all duration-300 ease-in-out ${
+                dateRangeCollapsed ? 'gap-0 px-2' : 'gap-2 px-3'
+              }`}
+            >
+              <Calendar className="h-4 w-4 flex-shrink-0" />
+              <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+                dateRangeCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+              }`}>
+                {dateRange.from && dateRange.to
+                  ? `${formatShortDate(dateRange.from)} ~ ${formatShortDate(dateRange.to)}`
+                  : '전체기간'}
+              </span>
+            </Button>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-border" />
+
+            {/* Toggle Button - Chevron */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDateRangeCollapsed(!dateRangeCollapsed)}
+              className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+            >
+              {dateRangeCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
 
           {/* Sort Dropdown */}
           <DropdownMenu>
