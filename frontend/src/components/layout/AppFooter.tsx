@@ -38,7 +38,7 @@ export function AppFooter({ stats }: AppFooterProps) {
   ]
 
   return (
-    <footer className="w-full flex flex-col items-center py-4 bg-background">
+    <footer className="w-full flex flex-col items-center py-4 bg-background mb-4">
       <div className="max-w-[450px] w-full mx-4 border border-border/50 rounded-lg bg-background">
         <div className="flex h-12 items-center justify-around px-4 gap-2 sm:gap-4">
           {items.map((item, index) => {

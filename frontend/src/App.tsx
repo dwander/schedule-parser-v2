@@ -393,7 +393,7 @@ function AppContent() {
       <ReactQueryDevtools initialIsOpen={false} />
 
       {/* 버전 배지 - 오른쪽 하단 */}
-      <div className="fixed bottom-4 right-4 z-50 px-2 py-1 bg-black/80 text-gray-400 text-xs rounded-md font-mono select-none pointer-events-none backdrop-blur-sm">
+      <div className="fixed bottom-0 right-4 z-50 px-2 py-1 bg-black/80 text-gray-400 text-xs rounded-md font-mono select-none pointer-events-none backdrop-blur-sm">
         v{import.meta.env.VITE_APP_VERSION || 'dev'}
       </div>
     </>
