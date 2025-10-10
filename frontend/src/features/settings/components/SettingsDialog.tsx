@@ -24,10 +24,6 @@ interface SettingsDialogProps {
 type SettingSection = 'appearance' | 'integration' | 'others'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    // 모바일(640px 미만)에서는 사이드바 접힌 상태로 시작
-    return typeof window !== 'undefined' && window.innerWidth < 640
-  })
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
 
   const {
@@ -39,6 +35,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setWeekStartsOn,
     enabledCalendars,
     setEnabledCalendars,
+    settingsSidebarCollapsed,
+    setSettingsSidebarCollapsed,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
@@ -84,14 +82,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     >
       <div className="flex h-full sm:min-h-[500px]">
         {/* Sidebar */}
-        <div className={`border-r border-border flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-48'}`}>
+        <div className={`border-r border-border flex flex-col transition-all duration-300 ${settingsSidebarCollapsed ? 'w-16' : 'w-48'}`}>
           {/* Toggle Button */}
           <div className="flex items-center justify-start border-b border-border">
             <button
               className="h-10 w-10 flex items-center justify-center"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={() => setSettingsSidebarCollapsed(!settingsSidebarCollapsed)}
             >
-              {sidebarCollapsed ? (
+              {settingsSidebarCollapsed ? (
                 <PanelLeftOpen className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
               ) : (
                 <PanelLeftClose className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
@@ -111,7 +109,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   className="w-full flex items-center gap-3 px-4 py-3"
                 >
                   <Icon className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                  {!sidebarCollapsed && (
+                  {!settingsSidebarCollapsed && (
                     <span className={`text-sm whitespace-nowrap transition-colors ${isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                       {section.label}
                     </span>

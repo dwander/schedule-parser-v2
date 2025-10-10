@@ -89,6 +89,10 @@ interface SettingsState {
   weekStartsOn: 0 | 1
   setWeekStartsOn: (day: 0 | 1) => void
 
+  // 설정 사이드바 접힘 여부
+  settingsSidebarCollapsed: boolean
+  setSettingsSidebarCollapsed: (collapsed: boolean) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -158,6 +162,7 @@ export const useSettingsStore = create<SettingsState>()(
       skipNaverCalendarConfirm: false,
       sortBy: 'date-desc',
       weekStartsOn: 1, // 기본값: 월요일
+      settingsSidebarCollapsed: typeof window !== 'undefined' && window.innerWidth < 640, // 모바일에서는 접힘
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -182,6 +187,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
       setSortBy: (sort) => set({ sortBy: sort }),
       setWeekStartsOn: (day) => set({ weekStartsOn: day }),
+      setSettingsSidebarCollapsed: (collapsed) => set({ settingsSidebarCollapsed: collapsed }),
     }),
     {
       name: 'app-settings', // localStorage key
