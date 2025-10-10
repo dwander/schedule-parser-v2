@@ -23,13 +23,29 @@ export function MemoEditDialog({
   onSave
 }: MemoEditDialogProps) {
   const [editValue, setEditValue] = useState(value)
+  const [hadMarker, setHadMarker] = useState(false)
 
   useEffect(() => {
-    setEditValue(value)
+    // LLM 마커 감지 및 제거
+    const hasLLMMarker = value.trim().startsWith('<!-- LLM_PARSED -->')
+    setHadMarker(hasLLMMarker)
+
+    if (hasLLMMarker) {
+      // 마커 제거하고 편집
+      const withoutMarker = value.replace(/^\s*<!--\s*LLM_PARSED\s*-->\s*\n?/, '')
+      setEditValue(withoutMarker)
+    } else {
+      setEditValue(value)
+    }
   }, [value, open])
 
   const handleSave = () => {
-    onSave(editValue)
+    // 원래 마커가 있었으면 다시 추가
+    const finalValue = hadMarker
+      ? `<!-- LLM_PARSED -->\n${editValue}`
+      : editValue
+
+    onSave(finalValue)
     onOpenChange(false)
   }
 

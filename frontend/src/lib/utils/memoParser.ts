@@ -40,8 +40,14 @@ export function parseMemo(memo: string): ParsedMemoItem[] {
     return []
   }
 
+  // LLM 파싱 마커 제거
+  let processedMemo = memo
+  if (memo.trim().startsWith('<!-- LLM_PARSED -->')) {
+    processedMemo = memo.replace(/^\s*<!--\s*LLM_PARSED\s*-->\s*\n?/, '')
+  }
+
   const items: ParsedMemoItem[] = []
-  const lines = memo.split('\n')
+  const lines = processedMemo.split('\n')
   let i = 0
 
   while (i < lines.length) {
@@ -154,11 +160,11 @@ export function isMemoEmpty(items: ParsedMemoItem[]): boolean {
 }
 
 /**
- * 구조화된 memo가 있는지 확인 (제목이 있는 키-값 쌍이 있으면 true)
+ * 구조화된 memo가 있는지 확인 (LLM 파싱 마커가 있으면 true)
  */
 export function hasStructuredMemo(memo: string): boolean {
   if (!memo || !memo.trim()) return false
 
-  const items = parseMemo(memo)
-  return items.some(item => !!item.title)
+  // LLM 파싱 마커 감지
+  return memo.trim().startsWith('<!-- LLM_PARSED -->')
 }
