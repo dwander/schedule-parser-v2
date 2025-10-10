@@ -25,8 +25,15 @@ import { useConfigStore } from '@/stores/useConfigStore'
 import { fetchConfig } from '@/lib/api/config'
 import axios from 'axios'
 import { toast } from 'sonner'
+import { enableStrictDateParsing } from '@/lib/utils/safariDatePolyfill'
 
 function AppContent() {
+  // 개발 환경에서 Safari처럼 엄격한 날짜 파싱 활성화
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      enableStrictDateParsing()
+    }
+  }, [])
   const [parserOpen, setParserOpen] = useState(false)
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)

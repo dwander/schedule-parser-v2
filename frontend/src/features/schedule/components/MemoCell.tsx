@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { MemoEditDialog } from './MemoEditDialog'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Edit2, ChevronDown } from 'lucide-react'
 import { parseMemo, hasStructuredMemo } from '@/lib/utils/memoParser'
 
 interface MemoCellProps {
@@ -51,11 +51,37 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   // 카드 모드 (확장/축소 기능)
   return (
     <>
-      <div className="space-y-1">
+      <div className="relative space-y-1">
+        {/* 우측 상단 편집 버튼 (내용이 있을 때만 표시) */}
+        {value && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setDialogOpen(true)
+            }}
+            className="absolute top-1 right-1 p-1.5 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground transition-colors z-10"
+            title="메모 편집"
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+
+        {/* 메모 내용 (클릭 시 펼침/접기 토글) */}
         <div
-          ref={textRef}
-          onClick={() => setDialogOpen(true)}
-          className="cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors"
+          onClick={() => {
+            if (!value) {
+              // 빈 메모는 클릭 시 에디터 열기
+              setDialogOpen(true)
+            } else if (isTruncated || isExpanded) {
+              // 긴 메모는 펼침/접기 토글 (펼쳐진 상태에서도 토글 가능)
+              setIsExpanded(!isExpanded)
+            }
+          }}
+          className={`px-2 py-1 rounded transition-colors ${
+            value ? 'pr-8' : ''
+          } ${
+            !value || isTruncated || isExpanded ? 'cursor-pointer hover:bg-accent/50' : ''
+          }`}
         >
           {!value && (
             <span className="text-muted-foreground text-sm">클릭하여 입력</span>
@@ -63,6 +89,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
           {value && !isStructured && (
             <div
+              ref={textRef}
               className={`text-muted-foreground text-sm ${
                 isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
               }`}
@@ -72,10 +99,13 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           )}
 
           {value && isStructured && (
-            <div className={`space-y-2 text-sm ${isExpanded ? '' : 'line-clamp-6'}`}>
+            <div
+              ref={textRef}
+              className={`space-y-2 text-sm ${isExpanded ? '' : 'line-clamp-2'}`}
+            >
               {parsedMemo.map((item, index) => {
-                // 내용 길이 판단: 50자 이상 또는 줄바꿈 포함 시 블록 형태
-                const isLongContent = item.content.length > 50 || item.content.includes('\n')
+                // 내용 길이 판단: 25자 이상 또는 줄바꿈 포함 시 블록 형태
+                const isLongContent = item.content.length > 25 || item.content.includes('\n')
 
                 return (
                   <div key={index}>
@@ -116,27 +146,11 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           )}
         </div>
 
+        {/* 접힌 상태일 때 하단 v 아이콘 (위아래 애니메이션) */}
         {isTruncated && !isExpanded && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(true)
-            }}
-            className="w-full flex items-center justify-center py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronDown className="h-3 w-3" />
-          </button>
-        )}
-        {isExpanded && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(false)
-            }}
-            className="w-full flex items-center justify-center py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronUp className="h-3 w-3" />
-          </button>
+          <div className="w-full flex items-center justify-center py-1">
+            <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
+          </div>
         )}
       </div>
       <MemoEditDialog
