@@ -227,6 +227,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
                     useOneTap={false}
                     use_fedcm_for_prompt={true}
                     itp_support={true}
+                    auto_select={true}
                     text="signin_with"
                     size="large"
                     width="348"
