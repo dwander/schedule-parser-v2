@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -59,9 +59,20 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [trashDialogOpen, setTrashDialogOpen] = useState(false)
   const [statsAlertOpen, setStatsAlertOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false)
 
   // 모바일 서브메뉴 펼침 상태
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
+  // 호버 핸들러 - 프로필 사진에 마우스 올리면 메뉴 열기
+  const handleProfileMouseEnter = useCallback(() => {
+    setDesktopMenuOpen(true)
+  }, [])
+
+  // 메뉴 영역을 벗어나면 닫기
+  const handleMenuMouseLeave = useCallback(() => {
+    setDesktopMenuOpen(false)
+  }, [])
 
   const handleLogout = async () => {
     await logout()
@@ -356,27 +367,32 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   return (
     <>
       {/* 데스크탑 드롭다운 */}
-      <DropdownMenu>
+      <DropdownMenu open={desktopMenuOpen} onOpenChange={setDesktopMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="hidden md:flex items-center gap-2 px-2"
+          <div
+            className="hidden md:block cursor-pointer"
+            onMouseEnter={handleProfileMouseEnter}
           >
-            {user.picture ? (
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="h-8 w-8 rounded-full"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <span className="text-sm font-medium">{user.name}</span>
-          </Button>
+            <div className="h-9 w-9 flex items-center justify-center">
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="h-8 w-8 rounded-full"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent
+          align="start"
+          className="w-56 ml-1"
+          onMouseLeave={handleMenuMouseLeave}
+        >
           {renderDesktopMenuContent()}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -384,10 +400,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       {/* 모바일 Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 px-2 md:hidden"
-          >
+          <div className="h-9 w-9 flex items-center justify-center cursor-pointer md:hidden">
             {user.picture ? (
               <img
                 src={user.picture}
@@ -399,8 +412,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
                 {user.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <span className="text-sm font-medium">{user.name}</span>
-          </Button>
+          </div>
         </SheetTrigger>
         <SheetContent
           side="bottom"
