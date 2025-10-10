@@ -62,17 +62,26 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
     return `${year}.${month}.${day}`
   }
 
-  // 정렬 옵션 정의
-  const sortOptions = [
-    { value: 'date-desc', label: '날짜 최신순', icon: ArrowDown },
-    { value: 'date-asc', label: '날짜 오래된순', icon: ArrowUp },
-    { value: 'location-asc', label: '장소 오름차순', icon: ArrowUp },
-    { value: 'location-desc', label: '장소 내림차순', icon: ArrowDown },
-    { value: 'cuts-desc', label: '컷수 많은순', icon: ArrowDown },
-    { value: 'cuts-asc', label: '컷수 적은순', icon: ArrowUp },
-  ] as const
+  // sortBy 파싱 (예: 'date-desc' → { type: 'date', order: 'desc' })
+  const getSortParts = (sortBy: string) => {
+    const parts = sortBy.split('-')
+    const order = parts[parts.length - 1] as 'asc' | 'desc'
+    const type = parts.slice(0, -1).join('-')
+    return { type, order }
+  }
 
-  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || '날짜 최신순'
+  const { type: sortType, order: sortOrder } = getSortParts(sortBy)
+
+  const sortTypeLabels: Record<string, string> = {
+    'date': '날짜',
+    'location': '장소',
+    'cuts': '컷수'
+  }
+
+  const toggleSortOrder = () => {
+    const newOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+    setSortBy(`${sortType}-${newOrder}`)
+  }
 
   const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
   const { virtualizer: listVirtualizer, tableRef } = useScheduleVirtual(table.getRowModel().rows)
@@ -230,38 +239,55 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             </Button>
           </div>
 
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`flex-shrink-0 overflow-hidden ${searchExpanded ? 'gap-0' : 'gap-2'}`}
-              >
-                <ArrowUpDown className="h-4 w-4 flex-shrink-0" />
-                <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
-                  searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-                }`}>{currentSortLabel}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>정렬</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {sortOptions.map((option) => {
-                const Icon = option.icon
-                return (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => setSortBy(option.value)}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {option.label}
-                    {sortBy === option.value && <Check className="ml-auto h-4 w-4" />}
-                  </DropdownMenuItem>
-                )
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Sort Controls - Split Button */}
+          <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
+            {/* Sort Order Toggle Button (Icon only) */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSortOrder}
+              className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+            >
+              {sortOrder === 'desc' ? (
+                <ArrowDown className="h-4 w-4" />
+              ) : (
+                <ArrowUp className="h-4 w-4" />
+              )}
+            </Button>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-border" />
+
+            {/* Sort Type Dropdown Select */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`rounded-none hover:bg-accent overflow-hidden transition-all duration-300 ease-in-out ${
+                    searchExpanded ? 'w-0 px-0' : 'w-auto px-2'
+                  }`}
+                >
+                  <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${
+                    searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+                  }`}>
+                    {sortTypeLabels[sortType]}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setSortBy(`date-${sortOrder}`)}>
+                  날짜
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy(`location-${sortOrder}`)}>
+                  장소
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy(`cuts-${sortOrder}`)}>
+                  컷수
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {/* Search Input Component */}
           <SearchInput
