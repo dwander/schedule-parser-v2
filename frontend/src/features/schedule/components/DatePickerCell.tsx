@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { parseScheduleDateString, formatToScheduleDate } from '@/lib/utils/dateParser'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -11,17 +12,17 @@ import {
 } from '@/components/ui/popover'
 
 interface DatePickerCellProps {
-  value: string // YYYY-MM-DD 형식
+  value: string // YYYY.MM.DD 형식
   onSave: (value: string) => void
 }
 
 export function DatePickerCell({ value, onSave }: DatePickerCellProps) {
   const [open, setOpen] = useState(false)
-  const date = value ? new Date(value) : undefined
+  const date = value ? parseScheduleDateString(value) : undefined
 
   const handleSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
-      const formatted = format(selectedDate, 'yyyy-MM-dd')
+      const formatted = formatToScheduleDate(selectedDate)
       onSave(formatted)
       setOpen(false)
     }
