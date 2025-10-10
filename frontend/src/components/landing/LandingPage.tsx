@@ -118,17 +118,20 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
         <div className="w-full max-w-md space-y-3">
           {/* 구글 로그인 - FedCM 방식 */}
           <div className="w-full flex justify-center">
-            <div className="py-0.5">
-              <GoogleLogin
-                onSuccess={handleGoogleLoginSuccess}
-                onError={handleGoogleLoginError}
-                useOneTap={false}
-                use_fedcm_for_prompt={true}
-                text="signin_with"
-                size="large"
-                width="348"
-                logo_alignment="left"
-              />
+            <div className="py-0.5" style={{ width: '348px', maxWidth: '348px' }}>
+              <div style={{ width: '348px', maxWidth: '348px', overflow: 'hidden' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  useOneTap={false}
+                  use_fedcm_for_prompt={true}
+                  itp_support={true}
+                  text="signin_with"
+                  size="large"
+                  width="348"
+                  logo_alignment="left"
+                />
+              </div>
             </div>
           </div>
 
