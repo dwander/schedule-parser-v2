@@ -566,26 +566,42 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
 
 def parse_structured_format(raw_text: str) -> List[Schedule]:
     """
-    Parse structured key-value format like:
-    예식일: 2025.09.20
-    식시간: 13:30
-    예식장: 한화리조트 몬테로소(지1층)
-    신랑신부님: 오왕석 & 김지원
-    사진업체: 세컨플로우
-    페이: 25
+    범용 구조화된 형식 파서 - 모든 키-값 쌍을 추출하여 처리
+
+    예시:
+        예식일: 2025.09.20
+        식시간: 13:30
+        예식장: 한화리조트 몬테로소(지1층)
+        신랑신부님: 오왕석 & 김지원
+        사진업체: 세컨플로우
+        상품: 비욘드 클래식, 1인 2캠
+        페이: 25
+        촬영범위: 사전촬영, 신부대기실, 로비, 본식, 원판
+
+    Schedule 필드에 매핑 가능한 키는 자동 매핑하고,
+    나머지는 구조화된 형식으로 memo에 저장
     """
     schedules = []
     lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
 
-    # 키-값 쌍을 저장할 딕셔너리
+    # 모든 키-값 쌍을 저장할 딕셔너리
     data = {}
     current_key = None
     current_value = []
 
-    # 모든 라인을 순회하며 키-값 쌍 추출
+    # 모든 라인을 순회하며 키-값 쌍 추출 (범용 패턴)
     for line in lines:
-        # 키-값 패턴 매칭
-        key_value_match = re.match(r'^(예식일|식시간|예식장|신랑신부님?|사진업체|플래너|담당감독|상품|촬영범위|페이|상품구성|SNS동의|웨딩카|연락처)\s*[:：]\s*(.*)$', line)
+        # 범용 키-값 패턴: "한글단어: 값" (섹션 헤더 제외)
+        key_value_match = re.match(r'^([가-힣a-zA-Z0-9\s]+)\s*[:：]\s*(.*)$', line)
+
+        # 섹션 헤더 제외 ([제목] 형식)
+        if line.startswith('['):
+            # 이전 키-값 저장
+            if current_key and current_value:
+                data[current_key] = '\n'.join(current_value).strip()
+            current_key = None
+            current_value = []
+            continue
 
         if key_value_match:
             # 이전 키-값 저장
@@ -593,128 +609,164 @@ def parse_structured_format(raw_text: str) -> List[Schedule]:
                 data[current_key] = '\n'.join(current_value).strip()
 
             # 새로운 키-값 시작
-            current_key = key_value_match.group(1)
+            current_key = key_value_match.group(1).strip()
             value = key_value_match.group(2).strip()
             current_value = [value] if value else []
         elif current_key:
-            # 여러 줄에 걸친 값 (섹션 헤더나 특수 패턴 제외)
-            if not line.startswith('[') and not line.startswith('-') and not line.startswith('*'):
-                current_value.append(line)
+            # 여러 줄에 걸친 값 (리스트 항목 포함)
+            current_value.append(line)
 
     # 마지막 키-값 저장
     if current_key and current_value:
         data[current_key] = '\n'.join(current_value).strip()
 
-    # 필수 필드 확인
-    if not any(key in data for key in ['예식일', '식시간', '예식장']):
+    # 필수 필드 확인 (예식일 또는 날짜, 식시간 또는 시간, 예식장 또는 장소)
+    has_date = any(key in data for key in ['예식일', '날짜'])
+    has_time = any(key in data for key in ['식시간', '시간'])
+    has_location = any(key in data for key in ['예식장', '장소'])
+
+    if not (has_date and has_time and has_location):
         return []  # 필수 필드가 없으면 빈 리스트 반환
 
     # Schedule 객체 생성
     schedule = Schedule()
 
-    # 날짜 추출 (예식일)
-    if '예식일' in data:
-        date_text = data['예식일']
-        # YYYY.MM.DD 또는 YYYY-MM-DD 형식
-        date_match = re.search(r'(\d{4})[.\-](\d{1,2})[.\-](\d{1,2})', date_text)
-        if date_match:
-            year, month, day = date_match.groups()
-            schedule.date = f"{year}.{int(month):02d}.{int(day):02d}"
+    # Schedule 필드로 매핑될 키 정의
+    mapped_keys = set()
 
-    # 시간 추출 (식시간)
-    if '식시간' in data:
-        time_text = data['식시간']
-        # HH:MM 형식
-        time_match = re.search(r'(\d{1,2}):(\d{2})', time_text)
-        if time_match:
-            hour, minute = time_match.groups()
-            schedule.time = f"{int(hour):02d}:{int(minute):02d}"
+    # === 날짜 추출 ===
+    for key in ['예식일', '날짜']:
+        if key in data:
+            date_text = data[key]
+            date_match = re.search(r'(\d{4})[.\-](\d{1,2})[.\-](\d{1,2})', date_text)
+            if date_match:
+                year, month, day = date_match.groups()
+                schedule.date = f"{year}.{int(month):02d}.{int(day):02d}"
+                mapped_keys.add(key)
+            break
 
-    # 장소 추출 (예식장)
-    if '예식장' in data:
-        schedule.location = clean_location(data['예식장'])
+    # === 시간 추출 ===
+    for key in ['식시간', '시간']:
+        if key in data:
+            time_text = data[key]
+            time_match = re.search(r'(\d{1,2}):(\d{2})', time_text)
+            if time_match:
+                hour, minute = time_match.groups()
+                schedule.time = f"{int(hour):02d}:{int(minute):02d}"
+                mapped_keys.add(key)
+            break
 
-    # 신랑신부 추출
-    if '신랑신부님' in data or '신랑신부' in data:
-        couple_text = data.get('신랑신부님', data.get('신랑신부', ''))
-        # & 또는 공백으로 구분된 이름 추출
-        couple_text = couple_text.replace('&', ' ').strip()
-        # 한글 이름만 추출
-        names = re.findall(r'[가-힣]{2,4}', couple_text)
-        if len(names) >= 2:
-            schedule.couple = f"{names[0]} {names[1]}"
-        elif len(names) == 1:
-            schedule.couple = names[0]
+    # === 장소 추출 ===
+    for key in ['예식장', '장소']:
+        if key in data:
+            schedule.location = clean_location(data[key])
+            mapped_keys.add(key)
+            break
 
-    # 브랜드 추출 (사진업체)
-    if '사진업체' in data:
-        brand_text = data['사진업체']
-        # 기존 브랜드 패턴 사용
-        for pattern in BRAND_PATTERNS:
-            if re.search(pattern, brand_text, re.IGNORECASE):
-                schedule.brand = re.search(pattern, brand_text, re.IGNORECASE).group(0)
-                schedule.brand = schedule.brand.replace('[', '').replace(']', '').strip()
-                break
-        # 패턴에 없으면 그대로 사용
-        if not schedule.brand:
-            schedule.brand = brand_text.strip()
+    # === 신랑신부 추출 ===
+    for key in ['신랑신부님', '신랑신부']:
+        if key in data:
+            couple_text = data[key].replace('&', ' ').strip()
+            names = re.findall(r'[가-힣]{2,4}', couple_text)
+            if len(names) >= 2:
+                schedule.couple = f"{names[0]} {names[1]}"
+            elif len(names) == 1:
+                schedule.couple = names[0]
+            mapped_keys.add(key)
+            break
 
-    # 상품에서 앨범 정보 추출
+    # === 브랜드 & 앨범 추출 (영상 업체 특화) ===
+    # "상품" 필드가 있으면 브랜드와 앨범 분리 시도
     if '상품' in data:
         product_text = data['상품']
-        # 앨범 패턴 매칭
-        for pattern in ALBUM_PATTERNS:
-            album_match = re.search(pattern, product_text, re.IGNORECASE)
-            if album_match:
-                schedule.album = album_match.group(0).upper()
-                break
+        mapped_keys.add('상품')
 
-    # 촬영비 추출 (페이)
-    if '페이' in data:
-        price_text = data['페이']
-        # 숫자만 추출
-        price_match = re.search(r'(\d+)', price_text)
-        if price_match:
-            # 만원 단위로 추정 (페이: 25 -> 250000)
-            schedule.price = int(price_match.group(1)) * 10000
+        # 쉼표로 구분된 경우: "비욘드 클래식, 1인 2캠"
+        if ',' in product_text:
+            parts = [p.strip() for p in product_text.split(',')]
+            if len(parts) >= 2:
+                schedule.brand = parts[0]
+                schedule.album = parts[1]
+            elif len(parts) == 1:
+                schedule.brand = parts[0]
+        else:
+            # 앨범 패턴이 있으면 분리
+            album_found = False
+            for pattern in ALBUM_PATTERNS:
+                album_match = re.search(pattern, product_text, re.IGNORECASE)
+                if album_match:
+                    schedule.album = album_match.group(0).upper()
+                    # 브랜드는 앨범을 제외한 나머지
+                    schedule.brand = product_text.replace(album_match.group(0), '').strip()
+                    album_found = True
+                    break
 
-    # 연락처 추출
-    if '연락처' in data:
-        schedule.contact = parse_contact(data['연락처'])
-    else:
-        # 담당감독에서 연락처 추출 시도
-        if '담당감독' in data:
-            contact = parse_contact(data['담당감독'])
+            if not album_found:
+                # 앨범 패턴이 없으면 전체를 브랜드로
+                schedule.brand = product_text.strip()
+
+    # === 촬영비 추출 ===
+    for key in ['페이', '촬영비', '금액']:
+        if key in data:
+            price_text = data[key]
+            price_match = re.search(r'(\d+)', price_text)
+            if price_match:
+                price_value = int(price_match.group(1))
+                # 페이는 만원 단위 (페이: 25 -> 250000)
+                # 촬영비/금액은 그대로 사용
+                if key == '페이':
+                    schedule.price = price_value * 10000
+                else:
+                    schedule.price = price_value
+                mapped_keys.add(key)
+            break
+
+    # === 연락처 추출 ===
+    for key in ['연락처', '전화번호', '전화', '담당감독']:
+        if key in data:
+            contact = parse_contact(data[key])
             if contact:
                 schedule.contact = contact
+                if key in ['연락처', '전화번호', '전화']:
+                    mapped_keys.add(key)
+                # '담당감독'은 manager로도 사용되므로 여기서는 mapped 안 함
+                break
 
-    # 계약자/플래너 추출
-    if '플래너' in data:
-        schedule.manager = data['플래너']
-    elif '담당감독' in data:
-        # 담당감독에서 이름만 추출 (연락처 제외)
-        manager_text = data['담당감독']
-        # 연락처 제거
-        manager_text = re.sub(r'010[- .]?\d{4}[- .]?\d{4}', '', manager_text)
-        # 괄호 내용 제거
-        manager_text = re.sub(r'\([^)]*\)', '', manager_text)
-        schedule.manager = manager_text.strip()
+    # === 계약자/플래너 추출 ===
+    for key in ['플래너', '담당자', '계약자', '담당감독']:
+        if key in data:
+            manager_text = data[key]
+            # 연락처 제거
+            manager_text = re.sub(r'010[- .]?\d{4}[- .]?\d{4}', '', manager_text)
+            # 괄호 내용 제거
+            manager_text = re.sub(r'\([^)]*\)', '', manager_text)
+            schedule.manager = manager_text.strip()
+            mapped_keys.add(key)
+            break
 
-    # 메모 생성 (추가 정보들)
+    # === 작가 추출 ===
+    for key in ['작가', '촬영작가', '사진작가']:
+        if key in data:
+            schedule.photographer = data[key]
+            mapped_keys.add(key)
+            break
+
+    # === 메모 생성: Schedule 필드로 매핑되지 않은 모든 키-값 ===
     memo_parts = []
-    memo_keys = ['촬영범위', '상품구성', 'SNS동의', '웨딩카', '신부님 전달사항', '식순', '촬영 요구사항']
 
-    for key in memo_keys:
-        if key in data and data[key]:
-            memo_parts.append(f"{key}: {data[key]}")
+    # 1. 키-값 쌍 추가 (매핑되지 않은 것만)
+    # "사진업체"는 영상 업체 스케줄에서 memo로 보내야 함
+    for key, value in data.items():
+        if key not in mapped_keys and value:
+            memo_parts.append(f"{key}: {value}")
 
-    # 섹션 내용 추출 ([신부님 전달사항], [식순], [촬영 요구사항])
+    # 2. 섹션 내용 추출 ([신부님 전달사항], [식순], [촬영 요구사항] 등)
     section_pattern = r'\[(.*?)\](.*?)(?=\[|$)'
     sections = re.findall(section_pattern, raw_text, re.DOTALL)
     for section_title, section_content in sections:
         section_title = section_title.strip()
         section_content = section_content.strip()
-        if section_content and section_title not in ['']:
+        if section_content:
             memo_parts.append(f"[{section_title}]\n{section_content}")
 
     if memo_parts:
