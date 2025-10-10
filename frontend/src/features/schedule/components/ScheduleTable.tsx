@@ -181,9 +181,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
       <div className="space-y-4 w-full">
         {/* Search and Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Search Input Component */}
-          <SearchInput value={globalFilter} onChange={onGlobalFilterChange} />
-
           {/* Date Range Filter Button */}
           <Button
             variant="outline"
@@ -229,6 +226,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               })}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Search Input Component */}
+          <SearchInput value={globalFilter} onChange={onGlobalFilterChange} />
 
         <div className="flex items-center gap-1 ml-auto">
           <DropdownMenu>
