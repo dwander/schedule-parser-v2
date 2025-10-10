@@ -778,10 +778,13 @@ def parse_structured_format(raw_text: str) -> List[Schedule]:
     # === 메모 생성: Schedule 필드로 매핑되지 않은 모든 키-값 ===
     memo_parts = []
 
-    # 1. 키-값 쌍 추가 (매핑되지 않은 것만)
-    # "사진업체"는 영상 업체 스케줄에서 memo로 보내야 함
+    # 1. 키-값 쌍 추가
+    # UI에 이미 크게 표시되는 필수 필드만 memo에서 제외 (중복 방지)
+    # 나머지는 모두 memo에 포함 (담당자, 촬영비, 브랜드, 앨범, 사진업체 등)
+    exclude_from_memo = {'예식일', '날짜', '식시간', '시간', '예식장', '장소', '신랑신부님', '신랑신부'}
+
     for key, value in data.items():
-        if key not in mapped_keys and value:
+        if key not in exclude_from_memo and value:
             memo_parts.append(f"{key}: {value}")
 
     # 2. 섹션 내용 추출 ([신부님 전달사항], [식순], [촬영 요구사항] 등)
