@@ -205,7 +205,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                 className="flex-shrink-0 gap-2"
               >
                 <ArrowUpDown className="h-4 w-4" />
-                <span className="hidden sm:inline">{currentSortLabel}</span>
+                <span>{currentSortLabel}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
