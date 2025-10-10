@@ -24,7 +24,10 @@ interface SettingsDialogProps {
 type SettingSection = 'appearance' | 'integration' | 'others'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // 모바일(640px 미만)에서는 사이드바 접힌 상태로 시작
+    return typeof window !== 'undefined' && window.innerWidth < 640
+  })
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
 
   const {
