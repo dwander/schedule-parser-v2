@@ -154,6 +154,17 @@ async def parse_with_llm(message: str) -> Optional[str]:
         # 텍스트 응답 추출
         converted_text = response.choices[0].message.content.strip()
 
+        # 마크다운 코드 블록 제거 (LLM이 ```로 감싸는 경우)
+        if converted_text.startswith('```'):
+            lines = converted_text.split('\n')
+            # 첫 줄이 ``` 또는 ```text 형태면 제거
+            if lines[0].startswith('```'):
+                lines = lines[1:]
+            # 마지막 줄이 ```이면 제거
+            if lines and lines[-1].strip() == '```':
+                lines = lines[:-1]
+            converted_text = '\n'.join(lines).strip()
+
         # 토큰 사용량 로깅 (비용 모니터링)
         usage = response.usage
         logger.info(f"LLM conversion successful - Tokens: input={usage.prompt_tokens}, output={usage.completion_tokens}, total={usage.total_tokens}")

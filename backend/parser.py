@@ -794,7 +794,12 @@ def parse_structured_format(raw_text: str) -> List[Schedule]:
             memo_parts.append(f"[{section_title}]\n{section_content}")
 
     if memo_parts:
-        schedule.memo = '\n\n'.join(memo_parts)
+        memo_text = '\n\n'.join(memo_parts)
+        # LLM 파싱 마커가 원본에 있었으면 memo에도 추가
+        if raw_text.strip().startswith('<!-- LLM_PARSED -->'):
+            schedule.memo = f"<!-- LLM_PARSED -->\n{memo_text}"
+        else:
+            schedule.memo = memo_text
 
     # 필수 필드 누락 체크
     missing_fields = []
