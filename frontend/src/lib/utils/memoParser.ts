@@ -160,11 +160,25 @@ export function isMemoEmpty(items: ParsedMemoItem[]): boolean {
 }
 
 /**
- * 구조화된 memo가 있는지 확인 (LLM 파싱 마커가 있으면 true)
+ * 구조화된 memo가 있는지 확인
+ *
+ * 조건:
+ * 1. LLM 파싱 마커가 있거나
+ * 2. "짧은키: 값" 패턴이 3개 이상 발견되면 구조화된 것으로 판단
  */
 export function hasStructuredMemo(memo: string): boolean {
   if (!memo || !memo.trim()) return false
 
-  // LLM 파싱 마커 감지
-  return memo.trim().startsWith('<!-- LLM_PARSED -->')
+  // 1. LLM 파싱 마커 감지
+  if (memo.trim().startsWith('<!-- LLM_PARSED -->')) {
+    return true
+  }
+
+  // 2. 구조화된 키-값 패턴 감지 (6글자 미만 키: 내용)
+  // "담당자: 홍길동", "플래너: 한화리조트" 같은 패턴
+  const keyValuePattern = /^[가-힣a-zA-Z]{1,6}\s*:\s*.+$/gm
+  const matches = memo.match(keyValuePattern)
+
+  // 3개 이상의 키-값 쌍이 있으면 구조화된 memo로 판단
+  return matches ? matches.length >= 3 : false
 }
