@@ -311,17 +311,29 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     onCollect: handleVoiceCollect,
   })
 
-  // 모달이 닫히면 음성 인식 강제 종료
+  // 모달이 닫히면 음성 인식 강제 종료 및 오버레이 즉시 제거
   useEffect(() => {
-    if (!open && voiceEnabled) {
-      setVoiceEnabled(false)
+    if (!open) {
+      if (voiceEnabled) {
+        setVoiceEnabled(false)
+      }
+      // 오버레이 즉시 제거
+      setDisplayedText('')
+      setShowRecognizedText(false)
+      setMatchedItemText('')
     }
   }, [open])
 
-  // 음성 끄면 훈련 종료
+  // 음성 끄면 훈련 종료 및 오버레이 즉시 제거
   useEffect(() => {
-    if (!voiceEnabled && trainingTargetId) {
-      endTraining()
+    if (!voiceEnabled) {
+      if (trainingTargetId) {
+        endTraining()
+      }
+      // 오버레이 즉시 제거
+      setDisplayedText('')
+      setShowRecognizedText(false)
+      setMatchedItemText('')
     }
   }, [voiceEnabled])
 
@@ -530,13 +542,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         </div>
       }
     >
-
-        {/* 음성 인식 상태 영역 */}
-        {voiceEnabled && displayedText && (
-          <div className="border-b pb-4">
-            {/* 인식된 텍스트 표시 */}
-            <div className={`text-center transition-opacity duration-500 ease-in-out ${showRecognizedText ? 'opacity-100' : 'opacity-0'}`}>
-              <div className={`text-base font-semibold ${matchedItemText ? 'text-foreground' : 'text-muted-foreground'}`}>
+        {/* 화면 중앙 플로팅 오버레이 - 인식된 텍스트 */}
+        {displayedText && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+            <div className={`bg-background/80 backdrop-blur-md border rounded-full px-6 py-4 max-w-md mx-4 transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+              <div className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}>
                 {displayedText}
               </div>
             </div>
