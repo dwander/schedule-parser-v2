@@ -617,7 +617,9 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 const parts = currentTime.split(':')
                 return (
                   <>
-                    <span className="text-6xl">{parts[0]}:{parts[1]}</span>
+                    <span className="text-6xl">{parts[0]}</span>
+                    <span className="text-6xl opacity-40">:</span>
+                    <span className="text-6xl">{parts[1]}</span>
                     {parts[2] && <span className="text-3xl ml-3">{parts[2]}</span>}
                   </>
                 )
