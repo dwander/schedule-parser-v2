@@ -578,11 +578,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         {/* 음성 인식 시 현재 시간 표시 영역 */}
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out ${
-            voiceEnabled ? 'max-h-24 opacity-100 mb-4' : 'max-h-0 opacity-0'
+            voiceEnabled ? 'max-h-32 opacity-100 -mt-2 mb-2' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="pb-2">
-            <div className="text-center text-4xl font-mono font-thin tabular-nums">
+          <div className="pb-1">
+            <div className="text-center text-6xl font-mono font-thin tabular-nums">
               {currentTime}
             </div>
           </div>
