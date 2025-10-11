@@ -29,3 +29,8 @@ export const VOICE_RECOGNITION_THRESHOLD = {
   MIN: 60,     // 최소값 60%
   MAX: 100,    // 최대값 100%
 } as const
+
+// Schedule Timer
+export const SCHEDULE_TIMER = {
+  DURATION_MINUTES: 45, // 스케줄 진행 시간 (분)
+} as const

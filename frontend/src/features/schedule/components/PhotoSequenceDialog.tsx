@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
-import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD } from '@/lib/constants/photoSequence'
+import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD, SCHEDULE_TIMER } from '@/lib/constants/photoSequence'
 import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
 import { SortableItem } from './SortableItem'
 import { TrainingDataManager } from './TrainingDataManager'
@@ -625,6 +625,33 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 )
               })()}
             </div>
+            {schedule.time && (() => {
+              // 예약 시간의 분만 가져오기
+              const [scheduleHours, scheduleMinutes] = schedule.time.split(':').map(Number)
+
+              // 현재 시간의 분만 가져오기
+              const now = new Date()
+              const currentMinutes = now.getMinutes()
+
+              // 예약 시간 기준 경과 시간 (분만 비교)
+              const elapsedMinutes = currentMinutes - scheduleMinutes
+
+              // 목표 시간에서 경과 시간을 뺀 남은 시간
+              const remainingMinutes = SCHEDULE_TIMER.DURATION_MINUTES - elapsedMinutes
+
+              // 목표 시간 계산 (예약 시간 + 진행 시간)
+              const targetTotalMinutes = scheduleMinutes + SCHEDULE_TIMER.DURATION_MINUTES
+              const targetMinutes = targetTotalMinutes % 60
+
+              return (
+                <div className="text-center text-sm text-muted-foreground mt-1">
+                  <span className="font-bold text-base">{String(targetMinutes).padStart(2, '0')}</span>
+                  <span className="opacity-50">분 까지 </span>
+                  <span className="font-bold text-base">{remainingMinutes > 0 ? String(remainingMinutes).padStart(2, '0') : '00'}</span>
+                  <span className="opacity-50">분 남음</span>
+                </div>
+              )
+            })()}
           </div>
         </div>
 
