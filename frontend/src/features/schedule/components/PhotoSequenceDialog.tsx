@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -17,6 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
 import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG } from '@/lib/constants/photoSequence'
 import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
@@ -90,6 +96,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
   const [showTrainingManager, setShowTrainingManager] = useState(false)
+  const [showAccuracySettings, setShowAccuracySettings] = useState(false)
   const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
   const [showRecognizedText, setShowRecognizedText] = useState(false)
   const [displayedText, setDisplayedText] = useState('')
@@ -513,15 +520,28 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             >
               {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTrainingManager(true)}
-              className="h-9 w-9"
-              title="훈련 데이터 관리"
-            >
-              <CassetteTape className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  title="설정"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowTrainingManager(true)}>
+                  <CassetteTape className="h-4 w-4 mr-2" />
+                  음성인식 훈련 데이터
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAccuracySettings(true)}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  음성인식 정확도 설정
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
@@ -669,6 +689,14 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         onOpenChange={setVoiceNotSupportedOpen}
         title="음성 인식 지원 안 됨"
         description="현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome, Edge, Safari 등의 브라우저를 사용해주세요."
+      />
+
+      {/* 음성인식 정확도 설정 다이얼로그 (임시) */}
+      <AlertDialog
+        open={showAccuracySettings}
+        onOpenChange={setShowAccuracySettings}
+        title="음성인식 정확도 설정"
+        description="이 기능은 추후 구현 예정입니다."
       />
     </>
   )
