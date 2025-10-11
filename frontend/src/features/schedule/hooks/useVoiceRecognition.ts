@@ -4,6 +4,7 @@ import type { VoiceTrainingData } from '../types/voiceRecognition'
 interface UseVoiceRecognitionProps {
   enabled: boolean
   trainingData: VoiceTrainingData
+  itemTexts: string[]  // 실제 카드 제목 리스트
   onMatch: (itemText: string) => void
   onCollect?: (phrase: string) => void  // 훈련 모드용
   threshold?: number  // 유사도 임계값 (0-100, 기본 75)
@@ -188,13 +189,14 @@ function findBestMatchInSentence(sentence: string, keyword: string): number {
   return maxSimilarity
 }
 
-export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect, threshold = 75 }: UseVoiceRecognitionProps) {
+export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch, onCollect, threshold = 75 }: UseVoiceRecognitionProps) {
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
   const [isSupported, setIsSupported] = useState(true)
   const recognitionRef = useRef<any>(null)
   const enabledRef = useRef(enabled)
   const trainingDataRef = useRef(trainingData)
+  const itemTextsRef = useRef(itemTexts)
   const onMatchRef = useRef(onMatch)
   const onCollectRef = useRef(onCollect)
   const thresholdRef = useRef(threshold)
@@ -219,6 +221,10 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect,
   useEffect(() => {
     thresholdRef.current = threshold
   }, [threshold])
+
+  useEffect(() => {
+    itemTextsRef.current = itemTexts
+  }, [itemTexts])
 
   // 음성 인식 인스턴스 생성 (한 번만)
   useEffect(() => {
@@ -279,18 +285,18 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect,
         const normalizedTranscript = normalizeText(transcript)
         let bestMatch: { itemText: string; keyword: string; similarity: number } | null = null
 
-        // 모든 항목을 순회하면서 키워드 매칭
+        // 1. 훈련 데이터 키워드 매칭 (우선순위 1)
         for (const [itemText, keywords] of Object.entries(trainingDataRef.current)) {
           for (const keyword of keywords) {
             const normalizedKeyword = normalizeText(keyword)
 
-            // 1단계: 정확한 포함 매칭 (우선순위)
+            // 1-1단계: 정확한 포함 매칭
             if (normalizedTranscript.includes(normalizedKeyword)) {
               onMatchRef.current(itemText)
               return
             }
 
-            // 2단계: 유사도 기반 매칭 (슬라이딩 윈도우)
+            // 1-2단계: 유사도 기반 매칭 (슬라이딩 윈도우)
             const similarity = findBestMatchInSentence(normalizedTranscript, normalizedKeyword)
 
             // 유사도가 임계값 이상이고 현재 최고 매칭보다 높으면 업데이트
@@ -301,7 +307,32 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect,
           }
         }
 
-        // 최고 유사도 매칭이 있으면 실행
+        // 훈련 데이터로 매칭되면 실행
+        if (bestMatch) {
+          onMatchRef.current(bestMatch.itemText)
+          return
+        }
+
+        // 2. 카드 제목 직접 매칭 (우선순위 2)
+        for (const itemText of itemTextsRef.current) {
+          const normalizedItemText = normalizeText(itemText)
+
+          // 2-1단계: 정확한 포함 매칭
+          if (normalizedTranscript.includes(normalizedItemText)) {
+            onMatchRef.current(itemText)
+            return
+          }
+
+          // 2-2단계: 유사도 기반 매칭
+          const similarity = findBestMatchInSentence(normalizedTranscript, normalizedItemText)
+
+          const thresholdValue = thresholdRef.current / 100
+          if (similarity >= thresholdValue && (!bestMatch || similarity > bestMatch.similarity)) {
+            bestMatch = { itemText, keyword: itemText, similarity }
+          }
+        }
+
+        // 카드 제목으로 매칭이 있으면 실행
         if (bestMatch) {
           onMatchRef.current(bestMatch.itemText)
         }

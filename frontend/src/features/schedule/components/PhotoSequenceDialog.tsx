@@ -319,6 +319,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const { isListening, lastRecognized, isSupported } = useVoiceRecognition({
     enabled: open && voiceEnabled,
     trainingData,
+    itemTexts: activeItems.map(item => item.text),
     onMatch: handleVoiceMatch,
     onCollect: handleVoiceCollect,
     threshold: voiceThreshold,
