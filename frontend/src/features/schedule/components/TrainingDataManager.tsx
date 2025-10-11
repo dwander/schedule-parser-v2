@@ -101,7 +101,6 @@ export function TrainingDataManager({
       onOpenChange={onOpenChange}
       size="fullscreen-mobile"
       title="훈련 데이터 관리"
-      useHistory={false}
       showFooter={true}
       footerContent={
         <div className="flex gap-2 w-full">

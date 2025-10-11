@@ -69,6 +69,8 @@ export function ContentModal({
 }: ContentModalProps) {
   const isFullscreenMobile = size === 'fullscreen-mobile'
   const onOpenChangeRef = useRef(onOpenChange)
+  const myStateRef = useRef<{ modal: boolean; modalId: string } | null>(null)
+  const closedByPopStateRef = useRef(false)
 
   // onOpenChange ref 업데이트
   useEffect(() => {
@@ -79,14 +81,23 @@ export function ContentModal({
   useEffect(() => {
     if (!open || !useHistory) return
 
+    closedByPopStateRef.current = false
+
+    // 고유한 모달 ID 생성
+    const modalId = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const modalState = { modal: true, modalId }
+    myStateRef.current = modalState
+
     // 모달이 열릴 때 히스토리 추가
-    const modalState = { modal: true, timestamp: Date.now() }
     window.history.pushState(modalState, '')
 
     // 뒤로가기 이벤트 리스너
     const handlePopState = () => {
-      // 뒤로가기로 모달을 닫을 때만 처리
-      onOpenChangeRef.current(false)
+      // 현재 history.state의 modalId가 내 modalId와 다르면 → 내가 pop된 것
+      if (window.history.state?.modalId !== myStateRef.current?.modalId) {
+        closedByPopStateRef.current = true
+        onOpenChangeRef.current(false)
+      }
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -94,15 +105,25 @@ export function ContentModal({
     return () => {
       window.removeEventListener('popstate', handlePopState)
 
-      // 클린업 시 모달이 여전히 열려있다면 히스토리 정리
-      if (window.history.state?.modal) {
+      // popstate로 닫힌 경우가 아니고, 내가 아직 스택에 있으면 제거
+      if (!closedByPopStateRef.current &&
+          window.history.state?.modalId === myStateRef.current?.modalId) {
         window.history.back()
       }
+
+      myStateRef.current = null
     }
   }, [open, useHistory])
 
   const handleClose = () => {
-    onOpenChange(false)
+    // 히스토리를 사용하는 모달이면 history.back()으로 닫기
+    // (popstate 이벤트가 자동으로 모달을 닫음)
+    if (useHistory && myStateRef.current) {
+      window.history.back()
+    } else {
+      // 히스토리를 사용하지 않으면 직접 닫기
+      onOpenChange(false)
+    }
   }
 
   return (
