@@ -9,6 +9,7 @@ export const PHOTO_SEQUENCE_STORAGE_KEYS = {
   VOICE_TRAINING: 'photoSequenceVoiceTraining',
   VOICE_HINT_DISMISSED: 'photoSequenceVoiceHintDismissed',
   VOICE_THRESHOLD: 'photoSequenceVoiceThreshold',
+  SHOW_CLOCK: 'photoSequenceShowClock',
 } as const
 
 // Timers (milliseconds)

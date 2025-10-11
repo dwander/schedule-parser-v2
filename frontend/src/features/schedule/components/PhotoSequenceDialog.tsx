@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -90,6 +90,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
   const [voiceThreshold, setVoiceThreshold] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
+  const [showClock, setShowClock] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.SHOW_CLOCK, true)
 
   // 현재 시간 표시용 state
   const [currentTime, setCurrentTime] = useState('')
@@ -327,7 +328,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 현재 시간 업데이트 (1초마다)
   useEffect(() => {
-    if (!voiceEnabled) return
+    if (!showClock) return
 
     const updateTime = () => {
       const now = new Date()
@@ -343,7 +344,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     const interval = setInterval(updateTime, 1000) // 1초마다 업데이트
 
     return () => clearInterval(interval)
-  }, [voiceEnabled])
+  }, [showClock])
 
   // 모달이 닫히면 음성 인식 강제 종료 및 오버레이 즉시 제거
   useEffect(() => {
@@ -537,6 +538,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowClock(!showClock)}>
+                  {showClock ? <Check className="h-4 w-4 mr-2" /> : <Clock className="h-4 w-4 mr-2" />}
+                  현재시간 표시
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowTrainingManager(true)}>
                   <CassetteTape className="h-4 w-4 mr-2" />
                   음성인식 훈련 데이터
@@ -600,10 +605,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           </div>
         )}
 
-        {/* 음성 인식 시 현재 시간 표시 영역 */}
+        {/* 현재 시간 표시 영역 */}
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out ${
-            voiceEnabled ? 'max-h-32 opacity-100 -mt-2 mb-2' : 'max-h-0 opacity-0'
+            showClock ? 'max-h-32 opacity-100 -mt-2 mb-2' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="pb-1">
