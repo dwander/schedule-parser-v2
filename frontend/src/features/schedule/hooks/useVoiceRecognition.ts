@@ -6,6 +6,7 @@ interface UseVoiceRecognitionProps {
   trainingData: VoiceTrainingData
   onMatch: (itemText: string) => void
   onCollect?: (phrase: string) => void  // 훈련 모드용
+  threshold?: number  // 유사도 임계값 (0-100, 기본 75)
 }
 
 // 한글 유니코드 상수
@@ -187,7 +188,7 @@ function findBestMatchInSentence(sentence: string, keyword: string): number {
   return maxSimilarity
 }
 
-export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect }: UseVoiceRecognitionProps) {
+export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect, threshold = 75 }: UseVoiceRecognitionProps) {
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
   const [isSupported, setIsSupported] = useState(true)
@@ -196,6 +197,7 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
   const trainingDataRef = useRef(trainingData)
   const onMatchRef = useRef(onMatch)
   const onCollectRef = useRef(onCollect)
+  const thresholdRef = useRef(threshold)
 
   // ref 업데이트
   useEffect(() => {
@@ -213,6 +215,10 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
   useEffect(() => {
     onCollectRef.current = onCollect
   }, [onCollect])
+
+  useEffect(() => {
+    thresholdRef.current = threshold
+  }, [threshold])
 
   // 음성 인식 인스턴스 생성 (한 번만)
   useEffect(() => {
@@ -287,8 +293,9 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
             // 2단계: 유사도 기반 매칭 (슬라이딩 윈도우)
             const similarity = findBestMatchInSentence(normalizedTranscript, normalizedKeyword)
 
-            // 유사도가 75% 이상이고 현재 최고 매칭보다 높으면 업데이트
-            if (similarity >= 0.75 && (!bestMatch || similarity > bestMatch.similarity)) {
+            // 유사도가 임계값 이상이고 현재 최고 매칭보다 높으면 업데이트
+            const thresholdValue = thresholdRef.current / 100 // 퍼센트를 0~1로 변환
+            if (similarity >= thresholdValue && (!bestMatch || similarity > bestMatch.similarity)) {
               bestMatch = { itemText, keyword, similarity }
             }
           }

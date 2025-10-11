@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect, useRef } from 'react'
@@ -24,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
-import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG } from '@/lib/constants/photoSequence'
+import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD } from '@/lib/constants/photoSequence'
 import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
 import { SortableItem } from './SortableItem'
 import { TrainingDataManager } from './TrainingDataManager'
@@ -88,6 +89,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   })
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
+  const [voiceThreshold, setVoiceThreshold] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
 
   // 현재 시간 표시용 state
   const [currentTime, setCurrentTime] = useState('')
@@ -319,6 +321,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     trainingData,
     onMatch: handleVoiceMatch,
     onCollect: handleVoiceCollect,
+    threshold: voiceThreshold,
   })
 
   // 현재 시간 업데이트 (1분마다)
@@ -691,13 +694,59 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         description="현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome, Edge, Safari 등의 브라우저를 사용해주세요."
       />
 
-      {/* 음성인식 정확도 설정 다이얼로그 (임시) */}
-      <AlertDialog
+      {/* 음성인식 정확도 설정 다이얼로그 */}
+      <ContentModal
         open={showAccuracySettings}
         onOpenChange={setShowAccuracySettings}
+        size="md"
         title="음성인식 정확도 설정"
-        description="이 기능은 추후 구현 예정입니다."
-      />
+        showFooter={true}
+        footerContent={
+          <div className="flex justify-end w-full">
+            <Button onClick={() => setShowAccuracySettings(false)}>
+              확인
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-6">
+          {/* 설명 */}
+          <div className="space-y-2">
+            <h3 className="font-medium">휴리스틱 알고리즘이란?</h3>
+            <p className="text-sm text-muted-foreground">
+              음성 인식 시 입력된 음성과 등록된 키워드를 비교하여 얼마나 유사한지 판단하는 알고리즘입니다.
+              정확도가 높을수록 완벽하게 일치해야 인식되고, 낮을수록 비슷한 발음도 인식됩니다.
+            </p>
+          </div>
+
+          {/* 슬라이더 */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">매칭 정확도</label>
+              <span className="text-2xl font-bold tabular-nums">{voiceThreshold}%</span>
+            </div>
+            <Slider
+              value={[voiceThreshold]}
+              onValueChange={(value) => setVoiceThreshold(value[0])}
+              min={VOICE_RECOGNITION_THRESHOLD.MIN}
+              max={VOICE_RECOGNITION_THRESHOLD.MAX}
+              step={5}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>관대함 ({VOICE_RECOGNITION_THRESHOLD.MIN}%)</span>
+              <span>엄격함 ({VOICE_RECOGNITION_THRESHOLD.MAX}%)</span>
+            </div>
+          </div>
+
+          {/* 가이드 */}
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              💡 <strong>권장:</strong> 75-85% 정도가 적당합니다. 너무 낮으면 잘못된 인식이 많아지고, 너무 높으면 정확히 말해야만 인식됩니다.
+            </p>
+          </div>
+        </div>
+      </ContentModal>
     </>
   )
 }

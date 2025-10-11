@@ -8,6 +8,7 @@ export const PHOTO_SEQUENCE_STORAGE_KEYS = {
   VOICE_ENABLED: 'photoSequenceVoiceEnabled',
   VOICE_TRAINING: 'photoSequenceVoiceTraining',
   VOICE_HINT_DISMISSED: 'photoSequenceVoiceHintDismissed',
+  VOICE_THRESHOLD: 'photoSequenceVoiceThreshold',
 } as const
 
 // Timers (milliseconds)
@@ -19,4 +20,11 @@ export const PHOTO_SEQUENCE_TIMERS = {
 // Drag & Drop
 export const PHOTO_SEQUENCE_DRAG = {
   ACTIVATION_DISTANCE: 8, // pixels
+} as const
+
+// Voice Recognition Threshold
+export const VOICE_RECOGNITION_THRESHOLD = {
+  DEFAULT: 80, // 기본값 80%
+  MIN: 60,     // 최소값 60%
+  MAX: 100,    // 최대값 100%
 } as const
