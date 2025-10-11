@@ -626,30 +626,42 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               })()}
             </div>
             {schedule.time && (() => {
-              // 예약 시간의 분만 가져오기
+              // 예약 시간을 총 분으로 변환
               const [scheduleHours, scheduleMinutes] = schedule.time.split(':').map(Number)
+              const scheduleTimeInMinutes = scheduleHours * 60 + scheduleMinutes
 
-              // 현재 시간의 분만 가져오기
+              // 목표 시간 (예약 시간 + 진행 시간)
+              const targetTimeInMinutes = scheduleTimeInMinutes + SCHEDULE_TIMER.DURATION_MINUTES
+              const targetHours = Math.floor(targetTimeInMinutes / 60) % 24
+              const targetMinutes = targetTimeInMinutes % 60
+
+              // 현재 시간을 총 분으로 변환
               const now = new Date()
-              const currentMinutes = now.getMinutes()
+              const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes()
 
-              // 예약 시간 기준 경과 시간 (분만 비교)
-              const elapsedMinutes = currentMinutes - scheduleMinutes
+              // 남은 시간 계산 (분 단위)
+              const remainingTotalMinutes = targetTimeInMinutes - currentTimeInMinutes
 
-              // 목표 시간에서 경과 시간을 뺀 남은 시간
-              const remainingMinutes = SCHEDULE_TIMER.DURATION_MINUTES - elapsedMinutes
+              // 남은 시간을 시간과 분으로 변환
+              const remainingHours = Math.floor(remainingTotalMinutes / 60)
+              const remainingMinutes = remainingTotalMinutes % 60
 
-              // 목표 시간 계산 (예약 시간 + 진행 시간)
-              const targetTotalMinutes = scheduleMinutes + SCHEDULE_TIMER.DURATION_MINUTES
-              const targetHours = scheduleHours + Math.floor(targetTotalMinutes / 60)
-              const targetMinutes = targetTotalMinutes % 60
+              // 남은 시간 포맷팅
+              let remainingText = ''
+              if (remainingTotalMinutes <= 0) {
+                remainingText = '종료'
+              } else if (remainingHours > 0) {
+                remainingText = `${remainingHours}시간 ${String(remainingMinutes).padStart(2, '0')}분`
+              } else {
+                remainingText = `${String(remainingMinutes).padStart(2, '0')}분`
+              }
 
               return (
                 <div className="text-center text-sm text-muted-foreground mt-1">
                   <span className="font-bold text-base">{targetHours}:{String(targetMinutes).padStart(2, '0')}</span>
                   <span className="opacity-50"> 까지 </span>
-                  <span className="font-bold text-base">{remainingMinutes > 0 ? String(remainingMinutes).padStart(2, '0') : '00'}</span>
-                  <span className="opacity-50">분 남음</span>
+                  <span className="font-bold text-base">{remainingText}</span>
+                  <span className="opacity-50"> 남음</span>
                 </div>
               )
             })()}
