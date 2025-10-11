@@ -71,6 +71,47 @@ export function TagSelectCell({ value, onSave, onDelete, options, placeholder = 
     option.toLowerCase().includes(search.toLowerCase())
   )
 
+  // 뷰포트 내 포지셔닝 계산
+  const getDropdownPosition = () => {
+    if (!containerRef.current) return {}
+
+    const rect = containerRef.current.getBoundingClientRect()
+    const dropdownWidth = 350 // max-w-[350px]
+    const dropdownHeight = 250 // 대략적인 높이 (input + max-h-48 + padding)
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const gap = 2
+    const padding = 8
+
+    let top = rect.bottom + gap
+    let left = rect.left
+    let right: number | undefined
+
+    // 우측 오버플로우 체크
+    if (left + dropdownWidth > viewportWidth - padding) {
+      // 우측 정렬로 변경
+      left = undefined as any
+      right = viewportWidth - rect.right
+    }
+
+    // 하단 오버플로우 체크
+    if (top + dropdownHeight > viewportHeight - padding) {
+      // 위쪽에 배치
+      top = rect.top - dropdownHeight - gap
+
+      // 위쪽도 넘치면 화면 안쪽으로 강제 조정
+      if (top < padding) {
+        top = padding
+      }
+    }
+
+    return {
+      top,
+      left,
+      right,
+    }
+  }
+
   const dropdownContent = isOpen && containerRef.current ? createPortal(
     <div
       className="fixed inset-0 z-50"
@@ -84,10 +125,7 @@ export function TagSelectCell({ value, onSave, onDelete, options, placeholder = 
     >
       <div
         className="absolute bg-popover border border-border rounded-md shadow-lg min-w-[200px] max-w-[350px]"
-        style={{
-          top: containerRef.current.getBoundingClientRect().bottom + 2,
-          left: containerRef.current.getBoundingClientRect().left,
-        }}
+        style={getDropdownPosition()}
       >
         <input
           ref={inputRef}
