@@ -235,18 +235,25 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
     }
 
     recognition.onend = () => {
+      // enabled가 false면 완전 중지
+      if (!enabledRef.current) {
+        setIsListening(false)
+        setLastRecognized('')
+        return
+      }
+
       setIsListening(false)
 
       // enabled가 true면 자동으로 재시작 (약간의 딜레이)
-      if (enabledRef.current) {
-        setTimeout(() => {
+      setTimeout(() => {
+        if (enabledRef.current) {
           try {
             recognition.start()
           } catch (e) {
             // 이미 시작된 경우 무시
           }
-        }, 100)
-      }
+        }
+      }, 100)
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -323,13 +330,32 @@ export function useVoiceRecognition({ enabled, trainingData, onMatch, onCollect 
     if (!recognitionRef.current) return
 
     if (enabled) {
+      // 기존 실행 중인 인식이 있을 수 있으니 먼저 중지
       try {
-        recognitionRef.current.start()
+        recognitionRef.current.stop()
       } catch (e) {
-        // 이미 시작된 경우 무시
+        // 중지 실패 무시
       }
+
+      // 약간의 딜레이 후 새로 시작 (마이크 리소스 해제 대기)
+      const startTimer = setTimeout(() => {
+        try {
+          recognitionRef.current.start()
+        } catch (e) {
+          // 시작 실패 무시
+        }
+      }, 200)
+
+      return () => clearTimeout(startTimer)
     } else {
-      recognitionRef.current.stop()
+      // enabled가 false로 변경되면 즉시 중지하고 상태 초기화
+      try {
+        recognitionRef.current.stop()
+      } catch (e) {
+        // 중지 실패 무시
+      }
+
+      // 상태를 즉시 초기화
       setIsListening(false)
       setLastRecognized('')
     }

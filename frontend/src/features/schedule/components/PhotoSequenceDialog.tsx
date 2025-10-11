@@ -311,6 +311,13 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     onCollect: handleVoiceCollect,
   })
 
+  // 모달이 닫히면 음성 인식 강제 종료
+  useEffect(() => {
+    if (!open && voiceEnabled) {
+      setVoiceEnabled(false)
+    }
+  }, [open])
+
   // 음성 끄면 훈련 종료
   useEffect(() => {
     if (!voiceEnabled && trainingTargetId) {
