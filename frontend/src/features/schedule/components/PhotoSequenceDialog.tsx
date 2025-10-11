@@ -83,6 +83,9 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
 
+  // 현재 시간 표시용 state
+  const [currentTime, setCurrentTime] = useState('')
+
   const [trainingTargetId, setTrainingTargetId] = useState<string | null>(null)
   const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
   const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
@@ -310,6 +313,25 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     onMatch: handleVoiceMatch,
     onCollect: handleVoiceCollect,
   })
+
+  // 현재 시간 업데이트 (1분마다)
+  useEffect(() => {
+    if (!voiceEnabled) return
+
+    const updateTime = () => {
+      const now = new Date()
+      let hours = now.getHours()
+      hours = hours % 12
+      hours = hours ? hours : 12 // 0시는 12시로 표시
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      setCurrentTime(`${hours}:${minutes}`)
+    }
+
+    updateTime() // 즉시 표시
+    const interval = setInterval(updateTime, 60000) // 1분마다 업데이트
+
+    return () => clearInterval(interval)
+  }, [voiceEnabled])
 
   // 모달이 닫히면 음성 인식 강제 종료 및 오버레이 즉시 제거
   useEffect(() => {
@@ -552,6 +574,19 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             </div>
           </div>
         )}
+
+        {/* 음성 인식 시 현재 시간 표시 영역 */}
+        <div
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            voiceEnabled ? 'max-h-24 opacity-100 mb-4' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="pb-2">
+            <div className="text-center text-4xl font-mono font-thin tabular-nums">
+              {currentTime}
+            </div>
+          </div>
+        </div>
 
         {/* 체크리스트 */}
         <div className="space-y-4">
