@@ -325,7 +325,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     threshold: voiceThreshold,
   })
 
-  // 현재 시간 업데이트 (1분마다)
+  // 현재 시간 업데이트 (1초마다)
   useEffect(() => {
     if (!voiceEnabled) return
 
@@ -335,11 +335,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       hours = hours % 12
       hours = hours ? hours : 12 // 0시는 12시로 표시
       const minutes = String(now.getMinutes()).padStart(2, '0')
-      setCurrentTime(`${hours}:${minutes}`)
+      const seconds = String(now.getSeconds()).padStart(2, '0')
+      setCurrentTime(`${hours}:${minutes}:${seconds}`)
     }
 
     updateTime() // 즉시 표시
-    const interval = setInterval(updateTime, 60000) // 1분마다 업데이트
+    const interval = setInterval(updateTime, 1000) // 1초마다 업데이트
 
     return () => clearInterval(interval)
   }, [voiceEnabled])
@@ -606,8 +607,16 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           }`}
         >
           <div className="pb-1">
-            <div className="text-center text-6xl font-mono font-thin tabular-nums">
-              {currentTime}
+            <div className="text-center font-mono font-thin tabular-nums flex items-baseline justify-center gap-0">
+              {(() => {
+                const parts = currentTime.split(':')
+                return (
+                  <>
+                    <span className="text-6xl">{parts[0]}:{parts[1]}</span>
+                    {parts[2] && <span className="text-3xl ml-3">{parts[2]}</span>}
+                  </>
+                )
+              })()}
             </div>
           </div>
         </div>
