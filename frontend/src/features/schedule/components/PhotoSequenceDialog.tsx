@@ -641,12 +641,13 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
               // 목표 시간 계산 (예약 시간 + 진행 시간)
               const targetTotalMinutes = scheduleMinutes + SCHEDULE_TIMER.DURATION_MINUTES
+              const targetHours = scheduleHours + Math.floor(targetTotalMinutes / 60)
               const targetMinutes = targetTotalMinutes % 60
 
               return (
                 <div className="text-center text-sm text-muted-foreground mt-1">
-                  <span className="font-bold text-base">{String(targetMinutes).padStart(2, '0')}</span>
-                  <span className="opacity-50">분 까지 </span>
+                  <span className="font-bold text-base">{targetHours}:{String(targetMinutes).padStart(2, '0')}</span>
+                  <span className="opacity-50"> 까지 </span>
                   <span className="font-bold text-base">{remainingMinutes > 0 ? String(remainingMinutes).padStart(2, '0') : '00'}</span>
                   <span className="opacity-50">분 남음</span>
                 </div>
