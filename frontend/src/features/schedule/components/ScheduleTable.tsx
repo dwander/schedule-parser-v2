@@ -28,6 +28,7 @@ import { toast } from 'sonner'
 import { useState, useLayoutEffect, useRef, useEffect } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { UI_SIZES } from '@/lib/constants/ui'
+import { presetLabels } from '@/lib/utils/datePresets'
 
 interface ScheduleTableProps {
   data: Schedule[]
@@ -50,6 +51,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   // localStorage에서 불러온 문자열을 Date 객체로 변환
   const dateRange = {
+    preset: dateRangeFilter.preset,
     from: dateRangeFilter.from ? new Date(dateRangeFilter.from) : null,
     to: dateRangeFilter.to ? new Date(dateRangeFilter.to) : null,
   }
@@ -215,7 +217,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
                 dateRangeCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
               }`}>
-                {dateRange.from && dateRange.to
+                {dateRange.preset && dateRange.preset !== 'custom'
+                  ? presetLabels[dateRange.preset] || '전체기간'
+                  : dateRange.from && dateRange.to
                   ? `${formatShortDate(dateRange.from)} ~ ${formatShortDate(dateRange.to)}`
                   : '전체기간'}
               </span>

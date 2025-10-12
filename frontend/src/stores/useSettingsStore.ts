@@ -3,6 +3,21 @@ import { persist } from 'zustand/middleware'
 
 type Theme = 'light' | 'dark' | 'system'
 
+export type DateRangePreset =
+  | 'today'
+  | 'thisWeek'
+  | 'thisMonth'
+  | 'thisYear'
+  | 'lastWeek'
+  | 'lastMonth'
+  | 'lastYear'
+  | 'nextWeek'
+  | 'nextMonth'
+  | 'nextYear'
+  | 'all'
+  | 'custom'
+  | null
+
 export interface ColumnVisibility {
   select: boolean
   date: boolean
@@ -70,8 +85,8 @@ interface SettingsState {
   setColumnLabel: (columnId: keyof ColumnLabels, label: string) => void
 
   // 날짜 범위 필터
-  dateRangeFilter: { from: Date | null; to: Date | null }
-  setDateRangeFilter: (range: { from: Date | null; to: Date | null }) => void
+  dateRangeFilter: { preset: DateRangePreset; from: Date | null; to: Date | null }
+  setDateRangeFilter: (range: { preset?: DateRangePreset; from: Date | null; to: Date | null }) => void
 
   // 캘린더 연동 설정
   enabledCalendars: { google: boolean; naver: boolean }
@@ -157,7 +172,7 @@ export const useSettingsStore = create<SettingsState>()(
         memo: '전달사항',
         folderName: '폴더',
       },
-      dateRangeFilter: { from: null, to: null },
+      dateRangeFilter: { preset: null, from: null, to: null },
       enabledCalendars: { google: true, naver: true },
       skipNaverCalendarConfirm: false,
       sortBy: 'date-desc',
@@ -182,7 +197,14 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           columnLabels: { ...state.columnLabels, [columnId]: label }
         })),
-      setDateRangeFilter: (range) => set({ dateRangeFilter: range }),
+      setDateRangeFilter: (range) =>
+        set((state) => ({
+          dateRangeFilter: {
+            preset: range.preset !== undefined ? range.preset : state.dateRangeFilter.preset,
+            from: range.from,
+            to: range.to,
+          }
+        })),
       setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
       setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
       setSortBy: (sort) => set({ sortBy: sort }),

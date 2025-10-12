@@ -26,6 +26,7 @@ import { fetchConfig } from '@/lib/api/config'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { enableStrictDateParsing } from '@/lib/utils/safariDatePolyfill'
+import { calculateDateRangeFromPreset } from '@/lib/utils/datePresets'
 
 function AppContent() {
   // 개발 환경에서 Safari처럼 엄격한 날짜 파싱 활성화
@@ -40,7 +41,7 @@ function AppContent() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [selectedCount, setSelectedCount] = useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const { testPanelVisible, fontSize, dateRangeFilter, sortBy } = useSettingsStore()
+  const { testPanelVisible, fontSize, dateRangeFilter, sortBy, weekStartsOn } = useSettingsStore()
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
@@ -270,8 +271,24 @@ function AppContent() {
   const filteredSchedules = useMemo(() => {
     let filtered = schedules
 
-    // 날짜 범위 필터
-    if (dateRangeFilter.from && dateRangeFilter.to) {
+    // 날짜 범위 필터 - 프리셋 기반 동적 계산
+    if (dateRangeFilter.preset && dateRangeFilter.preset !== 'all') {
+      // 프리셋이 있으면 현재 시간 기준으로 동적 계산
+      const range = calculateDateRangeFromPreset(dateRangeFilter.preset, weekStartsOn)
+
+      if (range) {
+        const fromDate = range.from
+        const toDate = range.to
+
+        filtered = filtered.filter((schedule) => {
+          if (!schedule.date) return false
+          const [year, month, day] = schedule.date.split('.').map(Number)
+          const scheduleDate = new Date(year, month - 1, day)
+          return scheduleDate >= fromDate && scheduleDate <= toDate
+        })
+      }
+    } else if (dateRangeFilter.from && dateRangeFilter.to) {
+      // 프리셋이 없으면 저장된 날짜 사용 (custom 모드)
       const fromDate = new Date(dateRangeFilter.from)
       const toDate = new Date(dateRangeFilter.to)
 
@@ -337,7 +354,7 @@ function AppContent() {
     })
 
     return sorted
-  }, [schedules, dateRangeFilter, globalFilter, sortBy])
+  }, [schedules, dateRangeFilter, globalFilter, sortBy, weekStartsOn])
 
   // 필터링된 데이터로 통계 계산
   const stats = useMemo(() => {

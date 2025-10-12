@@ -13,13 +13,14 @@ import { useState } from 'react'
 import { addWeeks, addMonths, addYears, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useSettingsStore, type DateRangePreset } from '@/stores/useSettingsStore'
+import { calculateDateRangeFromPreset } from '@/lib/utils/datePresets'
 
 interface DateRangeFilterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  dateRange: { from: Date | null; to: Date | null }
-  onDateRangeChange: (range: { from: Date | null; to: Date | null }) => void
+  dateRange: { preset: DateRangePreset; from: Date | null; to: Date | null }
+  onDateRangeChange: (range: { preset?: DateRangePreset; from: Date | null; to: Date | null }) => void
 }
 
 export function DateRangeFilterDialog({
@@ -36,94 +37,62 @@ export function DateRangeFilterDialog({
 
   const handleApply = () => {
     if (tempFrom && tempTo) {
-      onDateRangeChange({ from: tempFrom, to: tempTo })
+      // 직접 선택한 경우 preset을 'custom'으로 설정
+      onDateRangeChange({ preset: 'custom', from: tempFrom, to: tempTo })
     }
     onOpenChange(false)
   }
 
-  const handleQuickSelect = (type: 'today' | 'thisWeek' | 'thisMonth' | 'thisYear' | 'all') => {
-    const now = new Date()
-    let from: Date
-    let to: Date
-
-    switch (type) {
-      case 'today':
-        from = startOfDay(now)
-        to = endOfDay(now)
-        break
-      case 'thisWeek':
-        from = startOfWeek(now, { weekStartsOn })
-        to = endOfWeek(now, { weekStartsOn })
-        break
-      case 'thisMonth':
-        from = startOfMonth(now)
-        to = endOfMonth(now)
-        break
-      case 'thisYear':
-        from = startOfYear(now)
-        to = endOfYear(now)
-        break
-      case 'all':
-        setTempFrom(undefined)
-        setTempTo(undefined)
-        onDateRangeChange({ from: null, to: null })
-        onOpenChange(false)
-        return
+  const handleQuickSelect = (preset: DateRangePreset) => {
+    if (preset === 'all') {
+      // 전체기간 선택 - preset만 저장하고 날짜는 null
+      onDateRangeChange({ preset: 'all', from: null, to: null })
+      onOpenChange(false)
+      return
     }
 
-    setTempFrom(from)
-    setTempTo(to)
+    // 프리셋 기반으로 날짜 계산
+    const range = calculateDateRangeFromPreset(preset, weekStartsOn)
+    if (range) {
+      // 프리셋과 계산된 날짜 모두 저장하고 바로 적용
+      onDateRangeChange({ preset, from: range.from, to: range.to })
+      onOpenChange(false)
+    }
   }
 
   const handleRelativeSelect = () => {
-    const now = new Date()
-    let from: Date
-    let to: Date
-
-    if (relativeTime === 'last') {
-      if (relativeUnit === 'week') {
-        from = startOfWeek(addWeeks(now, -1), { weekStartsOn })
-        to = endOfWeek(addWeeks(now, -1), { weekStartsOn })
-      } else if (relativeUnit === 'month') {
-        from = startOfMonth(addMonths(now, -1))
-        to = endOfMonth(addMonths(now, -1))
-      } else {
-        from = startOfYear(addYears(now, -1))
-        to = endOfYear(addYears(now, -1))
-      }
-    } else if (relativeTime === 'this') {
-      if (relativeUnit === 'week') {
-        from = startOfWeek(now, { weekStartsOn })
-        to = endOfWeek(now, { weekStartsOn })
-      } else if (relativeUnit === 'month') {
-        from = startOfMonth(now)
-        to = endOfMonth(now)
-      } else {
-        from = startOfYear(now)
-        to = endOfYear(now)
-      }
-    } else {
-      // next
-      if (relativeUnit === 'week') {
-        from = startOfWeek(addWeeks(now, 1), { weekStartsOn })
-        to = endOfWeek(addWeeks(now, 1), { weekStartsOn })
-      } else if (relativeUnit === 'month') {
-        from = startOfMonth(addMonths(now, 1))
-        to = endOfMonth(addMonths(now, 1))
-      } else {
-        from = startOfYear(addYears(now, 1))
-        to = endOfYear(addYears(now, 1))
-      }
+    // 간편 선택으로 프리셋 생성 (예: 'lastWeek', 'thisMonth', 'nextYear')
+    const presetMap: Record<string, DateRangePreset> = {
+      'last-week': 'lastWeek',
+      'last-month': 'lastMonth',
+      'last-year': 'lastYear',
+      'this-week': 'thisWeek',
+      'this-month': 'thisMonth',
+      'this-year': 'thisYear',
+      'next-week': 'nextWeek',
+      'next-month': 'nextMonth',
+      'next-year': 'nextYear',
     }
 
-    setTempFrom(from)
-    setTempTo(to)
+    const presetKey = `${relativeTime}-${relativeUnit}`
+    const preset = presetMap[presetKey]
+
+    if (preset) {
+      // 프리셋 기반으로 날짜 계산
+      const range = calculateDateRangeFromPreset(preset, weekStartsOn)
+      if (range) {
+        // 프리셋과 계산된 날짜 모두 저장하고 바로 적용
+        onDateRangeChange({ preset, from: range.from, to: range.to })
+        onOpenChange(false)
+      }
+    }
   }
 
   const handleReset = () => {
     setTempFrom(undefined)
     setTempTo(undefined)
-    onDateRangeChange({ from: null, to: null })
+    // 초기화 시 preset을 null로 설정 (전체기간)
+    onDateRangeChange({ preset: null, from: null, to: null })
   }
 
   return (
