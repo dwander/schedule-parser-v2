@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -63,6 +63,30 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
 
   // 모바일 서브메뉴 펼침 상태
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
+  // 브라우저 뒤로가기 처리
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      // 메뉴가 열릴 때 히스토리 추가
+      window.history.pushState({ mobileMenu: true }, '')
+
+      const handlePopState = (event: PopStateEvent) => {
+        // 뒤로가기 감지 시 메뉴 닫기
+        setMobileMenuOpen(false)
+      }
+
+      window.addEventListener('popstate', handlePopState)
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState)
+      }
+    } else {
+      // 메뉴가 프로그래밍적으로 닫힐 때 히스토리 정리
+      if (window.history.state?.mobileMenu) {
+        window.history.back()
+      }
+    }
+  }, [mobileMenuOpen])
 
   // 호버 핸들러 - 프로필 사진에 마우스 올리면 메뉴 열기
   const handleProfileMouseEnter = useCallback(() => {
@@ -320,7 +344,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => window.history.back()}
                   className="h-9 w-9"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -424,7 +448,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => window.history.back()}
               className="h-9 w-9"
             >
               <ArrowLeft className="h-5 w-5" />
