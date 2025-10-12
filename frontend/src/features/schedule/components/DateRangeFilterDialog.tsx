@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { addWeeks, addMonths, addYears, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -32,8 +32,36 @@ export function DateRangeFilterDialog({
   const { weekStartsOn } = useSettingsStore()
   const [tempFrom, setTempFrom] = useState<Date | undefined>(dateRange.from || undefined)
   const [tempTo, setTempTo] = useState<Date | undefined>(dateRange.to || undefined)
-  const [relativeTime, setRelativeTime] = useState<'last' | 'this' | 'next'>('this')
-  const [relativeUnit, setRelativeUnit] = useState<'week' | 'month' | 'year'>('week')
+
+  // 현재 선택된 프리셋으로부터 초기값 결정
+  const getInitialRelativeValues = () => {
+    const preset = dateRange.preset
+    if (preset === 'lastWeek') return { time: 'last' as const, unit: 'week' as const }
+    if (preset === 'lastMonth') return { time: 'last' as const, unit: 'month' as const }
+    if (preset === 'lastYear') return { time: 'last' as const, unit: 'year' as const }
+    if (preset === 'thisWeek') return { time: 'this' as const, unit: 'week' as const }
+    if (preset === 'thisMonth') return { time: 'this' as const, unit: 'month' as const }
+    if (preset === 'thisYear') return { time: 'this' as const, unit: 'year' as const }
+    if (preset === 'nextWeek') return { time: 'next' as const, unit: 'week' as const }
+    if (preset === 'nextMonth') return { time: 'next' as const, unit: 'month' as const }
+    if (preset === 'nextYear') return { time: 'next' as const, unit: 'year' as const }
+    return { time: 'this' as const, unit: 'week' as const }
+  }
+
+  const initialValues = getInitialRelativeValues()
+  const [relativeTime, setRelativeTime] = useState<'last' | 'this' | 'next'>(initialValues.time)
+  const [relativeUnit, setRelativeUnit] = useState<'week' | 'month' | 'year'>(initialValues.unit)
+
+  // 모달이 열릴 때마다 현재 프리셋에 맞춰 상태 업데이트
+  useEffect(() => {
+    if (open) {
+      const values = getInitialRelativeValues()
+      setRelativeTime(values.time)
+      setRelativeUnit(values.unit)
+      setTempFrom(dateRange.from || undefined)
+      setTempTo(dateRange.to || undefined)
+    }
+  }, [open, dateRange.preset])
 
   const handleApply = () => {
     if (tempFrom && tempTo) {
@@ -109,7 +137,13 @@ export function DateRangeFilterDialog({
             초기화
           </Button>
           <div className="flex-1"></div>
-          <Button onClick={handleApply} disabled={!tempFrom || !tempTo}>
+          <Button
+            onClick={handleApply}
+            disabled={!tempFrom || !tempTo}
+            className={cn(
+              tempFrom && tempTo && dateRange.preset === 'custom' && 'border-2 border-primary'
+            )}
+          >
             적용
           </Button>
         </div>
@@ -120,19 +154,54 @@ export function DateRangeFilterDialog({
         <div className="space-y-2">
           <h4 className="text-sm font-medium">빠른 선택</h4>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleQuickSelect('today')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSelect('today')}
+              className={cn(
+                dateRange.preset === 'today' && 'border-2 border-primary'
+              )}
+            >
               오늘
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleQuickSelect('thisWeek')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSelect('thisWeek')}
+              className={cn(
+                dateRange.preset === 'thisWeek' && 'border-2 border-primary'
+              )}
+            >
               이번주
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleQuickSelect('thisMonth')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSelect('thisMonth')}
+              className={cn(
+                dateRange.preset === 'thisMonth' && 'border-2 border-primary'
+              )}
+            >
               이번달
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleQuickSelect('thisYear')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSelect('thisYear')}
+              className={cn(
+                dateRange.preset === 'thisYear' && 'border-2 border-primary'
+              )}
+            >
               올해
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleQuickSelect('all')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSelect('all')}
+              className={cn(
+                dateRange.preset === 'all' && 'border-2 border-primary'
+              )}
+            >
               전체
             </Button>
           </div>
@@ -170,7 +239,12 @@ export function DateRangeFilterDialog({
 
         {/* 날짜 선택 */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">직접 선택</h4>
+          <h4 className="text-sm font-medium">
+            직접 선택
+            {dateRange.preset === 'custom' && (
+              <span className="ml-2 text-xs text-primary">(현재 선택됨)</span>
+            )}
+          </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* 시작일 */}
             <div className="space-y-2">
