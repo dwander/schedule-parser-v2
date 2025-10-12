@@ -625,43 +625,49 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 )
               })()}
             </div>
-            {schedule.time && (() => {
-              // 예약 시간을 총 분으로 변환
+            {schedule.time && schedule.date && (() => {
+              // 스케줄 날짜 파싱 (YYYY.MM.DD 형식)
+              const [year, month, day] = schedule.date.split('.').map(Number)
+
+              // 예약 시간 파싱
               const [scheduleHours, scheduleMinutes] = schedule.time.split(':').map(Number)
-              const scheduleTimeInMinutes = scheduleHours * 60 + scheduleMinutes
 
-              // 목표 시간 (예약 시간 + 진행 시간)
-              const targetTimeInMinutes = scheduleTimeInMinutes + SCHEDULE_TIMER.DURATION_MINUTES
-              const targetHours = Math.floor(targetTimeInMinutes / 60) % 24
-              const targetMinutes = targetTimeInMinutes % 60
-
-              // 현재 시간을 총 분으로 변환
+              // 현재 시간
               const now = new Date()
-              const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes()
 
-              // 남은 시간 계산 (분 단위)
-              const remainingTotalMinutes = targetTimeInMinutes - currentTimeInMinutes
+              // 목표 시간 (스케줄 날짜 + 예약 시간 + 진행 시간)
+              const targetDate = new Date(year, month - 1, day, scheduleHours, scheduleMinutes, 0, 0)
+              targetDate.setMinutes(targetDate.getMinutes() + SCHEDULE_TIMER.DURATION_MINUTES)
+
+              // 타임스탬프로 남은 시간 계산
+              const remainingMs = targetDate.getTime() - now.getTime()
+
+              // 이미 지났으면 표시하지 않음
+              if (remainingMs <= 0) {
+                return null
+              }
 
               // 남은 시간을 시간과 분으로 변환
+              const remainingTotalMinutes = Math.floor(remainingMs / 60000)
               const remainingHours = Math.floor(remainingTotalMinutes / 60)
               const remainingMinutes = remainingTotalMinutes % 60
 
-              // 남은 시간 포맷팅
-              let remainingText = ''
-              if (remainingTotalMinutes <= 0) {
-                remainingText = '종료'
-              } else if (remainingHours > 0) {
-                remainingText = `${remainingHours}시간 ${String(remainingMinutes).padStart(2, '0')}분`
-              } else {
-                remainingText = `${String(remainingMinutes).padStart(2, '0')}분`
-              }
+              // 목표 시간 포맷팅
+              const targetHours = targetDate.getHours()
+              const targetMinutes = targetDate.getMinutes()
 
               return (
                 <div className="text-center text-sm text-muted-foreground mt-1">
-                  <span className="font-bold text-base">{targetHours}:{String(targetMinutes).padStart(2, '0')}</span>
-                  <span className="opacity-50"> 까지 </span>
-                  <span className="font-bold text-base">{remainingText}</span>
-                  <span className="opacity-50"> 남음</span>
+                  <span className="font-bold text-base">{String(targetHours).padStart(2, '0')}:{String(targetMinutes).padStart(2, '0')}</span>
+                  <span className="opacity-50">분 까지 </span>
+                  {remainingHours > 0 && (
+                    <>
+                      <span className="font-bold text-base">{String(remainingHours).padStart(2, '0')}</span>
+                      <span className="opacity-50">시간 </span>
+                    </>
+                  )}
+                  <span className="font-bold text-base">{String(remainingMinutes).padStart(2, '0')}</span>
+                  <span className="opacity-50">분 남음</span>
                 </div>
               )
             })()}
