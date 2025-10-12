@@ -218,9 +218,9 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
           <div className="space-y-3 pt-4">
             {/* 구글 로그인 - FedCM 방식 */}
-            <div className="w-full flex justify-center">
-              <div className="py-0.5" style={{ width: '348px', maxWidth: '348px' }}>
-                <div style={{ width: '348px', maxWidth: '348px', overflow: 'hidden' }}>
+            <div className="w-full flex justify-center px-4">
+              <div className="py-0.5 w-full max-w-[348px]">
+                <div className="w-full overflow-hidden">
                   <GoogleLogin
                     onSuccess={handleGoogleLoginSuccess}
                     onError={handleGoogleLoginError}
@@ -230,7 +230,6 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
                     auto_select={true}
                     text="signin_with"
                     size="large"
-                    width="348"
                     logo_alignment="left"
                   />
                 </div>
@@ -238,10 +237,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             </div>
 
             {/* 네이버 로그인 */}
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center px-4">
               <Button
                 variant="outline"
-                className="w-[348px] h-11 text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
+                className="w-full max-w-[348px] h-11 text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
                 onClick={handleNaverLogin}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -252,10 +251,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             </div>
 
             {/* 카카오 로그인 */}
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center px-4">
               <Button
                 variant="outline"
-                className="w-[348px] h-11 text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
+                className="w-full max-w-[348px] h-11 text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
                 onClick={handleKakaoLogin}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
