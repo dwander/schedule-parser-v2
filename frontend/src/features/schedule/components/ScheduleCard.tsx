@@ -165,15 +165,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       folderName = `${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
     }
 
-    // 작가 정보 추가
-    if (schedule.photographer) {
-      if (schedule.cuts && schedule.cuts > 0) {
-        folderName += ` - ${schedule.photographer}(${schedule.cuts})`
+    // 작가 정보 추가 (컷수가 있을 때만)
+    if (schedule.cuts && schedule.cuts > 0) {
+      const totalCuts = schedule.cuts * 2
+      if (schedule.photographer) {
+        folderName += ` - ${schedule.photographer}(${totalCuts})`
       } else {
-        folderName += ` - ${schedule.photographer}`
+        folderName += ` - (${totalCuts})`
       }
-    } else if (schedule.cuts && schedule.cuts > 0) {
-      folderName += ` - (${schedule.cuts})`
     }
 
     // 클립보드 복사
