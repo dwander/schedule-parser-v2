@@ -23,8 +23,8 @@
   --input: 214.3 31.8% 84%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
-  --shadow: 0 0% 0%;
-  --shadow-opacity: 0.1;
+  --shadow-rgb: 0, 0, 0;
+  --shadow-opacity: 0.15;
 
   /* 브랜드 색상 */
   --naver-green: 147 97% 40%;
@@ -64,8 +64,8 @@
   --border: 217.2 18% 25%;
   --input: 217.2 18% 25%;
   --ring: 212.7 15% 75%;
-  --shadow: 0 0% 0%;
-  --shadow-opacity: 0.3;
+  --shadow-rgb: 0, 0, 0;
+  --shadow-opacity: 0.5;
 
   /* 브랜드 색상 (다크모드 동일) */
   --naver-green: 147 97% 40%;
@@ -97,11 +97,15 @@
     font-family: system-ui, -apple-system, sans-serif;
   }
 
-  /* 포커스 링 완전 제거 */
+  /* 포커스 링 제거 (그림자는 유지) */
   *:focus,
   *:focus-visible {
     outline: none !important;
-    box-shadow: none !important;
+  }
+
+  /* Tailwind ring 유틸리티 제거 */
+  *:focus-visible {
+    --tw-ring-shadow: none !important;
   }
 }
 
