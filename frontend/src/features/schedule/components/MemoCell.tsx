@@ -20,6 +20,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const [hadMarker, setHadMarker] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
 
   // memo 파싱 (useEffect보다 먼저 선언)
   const parsedMemo = useMemo(() => parseMemo(value), [value])
@@ -77,6 +78,31 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
     }
   }, [isEditing, editValue])
 
+  // 팝오버 위치 재조정 (렌더링 후 실제 크기로)
+  useEffect(() => {
+    if (!isExpanded || !popoverPosition || !popoverRef.current) return
+
+    const popover = popoverRef.current
+    const popoverWidth = popover.offsetWidth
+    const VIEWPORT_PADDING = 8
+
+    // 현재 위치에서 오른쪽 끝 계산
+    const rightEdge = popoverPosition.left + popoverWidth
+    const viewportWidth = window.innerWidth
+
+    // 오른쪽으로 벗어나는 경우에만 위치 재조정
+    if (rightEdge > viewportWidth - VIEWPORT_PADDING) {
+      const newLeft = Math.max(
+        VIEWPORT_PADDING,
+        viewportWidth - popoverWidth - VIEWPORT_PADDING
+      )
+
+      if (newLeft !== popoverPosition.left) {
+        setPopoverPosition({ ...popoverPosition, left: newLeft })
+      }
+    }
+  }, [isExpanded, popoverPosition])
+
   // 편집 모드 저장 핸들러
   const handleSaveEdit = () => {
     // 원래 마커가 있었으면 다시 추가
@@ -108,11 +134,13 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                     setDialogOpen(true)
                   } else {
                     const rect = e.currentTarget.getBoundingClientRect()
-                    // p-1 (4px) 패딩만큼 위로 올림
-                    setPopoverPosition({
-                      top: rect.top + window.scrollY - 4,
-                      left: rect.left + window.scrollX - 4
-                    })
+
+                    // 기본 위치 (뷰포트 기준, 패딩 4px 보정)
+                    // 실제 크기는 렌더링 후 useEffect에서 체크하여 재조정
+                    const left = rect.left - 4
+                    const top = rect.top - 4
+
+                    setPopoverPosition({ top, left })
                     setIsExpanded(true)
                     // 펼침이 필요없는 짧은 텍스트는 바로 편집 모드로
                     if (!isTruncated) {
@@ -154,6 +182,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
               {/* 메모 팝오버 */}
               <div
+                ref={popoverRef}
                 className="fixed z-50 rounded-lg shadow-2xl min-w-[300px] max-w-[500px] bg-background"
                 style={{
                   top: `${popoverPosition.top}px`,

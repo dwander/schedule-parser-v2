@@ -1,5 +1,10 @@
+#!/bin/sh
+
+# Git 저장소 루트로 이동
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
 # Frontend 디렉토리로 이동
-cd frontend
+cd frontend || exit 1
 
 # TypeScript 타입 체크 (전체 프로젝트)
 echo "🔍 Running TypeScript type check..."
@@ -8,11 +13,24 @@ npm run typecheck || {
   exit 1
 }
 
-# ESLint (변경된 파일만)
+# ESLint (변경된 파일만, staged 파일 직접 체크)
 echo "🔍 Running ESLint on staged files..."
-npx lint-staged || {
-  echo "❌ ESLint failed. Please fix linting errors before committing."
-  exit 1
-}
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+  # frontend 디렉토리 기준으로 필터링
+  FRONTEND_FILES=$(echo "$STAGED_FILES" | grep "^frontend/" | sed 's|^frontend/||' || true)
+
+  if [ -n "$FRONTEND_FILES" ]; then
+    echo "Checking: $FRONTEND_FILES"
+    echo "$FRONTEND_FILES" | xargs npx eslint --fix || {
+      echo "❌ ESLint failed. Please fix linting errors before committing."
+      exit 1
+    }
+
+    # eslint가 파일을 수정했으면 다시 staged에 추가
+    echo "$FRONTEND_FILES" | xargs git add
+  fi
+fi
 
 echo "✅ All checks passed!"
