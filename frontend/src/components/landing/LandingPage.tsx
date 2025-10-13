@@ -145,7 +145,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-[39px] text-sm bg-[#03C75A] hover:bg-[#02B350] text-white border-[#03C75A] hover:border-[#02B350]"
+              className="w-[348px] h-[39px] text-sm bg-naver hover:brightness-90 text-white border-naver"
               onClick={handleNaverLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -159,7 +159,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-[39px] text-sm bg-[#FEE500] hover:bg-[#FDD835] text-[#000000] border-[#FEE500] hover:border-[#FDD835]"
+              className="w-[348px] h-[39px] text-sm bg-kakao hover:brightness-95 text-kakao-foreground border-kakao"
               onClick={handleKakaoLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">

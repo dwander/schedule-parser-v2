@@ -25,6 +25,23 @@
   --radius: 0.5rem;
   --shadow: 0 0% 0%;
   --shadow-opacity: 0.1;
+
+  /* 브랜드 색상 */
+  --naver-green: 147 97% 40%;
+  --kakao-yellow: 54 100% 50%;
+  --kakao-foreground: 0 0% 0%;
+
+  /* 상태 색상 */
+  --warning: 48 96% 89%;
+  --warning-foreground: 32 95% 44%;
+  --warning-border: 48 96% 53%;
+  --error: 0 86% 97%;
+  --error-foreground: 0 84% 60%;
+  --error-border: 0 84% 60%;
+
+  /* 버전 뱃지 */
+  --version-badge-bg: 0 0% 0%;
+  --version-badge-opacity: 0.8;
 }
 
 .dark {
@@ -49,6 +66,23 @@
   --ring: 212.7 15% 75%;
   --shadow: 0 0% 0%;
   --shadow-opacity: 0.3;
+
+  /* 브랜드 색상 (다크모드 동일) */
+  --naver-green: 147 97% 40%;
+  --kakao-yellow: 54 100% 50%;
+  --kakao-foreground: 0 0% 0%;
+
+  /* 상태 색상 (다크모드) */
+  --warning: 48 96% 8%;
+  --warning-foreground: 48 96% 89%;
+  --warning-border: 48 96% 44%;
+  --error: 0 86% 8%;
+  --error-foreground: 0 84% 97%;
+  --error-border: 0 84% 60%;
+
+  /* 버전 뱃지 */
+  --version-badge-bg: 0 0% 0%;
+  --version-badge-opacity: 0.8;
 }
 
 @layer base {

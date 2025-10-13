@@ -37,7 +37,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
           flex h-14 items-center justify-between px-[0.625rem]
           bg-background/60 backdrop-blur-sm
           transition-all duration-500 ease-in-out
-          ${isScrolled ? 'border-b-2 border-white/20 dark:border-white/10' : 'border-b-2 border-transparent'}
+          ${isScrolled ? 'border-b-2 border-border/20' : 'border-b-2 border-transparent'}
         `}
         style={{
           boxShadow: isScrolled

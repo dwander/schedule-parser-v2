@@ -447,9 +447,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                         }}
                         className={`border-b border-border hover:bg-accent/50 transition-colors ${
                           isDuplicate
-                            ? 'bg-yellow-50 dark:bg-yellow-950/20 border-l-4 border-l-yellow-500'
+                            ? 'bg-warning border-l-4 border-l-warning-border'
                             : isConflict
-                            ? 'bg-red-50 dark:bg-red-950/20 border-l-4 border-l-red-500'
+                            ? 'bg-error border-l-4 border-l-error-border'
                             : ''
                         }`}
                       >

@@ -227,9 +227,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         ${isSelected ? 'ring-2 ring-primary' : ''}
         ${
           isDuplicate
-            ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-500 border-l-4'
+            ? 'bg-warning border-warning-border border-l-4'
             : isConflict
-            ? 'bg-red-50 dark:bg-red-950/20 border-red-500 border-l-4'
+            ? 'bg-error border-error-border border-l-4'
             : 'border-border bg-card'
         }
       `}
@@ -527,7 +527,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     onClick={handleNaverCalendarClick}
                     title="네이버 캘린더"
                   >
-                    <CalendarPlus className="h-4 w-4 text-[#03C75A]" />
+                    <CalendarPlus className="h-4 w-4 text-naver" />
                   </Button>
                 )}
               </div>

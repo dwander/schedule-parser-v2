@@ -41,6 +41,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        naver: {
+          DEFAULT: "hsl(var(--naver-green))",
+        },
+        kakao: {
+          DEFAULT: "hsl(var(--kakao-yellow))",
+          foreground: "hsl(var(--kakao-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+          border: "hsl(var(--warning-border))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--error))",
+          foreground: "hsl(var(--error-foreground))",
+          border: "hsl(var(--error-border))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
