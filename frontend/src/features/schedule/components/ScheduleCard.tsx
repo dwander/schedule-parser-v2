@@ -21,6 +21,7 @@ import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
 import { logger } from '@/lib/utils/logger'
 import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
+import { PHOTO_CONSTANTS } from '@/lib/constants/schedule'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -168,7 +169,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
     // 작가 정보 추가 (컷수가 있을 때만)
     if (schedule.cuts && schedule.cuts > 0) {
-      const totalCuts = schedule.cuts * 2
+      const totalCuts = schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER
       if (schedule.photographer) {
         folderName += ` - ${schedule.photographer}(${totalCuts})`
       } else {

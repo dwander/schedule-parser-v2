@@ -24,6 +24,7 @@ import { useDeleteTag, useTags } from './useTags'
 import { FolderCheck, Clipboard } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
 import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
+import { TIME_CONSTANTS, PHOTO_CONSTANTS } from '@/lib/constants/schedule'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -50,7 +51,7 @@ export function useScheduleTable(
     // 시간 문자열을 분 단위로 변환 (HH:MM -> 분)
     const timeToMinutes = (time: string): number => {
       const [hours, minutes] = time.split(':').map(Number)
-      return hours * 60 + minutes
+      return hours * TIME_CONSTANTS.MINUTES_PER_HOUR + minutes
     }
 
     // 날짜+시간 기준으로 그룹화
@@ -92,8 +93,8 @@ export function useScheduleTable(
       for (let i = 0; i < schedules.length; i++) {
         for (let j = i + 1; j < schedules.length; j++) {
           const timeDiff = Math.abs(schedules[i].minutes - schedules[j].minutes)
-          // 1시간(60분) 이내이고, 완전 중복이 아닌 경우 시간 충돌
-          if (timeDiff > 0 && timeDiff < 60) {
+          // 1시간 이내이고, 완전 중복이 아닌 경우 시간 충돌
+          if (timeDiff > 0 && timeDiff < TIME_CONSTANTS.CONFLICT_THRESHOLD_MINUTES) {
             conflicts.add(schedules[i].index)
             conflicts.add(schedules[j].index)
           }
@@ -506,7 +507,7 @@ export function useScheduleTable(
 
             // 작가 정보 추가 (컷수가 있을 때만)
             if (schedule.cuts && schedule.cuts > 0) {
-              const totalCuts = schedule.cuts * 2
+              const totalCuts = schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER
               if (schedule.photographer) {
                 folderName += ` - ${schedule.photographer}(${totalCuts})`
               } else {
