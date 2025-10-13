@@ -27,6 +27,7 @@ import axios from 'axios'
 import { toast } from 'sonner'
 import { enableStrictDateParsing } from '@/lib/utils/safariDatePolyfill'
 import { calculateDateRangeFromPreset } from '@/lib/utils/datePresets'
+import { logger } from '@/lib/utils/logger'
 
 function AppContent() {
   // 개발 환경에서 Safari처럼 엄격한 날짜 파싱 활성화
@@ -97,7 +98,7 @@ function AppContent() {
           queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
         } catch (error) {
-          console.error('네이버 로그인 실패:', error)
+          logger.error('네이버 로그인 실패:', error)
           toast.error('네이버 로그인에 실패했습니다')
         }
       }
@@ -137,7 +138,7 @@ function AppContent() {
           queryClient.invalidateQueries({ queryKey: ['tags'] })
           toast.success(`환영합니다, ${user.name}님!`)
         } catch (error) {
-          console.error('카카오 로그인 실패:', error)
+          logger.error('카카오 로그인 실패:', error)
           toast.error('카카오 로그인에 실패했습니다')
         }
       }
@@ -178,7 +179,7 @@ function AppContent() {
           updateNaverToken(response.data.access_token, response.data.refresh_token)
           toast.success('네이버 캘린더 연동이 완료되었습니다')
         } catch (error) {
-          console.error('네이버 캘린더 연동 실패:', error)
+          logger.error('네이버 캘린더 연동 실패:', error)
           toast.error('네이버 캘린더 연동에 실패했습니다')
         }
       }
@@ -245,7 +246,7 @@ function AppContent() {
             // 사용자 정보 업데이트 (hasSeenSampleData = true)
             login({ ...user, hasSeenSampleData: true })
           } catch (error) {
-            console.error('예제 데이터 표시 기록 실패:', error)
+            logger.error('예제 데이터 표시 기록 실패:', error)
           }
         } else {
           // 익명 사용자: localStorage에 기록
@@ -255,7 +256,7 @@ function AppContent() {
         toast.success('🎉 환영합니다! 예제 데이터가 추가되었습니다.')
       },
       onError: (error) => {
-        console.error('예제 데이터 추가 실패:', error)
+        logger.error('예제 데이터 추가 실패:', error)
         localStorage.removeItem(APP_STORAGE_KEYS.ADDING_EXAMPLES) // 실패 시 플래그 제거
       }
     })
@@ -434,7 +435,7 @@ function App() {
         setConfig(config)
       })
       .catch((error) => {
-        console.error('Failed to load config:', error)
+        logger.error('Failed to load config:', error)
         toast.error('설정을 불러오는데 실패했습니다.')
       })
   }, [setConfig])
