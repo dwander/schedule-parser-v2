@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Frontend 디렉토리로 이동
+cd frontend
+
+# TypeScript 타입 체크 (전체 프로젝트)
+echo "🔍 Running TypeScript type check..."
+npm run typecheck || {
+  echo "❌ Type check failed. Please fix type errors before committing."
+  exit 1
+}
+
+# ESLint (변경된 파일만)
+echo "🔍 Running ESLint on staged files..."
+npx lint-staged || {
+  echo "❌ ESLint failed. Please fix linting errors before committing."
+  exit 1
+}
+
+echo "✅ All checks passed!"
