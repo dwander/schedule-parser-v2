@@ -457,6 +457,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                         {row.getVisibleCells().map((cell) => {
                           // 가변폭 컬럼 (memo 또는 spacer)
                           const width = cell.column.id === flexColumnId ? flexWidth : cell.column.getSize()
+                          const isMemoColumn = cell.column.id === 'memo'
                           return (
                             <td
                               key={cell.id}
@@ -465,7 +466,11 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                                 minWidth: `${width}px`,
                                 maxWidth: `${width}px`
                               }}
-                              className="px-3 py-2 text-sm overflow-hidden text-ellipsis whitespace-nowrap"
+                              className={`px-3 py-2 text-sm ${
+                                isMemoColumn
+                                  ? 'overflow-visible'
+                                  : 'overflow-hidden text-ellipsis whitespace-nowrap'
+                              }`}
                             >
                               {flexRender(
                                 cell.column.columnDef.cell,

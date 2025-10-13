@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { MemoEditDialog } from './MemoEditDialog'
 import { Edit2, ChevronDown } from 'lucide-react'
 import { parseMemo, hasStructuredMemo } from '@/lib/utils/memoParser'
@@ -13,6 +14,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isTruncated, setIsTruncated] = useState(false)
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null)
   const textRef = useRef<HTMLDivElement>(null)
 
   // memo 파싱 (useEffect보다 먼저 선언)
@@ -21,11 +23,11 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
   // 텍스트가 잘렸는지 확인
   useEffect(() => {
-    if (!cardMode) return
-
-    // 구조화된 메모: 아이템 개수로 판단 (3개 초과 시 잘림)
+    // 구조화된 메모: 아이템 개수로 판단
     if (isStructured) {
-      setIsTruncated(parsedMemo.length > 3)
+      // 카드 모드: 3개 초과, 테이블 모드: 2개 초과
+      const threshold = cardMode ? 3 : 2
+      setIsTruncated(parsedMemo.length > threshold)
       return
     }
 
@@ -38,14 +40,128 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   }, [value, cardMode, isExpanded, isStructured, parsedMemo.length])
 
   if (!cardMode) {
-    // 테이블 모드 (기존 동작)
+    // 테이블 모드 (오버레이 방식 펼침)
     return (
       <>
-        <div
-          onClick={() => setDialogOpen(true)}
-          className="w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors truncate text-muted-foreground"
-        >
-          {value || '클릭하여 입력'}
+        <div className="relative w-full">
+          {/* 기본 상태 (truncate) - 펼쳐진 상태일 때는 숨김 */}
+          {!isExpanded && (
+            <div className="relative">
+              <div
+                ref={textRef}
+                onClick={(e) => {
+                  if (!value) {
+                    setDialogOpen(true)
+                  } else if (isTruncated) {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    // p-1 (4px) 패딩만큼 위로 올림
+                    setPopoverPosition({
+                      top: rect.top + window.scrollY - 4,
+                      left: rect.left + window.scrollX - 4
+                    })
+                    setIsExpanded(true)
+                  }
+                }}
+                className={`w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors truncate text-muted-foreground text-sm ${
+                  isTruncated ? 'pr-6' : ''
+                }`}
+              >
+                {value || '클릭하여 입력'}
+              </div>
+
+              {/* 펼침 가능 표시 v 아이콘 */}
+              {isTruncated && (
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 펼쳐진 상태: 오버레이 팝오버 (Portal) */}
+          {isExpanded && popoverPosition && createPortal(
+            <>
+              {/* 배경 오버레이 (클릭 시 닫기) */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => {
+                  setIsExpanded(false)
+                  setPopoverPosition(null)
+                }}
+              />
+
+              {/* 메모 팝오버 */}
+              <div
+                className="fixed z-50 rounded-lg shadow-2xl min-w-[300px] max-w-[500px] p-1 bg-background"
+                style={{
+                  top: `${popoverPosition.top}px`,
+                  left: `${popoverPosition.left}px`
+                }}
+              >
+                {/* 내용 */}
+                <div className="relative px-3 py-2 pr-10 max-h-[400px] overflow-y-auto text-sm bg-card border border-border rounded-md shadow-sm">
+                  {!isStructured && (
+                    <div className="text-foreground whitespace-pre-wrap">
+                      {value}
+                    </div>
+                  )}
+
+                  {isStructured && (
+                    <div className="space-y-2">
+                      {parsedMemo.map((item, index) => {
+                        const isLongContent = item.content.length > 25 || item.content.includes('\n')
+
+                        return (
+                          <div key={index}>
+                            {item.title && !isLongContent && (
+                              <dl className="flex gap-2">
+                                <dt className="font-medium text-foreground flex-shrink-0">
+                                  {item.title}:
+                                </dt>
+                                <dd className="text-muted-foreground whitespace-pre-wrap">
+                                  {item.content}
+                                </dd>
+                              </dl>
+                            )}
+
+                            {item.title && isLongContent && (
+                              <div className="border-l-2 border-primary/30 pl-2">
+                                <h5 className="font-medium text-foreground mb-1">
+                                  {item.title}
+                                </h5>
+                                <div className="text-muted-foreground whitespace-pre-wrap text-xs">
+                                  {item.content}
+                                </div>
+                              </div>
+                            )}
+
+                            {!item.title && (
+                              <p className="text-muted-foreground whitespace-pre-wrap">
+                                {item.content}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* 우측 상단 닫기 버튼 */}
+                  <button
+                    onClick={() => {
+                      setIsExpanded(false)
+                      setPopoverPosition(null)
+                    }}
+                    className="absolute top-2 right-2 p-1 rounded hover:bg-accent transition-colors"
+                    title="닫기"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+                  </button>
+                </div>
+              </div>
+            </>,
+            document.body
+          )}
         </div>
         <MemoEditDialog
           open={dialogOpen}
