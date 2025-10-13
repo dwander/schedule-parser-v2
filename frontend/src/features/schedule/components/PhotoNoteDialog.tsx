@@ -111,7 +111,7 @@ const defaultPhotoNote: PhotoNote = {
 }
 
 // Deep merge 유틸리티
-function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T> | undefined): T {
+function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T> | undefined): T {
   if (!source) return target
 
   const result = { ...target }
@@ -121,9 +121,12 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T> 
     const targetValue = target[key]
 
     if (sourceValue && typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
-      result[key] = deepMerge((targetValue || {}) as any, sourceValue as any)
+      result[key] = deepMerge(
+        (targetValue || {}) as Record<string, unknown>,
+        sourceValue as Record<string, unknown>
+      ) as T[Extract<keyof T, string>]
     } else {
-      result[key] = sourceValue as any
+      result[key] = sourceValue as T[Extract<keyof T, string>]
     }
   }
 
@@ -288,7 +291,8 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   }
 
   const toggleEvent = (eventKey: string) => {
-    const current = (noteData.ceremony?.events as any)?.[eventKey]
+    const events = noteData.ceremony?.events as Record<string, unknown> | undefined
+    const current = events?.[eventKey]
     const newValue = !current
 
     // 새 데이터 객체 생성
@@ -611,7 +615,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
                       id={`event-${key}`}
-                      checked={(noteData.ceremony?.events as any)?.[key] === true}
+                      checked={(noteData.ceremony?.events as Record<string, unknown> | undefined)?.[key] === true}
                       onCheckedChange={() => toggleEvent(key)}
                     />
                     <Label

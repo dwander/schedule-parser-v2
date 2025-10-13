@@ -49,6 +49,7 @@ export interface PhotoNote {
   }
   photoConceptMemo?: string
   requestsMemo?: string
+  [key: string]: unknown  // index signature for deep merge compatibility
 }
 
 export interface Schedule {

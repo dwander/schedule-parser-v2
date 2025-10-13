@@ -33,6 +33,7 @@ export interface ColumnVisibility {
   manager: boolean
   memo: boolean
   folderName: boolean
+  [key: string]: boolean  // index signature for TanStack Table compatibility
 }
 
 export interface ColumnLabels {
@@ -192,11 +193,11 @@ export const useSettingsStore = create<SettingsState>()(
       setViewMode: (mode) => set({ viewMode: mode }),
       setListColumnVisibility: (visibility) =>
         set((state) => ({
-          listColumnVisibility: { ...state.listColumnVisibility, ...visibility }
+          listColumnVisibility: { ...state.listColumnVisibility, ...visibility } as ColumnVisibility
         })),
       setCardColumnVisibility: (visibility) =>
         set((state) => ({
-          cardColumnVisibility: { ...state.cardColumnVisibility, ...visibility }
+          cardColumnVisibility: { ...state.cardColumnVisibility, ...visibility } as ColumnVisibility
         })),
       setColumnLabel: (columnId, label) =>
         set((state) => ({

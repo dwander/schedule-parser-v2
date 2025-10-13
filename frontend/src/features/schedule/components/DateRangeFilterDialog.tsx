@@ -210,7 +210,7 @@ export function DateRangeFilterDialog({
         <div className="space-y-2">
           <h4 className="text-sm font-medium">간편 선택</h4>
           <div className="flex gap-2 items-center">
-            <Select value={relativeTime} onValueChange={(v) => setRelativeTime(v as any)}>
+            <Select value={relativeTime} onValueChange={(v) => setRelativeTime(v as 'last' | 'this' | 'next')}>
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -220,7 +220,7 @@ export function DateRangeFilterDialog({
                 <SelectItem value="next">다음</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={relativeUnit} onValueChange={(v) => setRelativeUnit(v as any)}>
+            <Select value={relativeUnit} onValueChange={(v) => setRelativeUnit(v as 'week' | 'month' | 'year')}>
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>

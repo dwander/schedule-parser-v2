@@ -72,7 +72,7 @@ export function TagSelectCell({ value, onSave, onDelete, options, placeholder = 
   )
 
   // 뷰포트 내 포지셔닝 계산
-  const getDropdownPosition = () => {
+  const getDropdownPosition = (): React.CSSProperties => {
     if (!containerRef.current) return {}
 
     const rect = containerRef.current.getBoundingClientRect()
@@ -84,13 +84,13 @@ export function TagSelectCell({ value, onSave, onDelete, options, placeholder = 
     const padding = 8
 
     let top = rect.bottom + gap
-    let left = rect.left
+    let left: number | undefined = rect.left
     let right: number | undefined
 
     // 우측 오버플로우 체크
     if (left + dropdownWidth > viewportWidth - padding) {
       // 우측 정렬로 변경
-      left = undefined as any
+      left = undefined
       right = viewportWidth - rect.right
     }
 

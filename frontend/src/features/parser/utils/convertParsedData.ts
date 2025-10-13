@@ -1,4 +1,4 @@
-import type { NewSchedule } from '@/features/schedule/types/schedule'
+import type { NewSchedule, Brand } from '@/features/schedule/types/schedule'
 import type { ParsedScheduleData } from '../types/parser'
 
 /**
@@ -15,7 +15,7 @@ export function convertParsedDataToSchedules(parsedData: ParsedScheduleData[]): 
       cuts: 0, // ParsedScheduleData에는 cuts 필드가 없으므로 기본값 사용
       price: item.price || 0,
       manager: item.manager || '',
-      brand: item.brand as any, // Brand 타입으로 강제 변환 (백엔드에서 유효한 값 반환)
+      brand: item.brand as Brand, // Brand 타입으로 단언 (백엔드에서 유효한 값 반환)
       album: item.album || '',
       photographer: item.photographer || '',
       memo: item.memo || '',

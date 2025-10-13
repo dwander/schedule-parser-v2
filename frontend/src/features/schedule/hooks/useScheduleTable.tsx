@@ -119,7 +119,7 @@ export function useScheduleTable(
 
   // TanStack Table용 setter (Record<string, boolean> 형식 받음)
   const setColumnVisibility = (updater: Record<string, boolean> | ((old: Record<string, boolean>) => Record<string, boolean>)) => {
-    const newVisibility = typeof updater === 'function' ? updater(columnVisibility as any) : updater
+    const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater
     // 현재 뷰 모드에 따라 적절한 setter 호출
     if (viewMode === 'list') {
       updateListColumnVisibility(newVisibility)
@@ -600,7 +600,7 @@ export function useScheduleTable(
     state: {
       columnFilters,
       rowSelection,
-      columnVisibility: columnVisibility as any,
+      columnVisibility,
     },
     enableSorting: false,
     onColumnFiltersChange: setColumnFilters,

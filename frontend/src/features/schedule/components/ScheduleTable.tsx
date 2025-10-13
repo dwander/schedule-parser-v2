@@ -81,7 +81,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   const toggleSortOrder = () => {
     const newOrder = sortOrder === 'asc' ? 'desc' : 'asc'
-    setSortBy(`${sortType}-${newOrder}` as any)
+    const newSortBy = `${sortType}-${newOrder}` as 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc'
+    setSortBy(newSortBy)
   }
 
   const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
@@ -130,7 +131,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   const gridVirtualizer = useVirtualizer({
     count: rowCount,
-    getScrollElement: () => window as any,
+    getScrollElement: () => (typeof window !== 'undefined' ? window : null) as unknown as Element,
     estimateSize: () => UI_SIZES.CARD_ESTIMATED_HEIGHT,
     overscan: UI_SIZES.GRID_OVERSCAN,
     scrollMargin: gridContainerRef.current?.offsetTop ?? 0,
@@ -148,7 +149,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
     },
     observeElementOffset: (_instance, cb) => {
       const handler = () => {
-        cb(window.scrollY, undefined as any)
+        cb(window.scrollY, false)
       }
 
       handler()

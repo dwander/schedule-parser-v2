@@ -1,6 +1,58 @@
 import { useState, useEffect, useRef } from 'react'
 import type { VoiceTrainingData } from '../types/voiceRecognition'
 
+// Web Speech API 타입 정의
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+  resultIndex: number
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  length: number
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+  isFinal: boolean
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+  message?: string
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  onstart: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  onend: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown) | null
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => unknown) | null
+  start(): void
+  stop(): void
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+}
+
 interface UseVoiceRecognitionProps {
   enabled: boolean
   trainingData: VoiceTrainingData
@@ -193,7 +245,7 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
   const [isListening, setIsListening] = useState(false)
   const [lastRecognized, setLastRecognized] = useState<string>('')
   const [isSupported, setIsSupported] = useState(true)
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
   const enabledRef = useRef(enabled)
   const trainingDataRef = useRef(trainingData)
   const itemTextsRef = useRef(itemTexts)
@@ -229,7 +281,7 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
   // 음성 인식 인스턴스 생성 (한 번만)
   useEffect(() => {
     // Web Speech API 지원 확인
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
     if (!SpeechRecognition) {
       setIsSupported(false)
@@ -268,7 +320,7 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
       }, 100)
     }
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const last = event.results.length - 1
       const transcript = event.results[last][0].transcript
       const isFinal = event.results[last].isFinal
@@ -339,7 +391,7 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
       }
     }
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       // 무시해도 되는 에러들 (자동 재시작됨)
       if (event.error === 'no-speech' || event.error === 'aborted') {
         return
@@ -378,7 +430,7 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
       // 약간의 딜레이 후 새로 시작 (마이크 리소스 해제 대기)
       const startTimer = setTimeout(() => {
         try {
-          recognitionRef.current.start()
+          recognitionRef.current?.start()
         } catch (e) {
           // 시작 실패 무시
         }
