@@ -15,7 +15,10 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isTruncated, setIsTruncated] = useState(false)
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
   const textRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // memo 파싱 (useEffect보다 먼저 선언)
   const parsedMemo = useMemo(() => parseMemo(value), [value])
@@ -39,6 +42,37 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
     }
   }, [value, cardMode, isExpanded, isStructured, parsedMemo.length])
 
+  // value 변경 시 editValue 동기화
+  useEffect(() => {
+    setEditValue(value)
+  }, [value])
+
+  // 편집 모드 진입 시 textarea 자동 포커스 (초기 1회만)
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus()
+      textareaRef.current.select()
+    }
+  }, [isEditing])
+
+  // textarea 높이 자동 조절
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [isEditing, editValue])
+
+  // 편집 모드 저장 핸들러
+  const handleSaveEdit = () => {
+    if (editValue !== value) {
+      onSave(editValue)
+    }
+    setIsEditing(false)
+    setIsExpanded(false)
+    setPopoverPosition(null)
+  }
+
   if (!cardMode) {
     // 테이블 모드 (오버레이 방식 펼침)
     return (
@@ -52,7 +86,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                 onClick={(e) => {
                   if (!value) {
                     setDialogOpen(true)
-                  } else if (isTruncated) {
+                  } else {
                     const rect = e.currentTarget.getBoundingClientRect()
                     // p-1 (4px) 패딩만큼 위로 올림
                     setPopoverPosition({
@@ -60,6 +94,10 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                       left: rect.left + window.scrollX - 4
                     })
                     setIsExpanded(true)
+                    // 펼침이 필요없는 짧은 텍스트는 바로 편집 모드로
+                    if (!isTruncated) {
+                      setIsEditing(true)
+                    }
                   }
                 }}
                 className={`w-full cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors truncate text-muted-foreground text-sm ${
@@ -81,83 +119,94 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           {/* 펼쳐진 상태: 오버레이 팝오버 (Portal) */}
           {isExpanded && popoverPosition && createPortal(
             <>
-              {/* 배경 오버레이 (클릭 시 닫기) */}
+              {/* 배경 오버레이 (클릭 시 편집중이면 저장, 아니면 닫기) */}
               <div
                 className="fixed inset-0 z-40"
                 onClick={() => {
-                  setIsExpanded(false)
-                  setPopoverPosition(null)
+                  if (isEditing) {
+                    handleSaveEdit()
+                  } else {
+                    setIsExpanded(false)
+                    setPopoverPosition(null)
+                  }
                 }}
               />
 
               {/* 메모 팝오버 */}
               <div
-                className="fixed z-50 rounded-lg shadow-2xl min-w-[300px] max-w-[500px] p-1 bg-background"
+                className="fixed z-50 rounded-lg shadow-2xl min-w-[300px] max-w-[500px] bg-background"
                 style={{
                   top: `${popoverPosition.top}px`,
                   left: `${popoverPosition.left}px`
                 }}
               >
-                {/* 내용 */}
-                <div className="relative px-3 py-2 pr-10 max-h-[400px] overflow-y-auto text-sm bg-card border border-border rounded-md shadow-sm">
-                  {!isStructured && (
-                    <div className="text-foreground whitespace-pre-wrap">
-                      {value}
-                    </div>
-                  )}
-
-                  {isStructured && (
-                    <div className="space-y-2">
-                      {parsedMemo.map((item, index) => {
-                        const isLongContent = item.content.length > 25 || item.content.includes('\n')
-
-                        return (
-                          <div key={index}>
-                            {item.title && !isLongContent && (
-                              <dl className="flex gap-2">
-                                <dt className="font-medium text-foreground flex-shrink-0">
-                                  {item.title}:
-                                </dt>
-                                <dd className="text-muted-foreground whitespace-pre-wrap">
-                                  {item.content}
-                                </dd>
-                              </dl>
-                            )}
-
-                            {item.title && isLongContent && (
-                              <div className="border-l-2 border-primary/30 pl-2">
-                                <h5 className="font-medium text-foreground mb-1">
-                                  {item.title}
-                                </h5>
-                                <div className="text-muted-foreground whitespace-pre-wrap text-xs">
-                                  {item.content}
-                                </div>
-                              </div>
-                            )}
-
-                            {!item.title && (
-                              <p className="text-muted-foreground whitespace-pre-wrap">
-                                {item.content}
-                              </p>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {/* 우측 상단 닫기 버튼 */}
-                  <button
-                    onClick={() => {
-                      setIsExpanded(false)
-                      setPopoverPosition(null)
-                    }}
-                    className="absolute top-2 right-2 p-1 rounded hover:bg-accent transition-colors"
-                    title="닫기"
+                {!isEditing ? (
+                  /* 읽기 모드 */
+                  <div
+                    onClick={() => setIsEditing(true)}
+                    className="relative px-3 py-2 max-h-[400px] overflow-y-auto text-sm bg-card border border-border rounded-lg shadow-sm cursor-text hover:bg-accent/30 transition-colors"
                   >
-                    <ChevronDown className="h-3.5 w-3.5 rotate-180" />
-                  </button>
-                </div>
+                    {!isStructured && (
+                      <div className="text-foreground whitespace-pre-wrap">
+                        {value}
+                      </div>
+                    )}
+
+                    {isStructured && (
+                      <div className="space-y-2">
+                        {parsedMemo.map((item, index) => {
+                          const isLongContent = item.content.length > 25 || item.content.includes('\n')
+
+                          return (
+                            <div key={index}>
+                              {item.title && !isLongContent && (
+                                <dl className="flex gap-2">
+                                  <dt className="font-medium text-foreground flex-shrink-0">
+                                    {item.title}:
+                                  </dt>
+                                  <dd className="text-muted-foreground whitespace-pre-wrap">
+                                    {item.content}
+                                  </dd>
+                                </dl>
+                              )}
+
+                              {item.title && isLongContent && (
+                                <div className="border-l-2 border-primary/30 pl-2">
+                                  <h5 className="font-medium text-foreground mb-1">
+                                    {item.title}
+                                  </h5>
+                                  <div className="text-muted-foreground whitespace-pre-wrap text-xs">
+                                    {item.content}
+                                  </div>
+                                </div>
+                              )}
+
+                              {!item.title && (
+                                <p className="text-muted-foreground whitespace-pre-wrap">
+                                  {item.content}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* 편집 모드 */
+                  <textarea
+                    ref={textareaRef}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape' || (e.key === 'Enter' && e.ctrlKey)) {
+                        handleSaveEdit()
+                      }
+                    }}
+                    className="w-full p-3 bg-card border border-border rounded-lg text-sm text-foreground resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                    placeholder="메모 입력..."
+                  />
+                )}
               </div>
             </>,
             document.body
