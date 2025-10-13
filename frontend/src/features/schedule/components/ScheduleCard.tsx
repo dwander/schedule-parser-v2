@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
-import { PHONE_NUMBER_LENGTH } from '@/lib/constants/validation'
 import { logger } from '@/lib/utils/logger'
+import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -348,37 +348,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <EditableCell
                   value={schedule.contact}
                   onSave={(value) => {
-                    const isEmail = value.includes('@')
-                    if (isEmail) {
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        contact: value.trim()
-                      })
-                    } else {
-                      const numbers = value.replace(/\D/g, '')
-                      let formatted = numbers
-                      if (numbers.length === PHONE_NUMBER_LENGTH.MOBILE) {
-                        formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                      } else if (numbers.length === PHONE_NUMBER_LENGTH.LANDLINE) {
-                        formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
-                      }
-                      updateSchedule.mutate({
-                        id: schedule.id,
-                        contact: formatted
-                      })
-                    }
+                    const formatted = value.includes('@') ? value.trim() : formatContact(value)
+                    updateSchedule.mutate({
+                      id: schedule.id,
+                      contact: formatted
+                    })
                   }}
-                  format={(val) => {
-                    const str = String(val)
-                    if (str.includes('@')) return str
-                    const numbers = str.replace(/\D/g, '')
-                    if (numbers.length === PHONE_NUMBER_LENGTH.MOBILE) {
-                      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                    } else if (numbers.length === PHONE_NUMBER_LENGTH.LANDLINE) {
-                      return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
-                    }
-                    return str
-                  }}
+                  format={(val) => formatContact(String(val))}
                   placeholder="연락처"
                   className="!w-auto"
                 />
@@ -410,22 +386,16 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <EditableCell
                   value={schedule.cuts}
                   onSave={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    if (!isNaN(num)) {
+                    const num = parseNumber(value)
+                    if (num >= 0) {
                       updateSchedule.mutate({
                         id: schedule.id,
                         cuts: num
                       })
                     }
                   }}
-                  validate={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    return !isNaN(num) && num >= 0
-                  }}
-                  format={(val) => {
-                    const num = Number(val)
-                    return num > 0 ? num.toLocaleString() : ''
-                  }}
+                  validate={isValidNumber}
+                  format={formatNumber}
                   placeholder="컷수"
                   className="!w-auto"
                 />
@@ -439,22 +409,16 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <EditableCell
                   value={schedule.price}
                   onSave={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    if (!isNaN(num)) {
+                    const num = parseNumber(value)
+                    if (num >= 0) {
                       updateSchedule.mutate({
                         id: schedule.id,
                         price: num
                       })
                     }
                   }}
-                  validate={(value) => {
-                    const num = parseInt(value.replace(/\D/g, ''))
-                    return !isNaN(num) && num >= 0
-                  }}
-                  format={(val) => {
-                    const num = Number(val)
-                    return num > 0 ? num.toLocaleString() : ''
-                  }}
+                  validate={isValidNumber}
+                  format={formatNumber}
                   placeholder="촬영비"
                   className="!w-auto"
                 />

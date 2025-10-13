@@ -23,6 +23,7 @@ import { useTagOptions } from './useTagOptions'
 import { useDeleteTag, useTags } from './useTags'
 import { FolderCheck, Clipboard } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -302,46 +303,13 @@ export function useScheduleTable(
           <EditableCell
             value={info.getValue() as string}
             onSave={(value) => {
-              // 이메일 형식 체크
-              const isEmail = value.includes('@')
-
-              if (isEmail) {
-                // 이메일은 그대로 저장
-                updateSchedule.mutate({
-                  id: info.row.original.id,
-                  contact: value.trim()
-                })
-              } else {
-                // 전화번호 포맷으로 변환
-                const numbers = value.replace(/\D/g, '')
-                let formatted = numbers
-                if (numbers.length === 11) {
-                  formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-                } else if (numbers.length === 10) {
-                  // 010 없는 번호도 처리
-                  formatted = `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
-                }
-                updateSchedule.mutate({
-                  id: info.row.original.id,
-                  contact: formatted
-                })
-              }
+              const formatted = value.includes('@') ? value.trim() : formatContact(value)
+              updateSchedule.mutate({
+                id: info.row.original.id,
+                contact: formatted
+              })
             }}
-            format={(val) => {
-              const str = String(val)
-              // 이메일이면 그대로 반환
-              if (str.includes('@')) {
-                return str
-              }
-              // 전화번호 포맷 적용
-              const numbers = str.replace(/\D/g, '')
-              if (numbers.length === 11) {
-                return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`
-              } else if (numbers.length === 10) {
-                return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6)}`
-              }
-              return str
-            }}
+            format={(val) => formatContact(String(val))}
           />
         ),
       },
@@ -419,22 +387,16 @@ export function useScheduleTable(
           <EditableCell
             value={info.getValue() as number}
             onSave={(value) => {
-              const num = parseInt(value.replace(/\D/g, ''))
-              if (!isNaN(num)) {
+              const num = parseNumber(value)
+              if (num >= 0) {
                 updateSchedule.mutate({
                   id: info.row.original.id,
                   cuts: num
                 })
               }
             }}
-            validate={(value) => {
-              const num = parseInt(value.replace(/\D/g, ''))
-              return !isNaN(num) && num >= 0
-            }}
-            format={(val) => {
-              const num = Number(val)
-              return num > 0 ? num.toLocaleString() : ''
-            }}
+            validate={isValidNumber}
+            format={formatNumber}
           />
         ),
       },
@@ -452,22 +414,16 @@ export function useScheduleTable(
           <EditableCell
             value={info.getValue() as number}
             onSave={(value) => {
-              const num = parseInt(value.replace(/\D/g, ''))
-              if (!isNaN(num)) {
+              const num = parseNumber(value)
+              if (num >= 0) {
                 updateSchedule.mutate({
                   id: info.row.original.id,
                   price: num
                 })
               }
             }}
-            validate={(value) => {
-              const num = parseInt(value.replace(/\D/g, ''))
-              return !isNaN(num) && num >= 0
-            }}
-            format={(val) => {
-              const num = Number(val)
-              return num > 0 ? num.toLocaleString() : ''
-            }}
+            validate={isValidNumber}
+            format={formatNumber}
           />
         ),
       },
