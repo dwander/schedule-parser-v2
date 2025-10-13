@@ -1,30 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, X, AlertCircle, Upload } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { ContentModal } from '@/components/common/ContentModal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Card } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useTags } from '@/features/schedule/hooks/useTags'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
-import { CalendarIcon } from 'lucide-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { toast } from 'sonner'
 import {
@@ -38,6 +18,9 @@ import {
 } from '../api/pricingApi'
 import { useQueryClient } from '@tanstack/react-query'
 import { logger } from '@/lib/utils/logger'
+import { PricingRuleForm } from './PricingRuleForm'
+import { PricingRuleList } from './PricingRuleList'
+import { isDuplicatePricingRule } from '../utils/pricingValidation'
 
 interface PricingRuleDialogProps {
   open: boolean
@@ -83,10 +66,6 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const [editMode, setEditMode] = useState<'new' | 'edit'>('new')
   const [editingId, setEditingId] = useState<number | null>(null)
 
-  // 날짜 선택 팝오버 상태
-  const [startDateOpen, setStartDateOpen] = useState(false)
-  const [endDateOpen, setEndDateOpen] = useState(false)
-
   // 다이얼로그 열릴 때 규칙 목록 불러오기
   useEffect(() => {
     if (open && user) {
@@ -120,33 +99,8 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const handleSaveRule = async () => {
     if (!user) return
 
-    // 값 정규화 함수 (undefined와 빈 문자열을 동일하게 취급)
-    const normalize = (val: string | undefined) => val || undefined
-
     // 중복 체크 (단가 제외)
-    const isDuplicate = rules.some(rule => {
-      // 수정 중인 항목은 제외
-      if (rule.id === editingId) return false
-
-      const locationMatch = normalize(rule.location) === normalize(currentRule.location)
-      const venueMatch = normalize(rule.venue) === normalize(currentRule.venue)
-      const hallMatch = normalize(rule.hall) === normalize(currentRule.hall)
-      const brandMatch = normalize(rule.brand) === normalize(currentRule.brand)
-      const albumMatch = normalize(rule.album) === normalize(currentRule.album)
-
-      // 날짜 비교: 둘 다 없거나, 둘 다 있고 같거나 (한쪽만 있으면 다름)
-      const startDateMatch = (!rule.startDate && !currentRule.startDate) ||
-                             (rule.startDate && currentRule.startDate &&
-                              rule.startDate.getTime() === currentRule.startDate.getTime())
-      const endDateMatch = (!rule.endDate && !currentRule.endDate) ||
-                           (rule.endDate && currentRule.endDate &&
-                            rule.endDate.getTime() === currentRule.endDate.getTime())
-
-      return locationMatch && venueMatch && hallMatch && brandMatch && albumMatch &&
-             startDateMatch && endDateMatch
-    })
-
-    if (isDuplicate) {
+    if (isDuplicatePricingRule(currentRule, rules, editingId ?? undefined)) {
       toast.error('동일한 조건의 단가 규칙이 이미 존재합니다.')
       return
     }
@@ -180,30 +134,8 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
   const handleSaveAsNew = async () => {
     if (!user) return
 
-    // 값 정규화 함수 (undefined와 빈 문자열을 동일하게 취급)
-    const normalize = (val: string | undefined) => val || undefined
-
     // 중복 체크 (모든 규칙과 비교, 단가 제외)
-    const isDuplicate = rules.some(rule => {
-      const locationMatch = normalize(rule.location) === normalize(currentRule.location)
-      const venueMatch = normalize(rule.venue) === normalize(currentRule.venue)
-      const hallMatch = normalize(rule.hall) === normalize(currentRule.hall)
-      const brandMatch = normalize(rule.brand) === normalize(currentRule.brand)
-      const albumMatch = normalize(rule.album) === normalize(currentRule.album)
-
-      // 날짜 비교: 둘 다 없거나, 둘 다 있고 같거나 (한쪽만 있으면 다름)
-      const startDateMatch = (!rule.startDate && !currentRule.startDate) ||
-                             (rule.startDate && currentRule.startDate &&
-                              rule.startDate.getTime() === currentRule.startDate.getTime())
-      const endDateMatch = (!rule.endDate && !currentRule.endDate) ||
-                           (rule.endDate && currentRule.endDate &&
-                            rule.endDate.getTime() === currentRule.endDate.getTime())
-
-      return locationMatch && venueMatch && hallMatch && brandMatch && albumMatch &&
-             startDateMatch && endDateMatch
-    })
-
-    if (isDuplicate) {
+    if (isDuplicatePricingRule(currentRule, rules)) {
       toast.error('동일한 조건의 단가 규칙이 이미 존재합니다.')
       return
     }
@@ -330,27 +262,6 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
     }
   }
 
-  // 규칙 설명 생성
-  const getRuleDescription = (rule: PricingRule) => {
-    const parts = []
-    if (rule.location) parts.push(rule.location)
-    if (rule.venue) parts.push(rule.venue)
-    if (rule.hall) parts.push(rule.hall)
-    if (rule.brand) parts.push(rule.brand)
-    if (rule.album) parts.push(rule.album)
-
-    // 기간 표시 (한쪽만 있어도 표시)
-    if (rule.startDate && rule.endDate) {
-      parts.push(`${format(rule.startDate, 'yyyy.MM.dd', { locale: ko })}~${format(rule.endDate, 'yyyy.MM.dd', { locale: ko })}`)
-    } else if (rule.startDate) {
-      parts.push(`${format(rule.startDate, 'yyyy.MM.dd', { locale: ko })}~`)
-    } else if (rule.endDate) {
-      parts.push(`~${format(rule.endDate, 'yyyy.MM.dd', { locale: ko })}`)
-    }
-
-    return parts.length > 0 ? parts.join(' · ') : '전체 적용'
-  }
-
   return (
     <>
       <ContentModal
@@ -377,313 +288,27 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       >
         <div className="space-y-4 md:space-y-6">
           {/* 단가 규칙 입력 폼 */}
-          <Card className="max-md:border-0 max-md:shadow-none max-md:bg-transparent max-md:px-2 max-md:py-4 md:p-4">
-            <div className="grid gap-4">
-              {/* 지역/장소/홀 - 모바일 2열, 데스크탑 3열 */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="location">지역</Label>
-                  <Input
-                    id="location"
-                    value={currentRule.location || ''}
-                    onChange={(e) => setCurrentRule({ ...currentRule, location: e.target.value })}
-                    placeholder="예: 서울, 경기, 부산 .."
-                    className="text-base"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="venue">장소(예식장)</Label>
-                  <Input
-                    id="venue"
-                    value={currentRule.venue || ''}
-                    onChange={(e) => setCurrentRule({ ...currentRule, venue: e.target.value })}
-                    placeholder="예: 신라호텔"
-                    className="text-base"
-                  />
-                </div>
-                <div className="col-span-2 md:col-span-1">
-                  <Label htmlFor="hall">홀</Label>
-                  <Input
-                    id="hall"
-                    value={currentRule.hall || ''}
-                    onChange={(e) => setCurrentRule({ ...currentRule, hall: e.target.value })}
-                    placeholder="예: 컨벤션, 체플 .."
-                    className="text-base"
-                  />
-                </div>
-              </div>
-
-              {/* 기간/브랜드/앨범 - 모바일 2열, 데스크탑 4열 */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>기간 시작</Label>
-                  <div className="flex gap-1">
-                    <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'flex-1 justify-start text-left font-normal text-base',
-                            !currentRule.startDate && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {currentRule.startDate
-                            ? format(currentRule.startDate, 'yyyy.MM.dd', { locale: ko })
-                            : '시작'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={currentRule.startDate}
-                          onSelect={(date) => {
-                            setCurrentRule({ ...currentRule, startDate: date || undefined })
-                            setStartDateOpen(false)
-                          }}
-                          defaultMonth={currentRule.startDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {currentRule.startDate && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-5"
-                        onClick={() => setCurrentRule({ ...currentRule, startDate: undefined })}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label>기간 종료</Label>
-                  <div className="flex gap-1">
-                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'flex-1 justify-start text-left font-normal text-base',
-                            !currentRule.endDate && 'text-muted-foreground'
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {currentRule.endDate
-                            ? format(currentRule.endDate, 'yyyy.MM.dd', { locale: ko })
-                            : '종료'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={currentRule.endDate}
-                          onSelect={(date) => {
-                            setCurrentRule({ ...currentRule, endDate: date || undefined })
-                            setEndDateOpen(false)
-                          }}
-                          disabled={(date) =>
-                            currentRule.startDate ? date < currentRule.startDate : false
-                          }
-                          defaultMonth={currentRule.endDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {currentRule.endDate && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-5"
-                        onClick={() => setCurrentRule({ ...currentRule, endDate: undefined })}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="brand">브랜드</Label>
-                  <Select
-                    value={currentRule.brand || 'all'}
-                    onValueChange={(value) => setCurrentRule({ ...currentRule, brand: value === 'all' ? undefined : value })}
-                  >
-                    <SelectTrigger className="text-base">
-                      <SelectValue placeholder="선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      {brandTags.map(tag => (
-                        <SelectItem key={tag.id} value={tag.tag_value}>
-                          {tag.tag_value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="album">앨범종류</Label>
-                  <Select
-                    value={currentRule.album || 'all'}
-                    onValueChange={(value) => setCurrentRule({ ...currentRule, album: value === 'all' ? undefined : value })}
-                  >
-                    <SelectTrigger className="text-base">
-                      <SelectValue placeholder="선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      {albumTags.map(tag => (
-                        <SelectItem key={tag.id} value={tag.tag_value}>
-                          {tag.tag_value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* 단가/메모 - 모바일 1열, 데스크탑 2열 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="price">단가 *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="10000"
-                    value={currentRule.price || ''}
-                    onChange={(e) => setCurrentRule({ ...currentRule, price: parseInt(e.target.value) || 0 })}
-                    placeholder="0"
-                    required
-                    className="text-base"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">메모</Label>
-                  <Input
-                    id="description"
-                    value={currentRule.description || ''}
-                    onChange={(e) => setCurrentRule({ ...currentRule, description: e.target.value })}
-                    placeholder="예: 평일 촬영, 추가 금액"
-                    className="text-base"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {editMode === 'edit' ? (
-                  <>
-                    <Button
-                      onClick={handleSaveRule}
-                      disabled={!currentRule.price || currentRule.price === 0 || loading}
-                      className="flex-1"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      수정
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={handleSaveAsNew}
-                      disabled={!currentRule.price || currentRule.price === 0 || loading}
-                      className="flex-1"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      <span className="max-md:hidden">새 규칙으로 저장</span>
-                      <span className="md:hidden">새로 저장</span>
-                    </Button>
-                    <Button variant="outline" onClick={handleNewRule} disabled={loading}>
-                      <X className="mr-2 h-4 w-4" />
-                      취소
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={handleSaveRule}
-                    disabled={!currentRule.price || currentRule.price === 0 || loading}
-                    className="flex-1"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span className="max-md:hidden">단가 규칙 추가</span>
-                    <span className="md:hidden">추가</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Card>
+          <PricingRuleForm
+            currentRule={currentRule}
+            onRuleChange={setCurrentRule}
+            onSave={handleSaveRule}
+            onSaveAsNew={handleSaveAsNew}
+            onCancel={handleNewRule}
+            editMode={editMode}
+            loading={loading}
+            brandTags={brandTags}
+            albumTags={albumTags}
+          />
 
           {/* 단가 규칙 목록 */}
-          {rules.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm">등록된 단가 규칙 ({rules.length}개)</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleAllSelection}
-                >
-                  {selectedRuleIds.length === rules.length ? '전체 해제' : '전체 선택'}
-                </Button>
-              </div>
-              <div className="space-y-2 max-h-[32rem] overflow-y-auto">
-                {rules.map((rule) => (
-                  <Card
-                    key={rule.id}
-                    className={cn(
-                      "p-2.5 cursor-pointer transition-colors hover:bg-accent/50",
-                      selectedRuleIds.includes(rule.id!) && "border-2 border-primary bg-accent/30"
-                    )}
-                    onClick={() => toggleRuleSelection(rule.id!)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">
-                          {getRuleDescription(rule)}
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-base font-bold text-primary">
-                            {rule.price.toLocaleString()}원
-                          </span>
-                          {rule.description && (
-                            <span className="text-xs text-muted-foreground">
-                              ({rule.description})
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-0.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSelectRule(rule)
-                          }}
-                        >
-                          <Upload className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteRule(rule.id!)
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+          <PricingRuleList
+            rules={rules}
+            selectedIds={selectedRuleIds}
+            onToggleSelection={toggleRuleSelection}
+            onToggleAllSelection={toggleAllSelection}
+            onEdit={handleSelectRule}
+            onDelete={handleDeleteRule}
+          />
 
           {/* 하단 액션 버튼 */}
           {rules.length > 0 && (

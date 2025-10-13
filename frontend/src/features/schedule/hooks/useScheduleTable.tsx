@@ -21,10 +21,11 @@ import { TimePickerCell } from '../components/TimePickerCell'
 import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
 import { useDeleteTag, useTags } from './useTags'
+import { useScheduleConflictDetector } from './useScheduleConflictDetector'
 import { FolderCheck, Clipboard } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
 import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
-import { TIME_CONSTANTS, PHOTO_CONSTANTS } from '@/lib/constants/schedule'
+import { generateFolderName } from '@/lib/utils/folderNameGenerator'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -43,67 +44,7 @@ export function useScheduleTable(
   const filteredData = data
 
   // 중복/충돌 스케줄 탐지 (날짜 + 시간 기준)
-  const { duplicateSchedules, conflictSchedules } = useMemo(() => {
-    const duplicates = new Set<number>()
-    const conflicts = new Set<number>()
-    const dateTimeMap = new Map<string, number[]>()
-
-    // 시간 문자열을 분 단위로 변환 (HH:MM -> 분)
-    const timeToMinutes = (time: string): number => {
-      const [hours, minutes] = time.split(':').map(Number)
-      return hours * TIME_CONSTANTS.MINUTES_PER_HOUR + minutes
-    }
-
-    // 날짜+시간 기준으로 그룹화
-    filteredData.forEach((schedule, index) => {
-      if (schedule.date && schedule.time) {
-        const key = `${schedule.date}-${schedule.time}`
-        if (!dateTimeMap.has(key)) {
-          dateTimeMap.set(key, [])
-        }
-        dateTimeMap.get(key)!.push(index)
-      }
-    })
-
-    // 2개 이상인 그룹의 모든 인덱스를 완전 중복으로 표시
-    dateTimeMap.forEach((indexes) => {
-      if (indexes.length > 1) {
-        indexes.forEach(idx => duplicates.add(idx))
-      }
-    })
-
-    // 시간 충돌 체크 (같은 날짜 내에서 1시간 이내)
-    const dateGroups = new Map<string, Array<{ index: number; minutes: number; time: string }>>()
-
-    filteredData.forEach((schedule, index) => {
-      if (schedule.date && schedule.time) {
-        if (!dateGroups.has(schedule.date)) {
-          dateGroups.set(schedule.date, [])
-        }
-        dateGroups.get(schedule.date)!.push({
-          index,
-          minutes: timeToMinutes(schedule.time),
-          time: schedule.time
-        })
-      }
-    })
-
-    // 각 날짜별로 시간 충돌 검사
-    dateGroups.forEach((schedules) => {
-      for (let i = 0; i < schedules.length; i++) {
-        for (let j = i + 1; j < schedules.length; j++) {
-          const timeDiff = Math.abs(schedules[i].minutes - schedules[j].minutes)
-          // 1시간 이내이고, 완전 중복이 아닌 경우 시간 충돌
-          if (timeDiff > 0 && timeDiff < TIME_CONSTANTS.CONFLICT_THRESHOLD_MINUTES) {
-            conflicts.add(schedules[i].index)
-            conflicts.add(schedules[j].index)
-          }
-        }
-      }
-    })
-
-    return { duplicateSchedules: duplicates, conflictSchedules: conflicts }
-  }, [filteredData])
+  const { duplicateSchedules, conflictSchedules } = useScheduleConflictDetector(filteredData)
 
   // 뷰 모드에 따른 컬럼 가시성 설정 (zustand store에서 가져오기)
   const viewMode = useSettingsStore((state) => state.viewMode)
@@ -485,35 +426,7 @@ export function useScheduleTable(
           const schedule = info.row.original
 
           const handleFolderCopy = async () => {
-            // 브랜드 매핑
-            const brandMap: Record<string, string> = {
-              '세컨플로루': '세컨',
-              '더그라피': '더그',
-              'A 세븐스프리미엄': '세프',
-            }
-            const brandPrefix = brandMap[schedule.brand] || ''
-
-            // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
-            const [hours, minutes] = schedule.time.split(':')
-            const timeStr = minutes === '00' ? `${hours}시` : `${hours}시${minutes}분`
-
-            // 폴더명 구성
-            let folderName = ''
-            if (brandPrefix) {
-              folderName = `${brandPrefix} ${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
-            } else {
-              folderName = `${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
-            }
-
-            // 작가 정보 추가 (컷수가 있을 때만)
-            if (schedule.cuts && schedule.cuts > 0) {
-              const totalCuts = schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER
-              if (schedule.photographer) {
-                folderName += ` - ${schedule.photographer}(${totalCuts})`
-              } else {
-                folderName += ` - (${totalCuts})`
-              }
-            }
+            const folderName = generateFolderName(schedule)
 
             // 클립보드 복사
             try {
