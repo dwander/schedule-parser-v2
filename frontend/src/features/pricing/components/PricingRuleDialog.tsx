@@ -37,6 +37,7 @@ import {
   type PricingRuleResponse
 } from '../api/pricingApi'
 import { useQueryClient } from '@tanstack/react-query'
+import { logger } from '@/lib/utils/logger'
 
 interface PricingRuleDialogProps {
   open: boolean
@@ -108,7 +109,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       }))
       setRules(rulesWithDates)
     } catch (error) {
-      console.error('Failed to load pricing rules:', error)
+      logger.error('Failed to load pricing rules:', error)
       toast.error('단가 규칙을 불러오는데 실패했습니다.')
     } finally {
       setLoading(false)
@@ -168,7 +169,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       // 초기화
       handleNewRule()
     } catch (error) {
-      console.error('Failed to save pricing rule:', error)
+      logger.error('Failed to save pricing rule:', error)
       toast.error('단가 규칙 저장에 실패했습니다.')
     } finally {
       setLoading(false)
@@ -219,7 +220,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       // 초기화
       handleNewRule()
     } catch (error) {
-      console.error('Failed to save pricing rule:', error)
+      logger.error('Failed to save pricing rule:', error)
       toast.error('단가 규칙 저장에 실패했습니다.')
     } finally {
       setLoading(false)
@@ -272,7 +273,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       setConfirmDeleteOpen(false)
       setDeleteTargetId(null)
     } catch (error) {
-      console.error('Failed to delete pricing rule:', error)
+      logger.error('Failed to delete pricing rule:', error)
       toast.error('단가 규칙 삭제에 실패했습니다.')
     } finally {
       setLoading(false)
@@ -304,7 +305,7 @@ export function PricingRuleDialog({ open, onOpenChange }: PricingRuleDialogProps
       // 확인 다이얼로그만 닫기 (메인 다이얼로그는 유지)
       setConfirmApplyOpen(false)
     } catch (error) {
-      console.error('Failed to apply pricing rules:', error)
+      logger.error('Failed to apply pricing rules:', error)
       toast.error('단가 규칙 적용에 실패했습니다.')
     } finally {
       setApplying(false)

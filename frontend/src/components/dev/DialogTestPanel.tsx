@@ -16,6 +16,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Moon, Sun, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { UI_TIMERS } from '@/lib/constants/timing'
+import { logger } from '@/lib/utils/logger'
 
 export function DialogTestPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -83,7 +84,7 @@ export function DialogTestPanel() {
         setTimeout(() => window.location.reload(), UI_TIMERS.RELOAD_DELAY)
       }
     } catch (error) {
-      console.error('Service Worker toggle error:', error)
+      logger.error('Service Worker toggle error:', error)
       toast.error('Service Worker 전환 중 오류가 발생했습니다')
     }
   }

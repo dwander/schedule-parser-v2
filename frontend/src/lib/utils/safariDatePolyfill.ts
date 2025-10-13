@@ -5,11 +5,13 @@
  * 이 polyfill을 개발 환경에서 사용하면 Safari와 동일한 오류를 미리 발견할 수 있습니다.
  */
 
+import { logger } from './logger'
+
 const OriginalDate = Date
 
 export function enableStrictDateParsing() {
   if (import.meta.env.PROD) {
-    console.warn('Safari date polyfill should only be used in development')
+    logger.warn('Safari date polyfill should only be used in development')
     return
   }
 
@@ -27,8 +29,8 @@ export function enableStrictDateParsing() {
           /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(dateString) // ISO 8601
 
         if (!isValidFormat) {
-          console.error(`🚨 Safari-incompatible date format detected: "${dateString}"`)
-          console.trace('Date creation stack trace:')
+          logger.error(`🚨 Safari-incompatible date format detected: "${dateString}"`)
+          logger.debug('Date creation stack trace:')
 
           // Invalid Date 생성 (Safari 동작 재현)
           super('Invalid Date')
@@ -44,11 +46,11 @@ export function enableStrictDateParsing() {
     static UTC = OriginalDate.UTC
   }
 
-  console.log('✅ Safari strict date parsing enabled - "YYYY.MM.DD" format will now fail')
+  logger.log('✅ Safari strict date parsing enabled - "YYYY.MM.DD" format will now fail')
 }
 
 export function disableStrictDateParsing() {
   // 원래 Date로 복원
   window.Date = OriginalDate as typeof Date
-  console.log('✅ Safari strict date parsing disabled')
+  logger.log('✅ Safari strict date parsing disabled')
 }

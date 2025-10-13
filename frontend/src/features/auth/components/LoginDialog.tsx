@@ -18,6 +18,7 @@ import { MigrateDataDialog } from './MigrateDataDialog'
 import { useQueryClient } from '@tanstack/react-query'
 import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
 import { getApiUrl } from '@/lib/constants/api'
+import { logger } from '@/lib/utils/logger'
 
 interface LoginDialogProps {
   open: boolean
@@ -57,7 +58,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
       // 로그인 계정에 이미 데이터가 있으면 마이그레이션 제안하지 않음
       if (existingSchedules.length > 0) {
-        console.log(`로그인 계정에 이미 ${existingSchedules.length}개의 스케줄이 있어 마이그레이션을 건너뜁니다.`)
+        logger.log(`로그인 계정에 이미 ${existingSchedules.length}개의 스케줄이 있어 마이그레이션을 건너뜁니다.`)
         return false
       }
 
@@ -74,7 +75,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
       return false
     } catch (error) {
-      console.error('익명 데이터 확인 실패:', error)
+      logger.error('익명 데이터 확인 실패:', error)
       return false
     }
   }
@@ -104,7 +105,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       setPendingUser(null)
       onOpenChange(false)
     } catch (error) {
-      console.error('마이그레이션 실패:', error)
+      logger.error('마이그레이션 실패:', error)
       toast.error('데이터 이동 중 오류가 발생했습니다')
     }
   }
@@ -165,13 +166,13 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         onOpenChange(false)
       }
     } catch (error) {
-      console.error('백엔드 인증 실패:', error)
+      logger.error('백엔드 인증 실패:', error)
       toast.error('로그인 처리 중 오류가 발생했습니다')
     }
   }
 
   const handleGoogleLoginError = () => {
-    console.error('구글 로그인 실패')
+    logger.error('구글 로그인 실패')
     toast.error('구글 로그인에 실패했습니다')
   }
 

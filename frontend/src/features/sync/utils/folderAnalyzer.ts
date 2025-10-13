@@ -1,4 +1,5 @@
 import type { Schedule } from '@/features/schedule/types/schedule'
+import { logger } from '@/lib/utils/logger'
 
 export interface ParsedFolderData {
   date: string
@@ -97,7 +98,7 @@ export function parseFolderName(folderName: string): ParsedFolderData | null {
       cutsFromName: cutsMatch ? parseInt(cutsMatch[1]) : null
     }
   } catch (error) {
-    console.error('폴더명 파싱 오류:', error)
+    logger.error('폴더명 파싱 오류:', error)
     return null
   }
 }
@@ -305,7 +306,7 @@ export async function countPhotosInFolder(
       }
     }
   } catch (error) {
-    console.error('폴더 스캔 오류:', error)
+    logger.error('폴더 스캔 오류:', error)
     return {
       count: 0,
       rawCount: 0,
@@ -363,7 +364,7 @@ export async function findScheduleFolders(
       }
     }
   } catch (error) {
-    console.error(`폴더 탐색 오류 (${folderEntry.name}):`, error)
+    logger.error(`폴더 탐색 오류 (${folderEntry.name}):`, error)
   }
 
   return scheduleFolders

@@ -1,4 +1,5 @@
 import { AUTH_STORAGE_KEYS } from '@/lib/constants/storage'
+import { logger } from './logger'
 
 /**
  * Generate a random UUID v4
@@ -45,7 +46,7 @@ export function getUserId(): string {
         return authState.state.user.id
       }
     } catch (e) {
-      console.error('Failed to parse auth storage:', e)
+      logger.error('Failed to parse auth storage:', e)
     }
   }
 

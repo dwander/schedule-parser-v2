@@ -22,6 +22,7 @@ import {
   Phone,
   type LucideIcon
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface PhotoNoteDialogProps {
   open: boolean
@@ -279,7 +280,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
 
   const saveField = () => {
     const trimmedData = trimPhotoNoteData(noteData) as PhotoNote
-    console.log('💾 Saving photoNote:', trimmedData)
+    logger.log('💾 Saving photoNote:', trimmedData)
     updateSchedule.mutate({
       id: schedule.id,
       photoNote: trimmedData

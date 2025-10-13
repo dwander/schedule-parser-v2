@@ -8,6 +8,7 @@ import { useConfigStore } from '@/stores/useConfigStore'
 import { useQueryClient } from '@tanstack/react-query'
 import type { GoogleCredentialResponse } from '@/features/parser/types/parser'
 import { getApiUrl } from '@/lib/constants/api'
+import { logger } from '@/lib/utils/logger'
 
 interface LandingPageProps {
   onContinueAnonymous: () => void
@@ -53,13 +54,13 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
       queryClient.invalidateQueries({ queryKey: ['tags'] })
       toast.success(`환영합니다, ${user.name}님!`)
     } catch (error) {
-      console.error('백엔드 인증 실패:', error)
+      logger.error('백엔드 인증 실패:', error)
       toast.error('로그인 처리 중 오류가 발생했습니다')
     }
   }
 
   const handleGoogleLoginError = () => {
-    console.error('구글 로그인 실패')
+    logger.error('구글 로그인 실패')
     toast.error('구글 로그인에 실패했습니다')
   }
 

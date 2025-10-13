@@ -28,6 +28,7 @@ import {
   type FolderAnalysisResult,
   type ParsedFolderData
 } from '../utils/folderAnalyzer'
+import { logger } from '@/lib/utils/logger'
 
 interface FolderSyncModalProps {
   open: boolean
@@ -169,7 +170,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
       }
 
     } catch (error) {
-      console.error('폴더 처리 오류:', error)
+      logger.error('폴더 처리 오류:', error)
       toast.error('폴더 처리 중 오류가 발생했습니다')
     } finally {
       setIsAnalyzing(false)

@@ -20,6 +20,7 @@ import axios from 'axios'
 import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
 import { PHONE_NUMBER_LENGTH } from '@/lib/constants/validation'
+import { logger } from '@/lib/utils/logger'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -136,7 +137,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         toast.error('일정 추가에 실패했습니다')
       }
     } catch (error: unknown) {
-      console.error('네이버 캘린더 추가 실패:', error)
+      logger.error('네이버 캘린더 추가 실패:', error)
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number } }
         if (axiosError.response?.status === 401) {
@@ -180,7 +181,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       await navigator.clipboard.writeText(folderName)
       toast.success(`폴더명이 복사되었습니다.\n${folderName}`)
     } catch (error) {
-      console.error('클립보드 복사 실패:', error)
+      logger.error('클립보드 복사 실패:', error)
       toast.error('클립보드 복사에 실패했습니다')
     }
   }

@@ -22,6 +22,7 @@ import { TagSelectCell } from '../components/TagSelectCell'
 import { useTagOptions } from './useTagOptions'
 import { useDeleteTag, useTags } from './useTags'
 import { FolderCheck, Clipboard } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 export function useScheduleTable(
   data: Schedule[] = []
@@ -562,7 +563,7 @@ export function useScheduleTable(
               await navigator.clipboard.writeText(folderName)
               toast.success(`폴더명이 복사되었습니다.\n${folderName}`)
             } catch (error) {
-              console.error('클립보드 복사 실패:', error)
+              logger.error('클립보드 복사 실패:', error)
               toast.error('클립보드 복사에 실패했습니다')
             }
           }

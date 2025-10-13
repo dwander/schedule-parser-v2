@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * localStorage와 동기화되는 state 훅
@@ -14,7 +15,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       const item = localStorage.getItem(key)
       return item ? JSON.parse(item) : initialValue
     } catch (error) {
-      console.error(`Error loading localStorage key "${key}":`, error)
+      logger.error(`Error loading localStorage key "${key}":`, error)
       return initialValue
     }
   })
@@ -28,7 +29,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       setStoredValue(valueToStore)
       localStorage.setItem(key, JSON.stringify(valueToStore))
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error)
+      logger.error(`Error setting localStorage key "${key}":`, error)
     }
   }
 
@@ -48,7 +49,7 @@ export function useLocalStorageString(key: string, initialValue: string): [strin
       const item = localStorage.getItem(key)
       return item ?? initialValue
     } catch (error) {
-      console.error(`Error loading localStorage key "${key}":`, error)
+      logger.error(`Error loading localStorage key "${key}":`, error)
       return initialValue
     }
   })
@@ -58,7 +59,7 @@ export function useLocalStorageString(key: string, initialValue: string): [strin
       setStoredValue(value)
       localStorage.setItem(key, value)
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error)
+      logger.error(`Error setting localStorage key "${key}":`, error)
     }
   }
 

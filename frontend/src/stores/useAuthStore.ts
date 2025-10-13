@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { logger } from '@/lib/utils/logger'
 
 export interface User {
   id: string
@@ -40,9 +41,9 @@ export const useAuthStore = create<AuthState>()(
             await Promise.all(
               cacheNames.map(cacheName => caches.delete(cacheName))
             )
-            console.log('Service Worker 캐시가 클리어되었습니다')
+            logger.log('Service Worker 캐시가 클리어되었습니다')
           } catch (error) {
-            console.error('캐시 클리어 실패:', error)
+            logger.error('캐시 클리어 실패:', error)
           }
         }
 
