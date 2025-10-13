@@ -7,7 +7,7 @@ import { ScheduleCard } from './ScheduleCard'
 import { SearchInput } from './SearchInput'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
-import { Trash2, Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUpDown, ArrowUp, ArrowDown, Check, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -81,7 +81,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   const toggleSortOrder = () => {
     const newOrder = sortOrder === 'asc' ? 'desc' : 'asc'
-    setSortBy(`${sortType}-${newOrder}`)
+    setSortBy(`${sortType}-${newOrder}` as any)
   }
 
   const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
@@ -148,7 +148,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
     },
     observeElementOffset: (_instance, cb) => {
       const handler = () => {
-        cb(window.scrollY, _instance)
+        cb(window.scrollY, undefined as any)
       }
 
       handler()
@@ -160,7 +160,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
   const rows = table.getRowModel().rows
   const selectedCount = Object.keys(rowSelection).length
-  const hasSelection = selectedCount > 0
 
   // selectedCount 변경 시 부모에게 알림
   useEffect(() => {

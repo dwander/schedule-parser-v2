@@ -298,7 +298,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           />
           <div className="text-xs text-muted-foreground">
             <TagSelectCell
-              value={schedule.album}
+              value={schedule.album || ''}
               options={albumOptions}
               onSave={(value) => {
                 updateSchedule.mutate({
@@ -389,7 +389,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               <div className="flex items-center gap-2">
                 <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <EditableCell
-                  value={schedule.photographer}
+                  value={schedule.photographer || ''}
                   onSave={(value) => {
                     updateSchedule.mutate({
                       id: schedule.id,

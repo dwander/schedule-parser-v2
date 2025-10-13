@@ -4,7 +4,6 @@ import { ContentModal } from '@/components/common/ContentModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  FolderOpen,
   Upload,
   CheckCircle2,
   XCircle,
@@ -26,7 +25,8 @@ import {
   countPhotosInFolder,
   findScheduleFolders,
   isSelectFolder,
-  type FolderAnalysisResult
+  type FolderAnalysisResult,
+  type ParsedFolderData
 } from '../utils/folderAnalyzer'
 
 interface FolderSyncModalProps {
@@ -91,12 +91,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
       const allScheduleFolders: Array<{
         entry: FileSystemDirectoryEntry
         fullPath: string
-        parsedData: {
-          date: string
-          time: string
-          couple?: string
-          cutsFromName?: number
-        }
+        parsedData: ParsedFolderData
       }> = []
       const processedFolders = new Set<string>()
 

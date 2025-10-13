@@ -71,6 +71,7 @@ export interface Schedule {
   isDuplicate: boolean
   createdAt: string
   updatedAt: string
+  deletedAt?: string | null
 }
 
 export type NewSchedule = Omit<Schedule, 'id' | 'createdAt' | 'updatedAt'>

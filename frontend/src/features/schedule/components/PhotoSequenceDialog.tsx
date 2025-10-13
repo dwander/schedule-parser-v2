@@ -1,13 +1,12 @@
 import { ContentModal } from '@/components/common/ContentModal'
 import { AlertDialog } from '@/components/common/AlertDialog'
-import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
@@ -26,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
 import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD, SCHEDULE_TIMER } from '@/lib/constants/photoSequence'
-import { useLocalStorage, useLocalStorageString } from '@/lib/hooks/useLocalStorage'
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 import { SortableItem } from './SortableItem'
 import { TrainingDataManager } from './TrainingDataManager'
 import { useVoiceTrainingData, useUpdateVoiceTrainingData } from '@/features/auth/hooks/useUsers'
@@ -44,10 +43,8 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 interface PhotoSequenceDialogProps {
   open: boolean
@@ -73,7 +70,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
       // 템플릿 1,2,3
       const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
-      return generatePhotoSequence(template.items)
+      return generatePhotoSequence(template.items as Omit<PhotoSequenceItem, 'id'>[])
     }
     // 기본 템플릿
     return generatePhotoSequence()
@@ -89,7 +86,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   })
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
-  const [voiceThreshold, setVoiceThreshold] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
+  const [voiceThreshold, setVoiceThreshold] = useLocalStorage<number>(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
   const [showClock, setShowClock] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.SHOW_CLOCK, true)
 
   // 현재 시간 표시용 state
@@ -129,7 +126,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
         // 템플릿 1,2,3
         const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
-        setItems(generatePhotoSequence(template.items))
+        setItems(generatePhotoSequence(template.items as Omit<PhotoSequenceItem, 'id'>[]))
         setSelectedTemplate(schedule.currentTemplate as TemplateKey)
       } else {
         // 기본 템플릿

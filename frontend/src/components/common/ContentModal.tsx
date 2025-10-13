@@ -140,7 +140,7 @@ export function ContentModal({
           isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-lg sm:border sm:max-h-[85vh] p-0 sm:p-4',
           className
         )}
-        hideClose={true}
+        hideClose={hideClose}
       >
         {/* Header */}
         {showHeader && (title || subtitle || headerContent) && (

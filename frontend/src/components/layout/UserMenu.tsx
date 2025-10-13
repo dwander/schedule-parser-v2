@@ -70,7 +70,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       // 메뉴가 열릴 때 히스토리 추가
       window.history.pushState({ mobileMenu: true }, '')
 
-      const handlePopState = (event: PopStateEvent) => {
+      const handlePopState = () => {
         // 뒤로가기 감지 시 메뉴 닫기
         setMobileMenuOpen(false)
       }

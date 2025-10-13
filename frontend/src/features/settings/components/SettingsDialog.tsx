@@ -10,7 +10,7 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { Palette, Type, Calendar, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Palette, Calendar, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'

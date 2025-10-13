@@ -26,7 +26,7 @@ export interface ParsedScheduleData {
  * Google OAuth credential response
  */
 export interface GoogleCredentialResponse {
-  credential: string
+  credential?: string
   select_by?: string
   clientId?: string
 }

@@ -48,7 +48,7 @@ export function enableStrictDateParsing() {
 }
 
 export function disableStrictDateParsing() {
-  // @ts-expect-error - 원래 Date로 복원
-  window.Date = OriginalDate
+  // 원래 Date로 복원
+  window.Date = OriginalDate as typeof Date
   console.log('✅ Safari strict date parsing disabled')
 }

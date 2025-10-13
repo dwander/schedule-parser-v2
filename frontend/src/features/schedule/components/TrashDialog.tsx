@@ -22,7 +22,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
   const emptyTrashMutation = useEmptyTrash()
   const restoreAllMutation = useRestoreAllTrash()
 
-  const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<number | null>(null)
+  const [confirmPermanentDelete, setConfirmPermanentDelete] = useState<string | null>(null)
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false)
   const [confirmRestoreAll, setConfirmRestoreAll] = useState(false)
 
@@ -37,8 +37,8 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
     })
   }
 
-  const handlePermanentDelete = (scheduleId: number) => {
-    permanentDeleteMutation.mutate(String(scheduleId), {
+  const handlePermanentDelete = (scheduleId: string) => {
+    permanentDeleteMutation.mutate(scheduleId, {
       onSuccess: () => {
         toast.success('영구 삭제되었습니다')
         setConfirmPermanentDelete(null)
@@ -151,7 +151,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
                         {schedule.location} - {schedule.couple}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {schedule.date} {schedule.time} • {formatDeletedDate(schedule.deletedAt)}
+                        {schedule.date} {schedule.time} • {formatDeletedDate(schedule.deletedAt || null)}
                       </div>
                     </div>
 
