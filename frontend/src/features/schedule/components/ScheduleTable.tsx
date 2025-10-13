@@ -458,6 +458,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                           // 가변폭 컬럼 (memo 또는 spacer)
                           const width = cell.column.id === flexColumnId ? flexWidth : cell.column.getSize()
                           const isMemoColumn = cell.column.id === 'memo'
+                          const isSelectColumn = cell.column.id === 'select'
                           return (
                             <td
                               key={cell.id}
@@ -469,6 +470,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                               className={`px-3 py-2 text-sm ${
                                 isMemoColumn
                                   ? 'overflow-visible'
+                                  : isSelectColumn
+                                  ? ''
                                   : 'overflow-hidden text-ellipsis whitespace-nowrap'
                               }`}
                             >

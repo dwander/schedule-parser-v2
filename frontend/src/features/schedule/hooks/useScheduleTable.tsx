@@ -138,7 +138,7 @@ export function useScheduleTable(
             />
           )
         },
-        size: 25,
+        size: 35,
         enableSorting: false,
         enableColumnFilter: false,
         enableHiding: false,
