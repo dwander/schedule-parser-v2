@@ -7,7 +7,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
 } from '@tanstack/react-table'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { Schedule } from '../types/schedule'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useUpdateSchedule, useSchedules } from './useSchedules'
@@ -133,7 +133,7 @@ export function useScheduleTable(
   const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
 
   // 태그 삭제 핸들러
-  const handleDeleteTag = (tagValue: string, field: 'brand' | 'album') => {
+  const handleDeleteTag = useCallback((tagValue: string, field: 'brand' | 'album') => {
     const tags = field === 'brand' ? brandTags : albumTags
     const tag = tags.find(t => t.tag_value === tagValue)
 
@@ -142,7 +142,7 @@ export function useScheduleTable(
       return
     }
     setDeleteConfirm({ tagId: tag.id, tagValue, field })
-  }
+  }, [brandTags, albumTags, setDeleteConfirm])
 
   const confirmDeleteTag = async () => {
     if (!deleteConfirm) return
@@ -152,7 +152,7 @@ export function useScheduleTable(
     try {
       await deleteTagMutation.mutateAsync(tagId)
       toast.success(`"${tagValue}" 태그가 삭제되었습니다`)
-    } catch (error) {
+    } catch {
       toast.error('태그 삭제 중 오류가 발생했습니다')
     } finally {
       setDeleteConfirm(null)
@@ -160,7 +160,7 @@ export function useScheduleTable(
   }
 
   // 태그 생성 핸들러 (TagSelectCell에서 새 태그 입력 시)
-  const handleSaveTag = async (value: string, field: 'brand' | 'album', scheduleId: string) => {
+  const handleSaveTag = useCallback(async (value: string, field: 'brand' | 'album', scheduleId: string) => {
     // 먼저 스케줄 업데이트
     updateSchedule.mutate({
       id: scheduleId,
@@ -169,7 +169,7 @@ export function useScheduleTable(
 
     // 백엔드에서 자동으로 태그를 생성하므로 프론트엔드에서는 별도 처리 불필요
     // updateSchedule가 성공하면 queryClient가 자동으로 tags를 refetch함
-  }
+  }, [updateSchedule])
 
   const columns = useMemo<ColumnDef<Schedule>[]>(
     () => [
@@ -547,7 +547,7 @@ export function useScheduleTable(
         cell: () => null,
       },
     ],
-    [columnLabels, brandOptions, albumOptions, updateSchedule]
+    [columnLabels, brandOptions, albumOptions, updateSchedule, setColumnLabel, handleSaveTag, handleDeleteTag]
   )
 
   const table = useReactTable({
