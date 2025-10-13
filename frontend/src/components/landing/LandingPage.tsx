@@ -123,8 +123,8 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
         <div className="w-full max-w-md space-y-3">
           {/* 구글 로그인 - FedCM 방식 */}
           <div className="w-full flex justify-center">
-            <div className="py-0.5" style={{ width: '348px', maxWidth: '348px' }}>
-              <div style={{ width: '348px', maxWidth: '348px', overflow: 'hidden' }}>
+            <div className="py-0.5 w-[21.75rem] max-w-[21.75rem]">
+              <div className="w-[21.75rem] max-w-[21.75rem] overflow-hidden">
                 <GoogleLogin
                   onSuccess={handleGoogleLoginSuccess}
                   onError={handleGoogleLoginError}
@@ -145,7 +145,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-[39px] text-sm bg-naver hover:brightness-90 text-white border-naver"
+              className="w-[21.75rem] h-[2.4375rem] text-sm bg-naver hover:brightness-90 text-white border-naver"
               onClick={handleNaverLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -159,7 +159,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
           <div className="w-full flex justify-center">
             <Button
               variant="outline"
-              className="w-[348px] h-[39px] text-sm bg-kakao hover:brightness-95 text-kakao-foreground border-kakao"
+              className="w-[21.75rem] h-[2.4375rem] text-sm bg-kakao hover:brightness-95 text-kakao-foreground border-kakao"
               onClick={handleKakaoLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -174,7 +174,7 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
             <Button
               onClick={onContinueAnonymous}
               variant="ghost"
-              className="w-[348px] h-10 text-sm"
+              className="w-[21.75rem] h-10 text-sm"
             >
               로그인 없이 이용
             </Button>
