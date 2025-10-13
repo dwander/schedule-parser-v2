@@ -108,6 +108,10 @@ interface SettingsState {
   settingsSidebarCollapsed: boolean
   setSettingsSidebarCollapsed: (collapsed: boolean) => void
 
+  // 날짜 범위 필터 버튼 접힘 여부
+  dateRangeCollapsed: boolean
+  setDateRangeCollapsed: (collapsed: boolean) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -178,6 +182,7 @@ export const useSettingsStore = create<SettingsState>()(
       sortBy: 'date-desc',
       weekStartsOn: 1, // 기본값: 월요일
       settingsSidebarCollapsed: typeof window !== 'undefined' && window.innerWidth < 640, // 모바일에서는 접힘
+      dateRangeCollapsed: true, // 기본값: 접힌 상태
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -210,6 +215,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSortBy: (sort) => set({ sortBy: sort }),
       setWeekStartsOn: (day) => set({ weekStartsOn: day }),
       setSettingsSidebarCollapsed: (collapsed) => set({ settingsSidebarCollapsed: collapsed }),
+      setDateRangeCollapsed: (collapsed) => set({ dateRangeCollapsed: collapsed }),
     }),
     {
       name: 'app-settings', // localStorage key

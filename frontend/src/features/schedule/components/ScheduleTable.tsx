@@ -44,10 +44,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
   const [searchExpanded, setSearchExpanded] = useState(false)
-  const [dateRangeCollapsed, setDateRangeCollapsed] = useState(true)
   const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
   const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
-  const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy } = useSettingsStore()
+  const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy, dateRangeCollapsed, setDateRangeCollapsed } = useSettingsStore()
 
   // localStorage에서 불러온 문자열을 Date 객체로 변환
   const dateRange = {
