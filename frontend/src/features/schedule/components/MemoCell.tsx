@@ -17,6 +17,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
+  const [hadMarker, setHadMarker] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -47,13 +48,26 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
     setEditValue(value)
   }, [value])
 
-  // 편집 모드 진입 시 textarea 자동 포커스 (초기 1회만)
+  // 편집 모드 진입 시 LLM 마커 제거 및 포커스
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus()
-      textareaRef.current.select()
+    if (isEditing) {
+      // LLM 마커 감지 및 제거
+      const hasLLMMarker = value.trim().startsWith('<!-- LLM_PARSED -->')
+      setHadMarker(hasLLMMarker)
+
+      if (hasLLMMarker) {
+        // 마커 제거하고 편집
+        const withoutMarker = value.replace(/^\s*<!--\s*LLM_PARSED\s*-->\s*\n?/, '')
+        setEditValue(withoutMarker)
+      }
+
+      // textarea 포커스
+      if (textareaRef.current) {
+        textareaRef.current.focus()
+        textareaRef.current.select()
+      }
     }
-  }, [isEditing])
+  }, [isEditing, value])
 
   // textarea 높이 자동 조절
   useEffect(() => {
@@ -65,12 +79,18 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
   // 편집 모드 저장 핸들러
   const handleSaveEdit = () => {
-    if (editValue !== value) {
-      onSave(editValue)
+    // 원래 마커가 있었으면 다시 추가
+    const finalValue = hadMarker
+      ? `<!-- LLM_PARSED -->\n${editValue}`
+      : editValue
+
+    if (finalValue !== value) {
+      onSave(finalValue)
     }
     setIsEditing(false)
     setIsExpanded(false)
     setPopoverPosition(null)
+    setHadMarker(false)
   }
 
   if (!cardMode) {
