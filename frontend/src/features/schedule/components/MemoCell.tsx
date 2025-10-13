@@ -162,7 +162,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
 
         {/* 접힌 상태일 때 하단 v 아이콘 (위아래 애니메이션) */}
         {isTruncated && !isExpanded && (
-          <div className="w-full flex items-center justify-center py-1">
+          <div className="w-full flex items-center justify-center h-4">
             <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
           </div>
         )}
