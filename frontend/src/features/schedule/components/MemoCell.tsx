@@ -226,12 +226,12 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   return (
     <>
       <div className="relative space-y-1">
-        {/* 우측 상단 편집 버튼 (내용이 있을 때만 표시) */}
-        {value && (
+        {/* 우측 상단 편집 버튼 (편집중이 아닐 때만 표시) */}
+        {value && !isEditing && (
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setDialogOpen(true)
+              setIsEditing(true)
             }}
             className="absolute top-1 right-1 p-1.5 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground transition-colors z-10"
             title="메모 편집"
@@ -240,104 +240,115 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
           </button>
         )}
 
-        {/* 메모 내용 (클릭 시 펼침/접기 토글) */}
-        <div
-          onClick={() => {
-            if (!value) {
-              // 빈 메모는 클릭 시 에디터 열기
-              setDialogOpen(true)
-            } else if (isTruncated || isExpanded) {
-              // 긴 메모는 펼침/접기 토글 (펼쳐진 상태에서도 토글 가능)
-              setIsExpanded(!isExpanded)
-            }
-          }}
-          className={`px-2 py-1 rounded transition-colors ${
-            value ? 'pr-8' : ''
-          } ${
-            !value || isTruncated || isExpanded ? 'cursor-pointer hover:bg-accent/50' : ''
-          }`}
-        >
+        {!isEditing ? (
+          /* 읽기 모드 */
+          <div
+            onClick={() => {
+              if (!value) {
+                // 빈 메모는 클릭 시 편집 모드로
+                setIsEditing(true)
+              } else if (isTruncated || isExpanded) {
+                // 긴 메모는 펼침/접기 토글
+                setIsExpanded(!isExpanded)
+              }
+            }}
+            className={`px-2 py-1 rounded transition-colors ${
+              value ? 'pr-8' : ''
+            } ${
+              !value || isTruncated || isExpanded ? 'cursor-pointer hover:bg-accent/50' : ''
+            }`}
+          >
           {!value && (
             <span className="text-muted-foreground text-sm">클릭하여 입력</span>
           )}
 
-          {value && !isStructured && (
-            <div
-              ref={textRef}
-              className={`text-muted-foreground text-sm ${
-                isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
-              }`}
-            >
-              {value}
-            </div>
-          )}
+            {value && !isStructured && (
+              <div
+                ref={textRef}
+                className={`text-muted-foreground text-sm ${
+                  isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
+                }`}
+              >
+                {value}
+              </div>
+            )}
 
-          {value && isStructured && (
-            <div
-              ref={textRef}
-              className="space-y-2 text-sm"
-            >
-              {parsedMemo.map((item, index) => {
-                // 접힌 상태에서는 첫 3개 아이템만 표시
-                if (!isExpanded && index >= 3) {
-                  return null
-                }
+            {value && isStructured && (
+              <div
+                ref={textRef}
+                className="space-y-2 text-sm"
+              >
+                {parsedMemo.map((item, index) => {
+                  // 접힌 상태에서는 첫 3개 아이템만 표시
+                  if (!isExpanded && index >= 3) {
+                    return null
+                  }
 
-                // 내용 길이 판단: 25자 이상 또는 줄바꿈 포함 시 블록 형태
-                const isLongContent = item.content.length > 25 || item.content.includes('\n')
+                  // 내용 길이 판단: 25자 이상 또는 줄바꿈 포함 시 블록 형태
+                  const isLongContent = item.content.length > 25 || item.content.includes('\n')
 
-                return (
-                  <div key={index}>
-                    {/* 제목 있음 + 짧은 내용 → 한 줄 */}
-                    {item.title && !isLongContent && (
-                      <dl className="flex gap-2">
-                        <dt className="font-medium text-foreground flex-shrink-0">
-                          {item.title}:
-                        </dt>
-                        <dd className="text-muted-foreground whitespace-pre-wrap">
-                          {item.content}
-                        </dd>
-                      </dl>
-                    )}
+                  return (
+                    <div key={index}>
+                      {/* 제목 있음 + 짧은 내용 → 한 줄 */}
+                      {item.title && !isLongContent && (
+                        <dl className="flex gap-2">
+                          <dt className="font-medium text-foreground flex-shrink-0">
+                            {item.title}:
+                          </dt>
+                          <dd className="text-muted-foreground whitespace-pre-wrap">
+                            {item.content}
+                          </dd>
+                        </dl>
+                      )}
 
-                    {/* 제목 있음 + 긴 내용 → 블록 형태 (왼쪽 보더) */}
-                    {item.title && isLongContent && (
-                      <div className="border-l-2 border-muted-foreground/30 pl-2">
-                        <h5 className="font-medium text-foreground mb-1">
-                          {item.title}
-                        </h5>
-                        <div className="text-muted-foreground whitespace-pre-wrap text-xs">
-                          {item.content}
+                      {/* 제목 있음 + 긴 내용 → 블록 형태 (왼쪽 보더) */}
+                      {item.title && isLongContent && (
+                        <div className="border-l-2 border-muted-foreground/30 pl-2">
+                          <h5 className="font-medium text-foreground mb-1">
+                            {item.title}
+                          </h5>
+                          <div className="text-muted-foreground whitespace-pre-wrap text-xs">
+                            {item.content}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* 제목 없음 (일반 텍스트) */}
-                    {!item.title && (
-                      <p className="text-muted-foreground whitespace-pre-wrap">
-                        {item.content}
-                      </p>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                      {/* 제목 없음 (일반 텍스트) */}
+                      {!item.title && (
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {item.content}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* 편집 모드 */
+          <textarea
+            ref={textareaRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' || (e.key === 'Enter' && e.ctrlKey)) {
+                handleSaveEdit()
+              }
+            }}
+            onBlur={handleSaveEdit}
+            className="w-full p-3 bg-card border border-border rounded-lg text-sm text-foreground resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="메모 입력..."
+          />
+        )}
 
-        {/* 접힌 상태일 때 하단 v 아이콘 (위아래 애니메이션) */}
-        {isTruncated && !isExpanded && (
+        {/* 접힌 상태일 때 하단 v 아이콘 (편집중이 아닐 때만) */}
+        {!isEditing && isTruncated && !isExpanded && (
           <div className="w-full flex items-center justify-center h-4">
             <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
           </div>
         )}
       </div>
-      <MemoEditDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        value={value}
-        onSave={onSave}
-      />
     </>
   )
 }
