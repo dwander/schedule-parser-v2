@@ -77,6 +77,13 @@ interface SettingsState {
   viewMode: 'list' | 'card'
   setViewMode: (mode: 'list' | 'card') => void
 
+  // 폴더명 포맷
+  folderNameFormat: {
+    normal: string // 일반 포맷 (컷수 있을 때)
+    noCuts: string // 컷수 없을 때 포맷
+  }
+  setFolderNameFormat: (format: { normal: string; noCuts: string }) => void
+
   // 리스트뷰 컬럼 가시성
   listColumnVisibility: ColumnVisibility
   setListColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
@@ -133,6 +140,10 @@ export const useSettingsStore = create<SettingsState>()(
       priceExpanded: false,
       testPanelVisible: false,
       viewMode: 'card',
+      folderNameFormat: {
+        normal: '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE]) - [PHOTOGRAPHER]([CUTS])',
+        noCuts: '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE])',
+      },
       // 리스트뷰 컬럼 가시성
       listColumnVisibility: {
         select: false,
@@ -197,6 +208,7 @@ export const useSettingsStore = create<SettingsState>()(
       setPriceExpanded: (expanded) => set({ priceExpanded: expanded }),
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
       setViewMode: (mode) => set({ viewMode: mode }),
+      setFolderNameFormat: (format) => set({ folderNameFormat: format }),
       setListColumnVisibility: (visibility) =>
         set((state) => ({
           listColumnVisibility: { ...state.listColumnVisibility, ...visibility } as ColumnVisibility

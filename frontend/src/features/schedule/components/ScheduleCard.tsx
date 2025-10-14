@@ -17,11 +17,10 @@ import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, Use
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
-import { BRAND_FOLDER_PREFIX_MAP } from '@/lib/constants/brands'
 import { getApiUrl } from '@/lib/constants/api'
 import { logger } from '@/lib/utils/logger'
 import { formatContact, parseNumber, isValidNumber, formatNumber } from '@/lib/utils/formatters'
-import { PHOTO_CONSTANTS } from '@/lib/constants/schedule'
+import { generateFolderName } from '@/lib/utils/folderNameGenerator'
 
 interface ScheduleCardProps {
   schedule: Schedule
@@ -36,7 +35,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -152,30 +151,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
   // 폴더명 생성 및 클립보드 복사
   const handleFolderCopy = async () => {
-    // 브랜드 매핑
-    const brandPrefix = BRAND_FOLDER_PREFIX_MAP[schedule.brand] || ''
-
-    // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
-    const [hours, minutes] = schedule.time.split(':')
-    const timeStr = minutes === '00' ? `${hours}시` : `${hours}시${minutes}분`
-
-    // 폴더명 구성
-    let folderName = ''
-    if (brandPrefix) {
-      folderName = `${brandPrefix} ${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
-    } else {
-      folderName = `${schedule.date} ${timeStr} ${schedule.location}(${schedule.couple})`
-    }
-
-    // 작가 정보 추가 (컷수가 있을 때만)
-    if (schedule.cuts && schedule.cuts > 0) {
-      const totalCuts = schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER
-      if (schedule.photographer) {
-        folderName += ` - ${schedule.photographer}(${totalCuts})`
-      } else {
-        folderName += ` - (${totalCuts})`
-      }
-    }
+    // 설정된 포맷으로 폴더명 생성
+    const folderName = generateFolderName(schedule, folderNameFormat)
 
     // 클립보드 복사
     try {

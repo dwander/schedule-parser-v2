@@ -64,6 +64,9 @@ export function useScheduleTable(
   const columnLabels = useSettingsStore((state) => state.columnLabels)
   const setColumnLabelStore = useSettingsStore((state) => state.setColumnLabel)
 
+  // 폴더명 포맷 설정
+  const folderNameFormat = useSettingsStore((state) => state.folderNameFormat)
+
   // 컬럼 라벨 변경 핸들러 (로컬 store + DB 저장)
   const handleSetColumnLabel = useCallback((columnId: keyof typeof columnLabels, label: string) => {
     // 1. 로컬 store 업데이트 (즉시 반영)
@@ -448,7 +451,7 @@ export function useScheduleTable(
           const schedule = info.row.original
 
           const handleFolderCopy = async () => {
-            const folderName = generateFolderName(schedule)
+            const folderName = generateFolderName(schedule, folderNameFormat)
 
             // 클립보드 복사
             try {

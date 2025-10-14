@@ -10,7 +10,8 @@ import {
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { Palette, Calendar, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Palette, RefreshCw, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
@@ -37,6 +38,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setEnabledCalendars,
     settingsSidebarCollapsed,
     setSettingsSidebarCollapsed,
+    folderNameFormat,
+    setFolderNameFormat,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
@@ -67,7 +70,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   const sections = [
     { id: 'appearance' as SettingSection, label: '외관', icon: Palette },
-    { id: 'integration' as SettingSection, label: '외부연동', icon: Calendar },
+    { id: 'integration' as SettingSection, label: '동기화', icon: RefreshCw },
     { id: 'others' as SettingSection, label: '기타', icon: Settings },
   ]
 
@@ -164,10 +167,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           )}
 
-          {/* 외부연동 Section */}
+          {/* 동기화 Section */}
           {activeSection === 'integration' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-foreground">외부연동</h2>
+              <h2 className="text-lg font-semibold text-foreground">동기화</h2>
 
               {/* 캘린더 선택 */}
               <div className="space-y-3">
@@ -223,6 +226,54 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       네이버 캘린더 연동
                     </Button>
                   )}
+                </div>
+              </div>
+
+              {/* 폴더명 포맷 */}
+              <div className="space-y-4 pt-6 border-t">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">폴더명 포맷</h3>
+                  <p className="text-xs text-muted-foreground">
+                    사용 가능한 키워드: [BRAND] [DATE] [TIME] [LOCATION] [COUPLE] [PHOTOGRAPHER] [CUTS]
+                  </p>
+                </div>
+
+                {/* 일반 포맷 (컷수 있을 때) */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">일반 포맷 (컷수 있을 때)</label>
+                  <Input
+                    value={folderNameFormat.normal}
+                    onChange={(e) =>
+                      setFolderNameFormat({
+                        ...folderNameFormat,
+                        normal: e.target.value,
+                      })
+                    }
+                    placeholder="[BRAND] [DATE] [TIME] [LOCATION]([COUPLE]) - [PHOTOGRAPHER]([CUTS])"
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    예시: 브랜드A 2025.10.11 14시 예식장명(신랑 신부) - 작가명(480)
+                  </p>
+                </div>
+
+                {/* 컷수 없을 때 포맷 */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">컷수 없을 때 포맷</label>
+                  <Input
+                    value={folderNameFormat.noCuts}
+                    onChange={(e) =>
+                      setFolderNameFormat({
+                        ...folderNameFormat,
+                        noCuts: e.target.value,
+                      })
+                    }
+                    placeholder="[BRAND] [DATE] [TIME] [LOCATION]([COUPLE])"
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    예시: 브랜드A 2025.10.11 14시 예식장명(신랑 신부)
+                  </p>
                 </div>
               </div>
             </div>
