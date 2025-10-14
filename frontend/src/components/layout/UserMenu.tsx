@@ -289,7 +289,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex h-9 w-9"
+                className="hidden md:flex h-9 w-9 shadow-sm hover:shadow-md transition-all bg-background/50 backdrop-blur-sm rounded-lg"
               >
                 <Settings className="h-5 w-5" />
               </Button>
@@ -303,7 +303,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 md:hidden"
+            className="h-9 w-9 md:hidden shadow-sm hover:shadow-md transition-all bg-background/50 backdrop-blur-sm rounded-lg"
             onClick={() => setMobileMenuOpen(true)}
           >
             <Settings className="h-5 w-5" />
@@ -313,7 +313,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             variant="ghost"
             size="sm"
             onClick={() => setLoginOpen(true)}
-            className="group transition-all hover:bg-accent"
+            className="group transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm rounded-lg"
           >
             <LogIn className="h-5 w-5 group-hover:scale-110 transition-transform" />
             <span className="ml-0 max-w-0 overflow-hidden opacity-0 group-hover:ml-2 group-hover:max-w-[5rem] group-hover:opacity-100 transition-all duration-300">
@@ -367,10 +367,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
                 <img
                   src={user.picture}
                   alt={user.name}
-                  className="h-8 w-8 rounded-full"
+                  className="h-8 w-8 rounded-full shadow-sm hover:shadow-md transition-shadow"
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-sm hover:shadow-md transition-shadow">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -395,10 +395,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           <img
             src={user.picture}
             alt={user.name}
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full shadow-sm hover:shadow-md transition-shadow"
           />
         ) : (
-          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold shadow-sm hover:shadow-md transition-shadow">
             {user.name.charAt(0).toUpperCase()}
           </div>
         )}

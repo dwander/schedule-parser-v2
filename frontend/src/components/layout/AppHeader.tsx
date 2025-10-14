@@ -60,7 +60,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
               size="icon"
               onClick={onDeleteClick}
               aria-label="선택 항목 삭제"
-              className="bg-background/50 backdrop-blur-md"
+              className="bg-background/50 backdrop-blur-md shadow-sm hover:shadow-md transition-all rounded-lg"
             >
               <Trash2 className="h-[1.25rem] w-[1.25rem] text-destructive" />
             </Button>
@@ -72,7 +72,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
             size="icon"
             onClick={onFolderSyncClick}
             aria-label="폴더 동기화"
-            className="hidden md:flex bg-background/50 backdrop-blur-sm"
+            className="hidden md:flex bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all rounded-lg"
           >
             <FolderSync className="h-[1.25rem] w-[1.25rem]" />
           </Button>
@@ -83,7 +83,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
             size="sm"
             onClick={onAddClick}
             aria-label="새 스케줄 추가"
-            className="bg-background/50 backdrop-blur-sm"
+            className="bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all rounded-lg"
           >
             <CalendarPlus className="h-[1.25rem] w-[1.25rem]" />
             <span className="font-semibold">새 스케줄</span>
