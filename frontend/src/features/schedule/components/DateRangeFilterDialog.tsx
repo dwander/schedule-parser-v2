@@ -196,6 +196,16 @@ export function DateRangeFilterDialog({
             <Button
               variant="outline"
               size="sm"
+              onClick={() => handleQuickSelect('upcoming')}
+              className={cn(
+                dateRange.preset === 'upcoming' && 'border-2 border-primary'
+              )}
+            >
+              예정된 스케줄
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => handleQuickSelect('all')}
               className={cn(
                 dateRange.preset === 'all' && 'border-2 border-primary'
