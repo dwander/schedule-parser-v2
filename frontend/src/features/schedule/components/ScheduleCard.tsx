@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck } from 'lucide-react'
+import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Apple } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
@@ -35,12 +35,14 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
   const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
+  const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
+  const [appleCredentialsPromptOpen, setAppleCredentialsPromptOpen] = useState(false)
 
   // 구글 캘린더 URL 생성 함수
   const generateGoogleCalendarUrl = () => {
@@ -146,6 +148,67 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         }
       }
       toast.error('네이버 캘린더 추가 중 오류가 발생했습니다')
+    }
+  }
+
+  const handleAppleCalendar = async () => {
+    // Check if credentials are configured
+    if (!appleCredentials.appleId || !appleCredentials.appPassword) {
+      setAppleCredentialsPromptOpen(true)
+      return
+    }
+
+    setAppleCalendarLoading(true)
+    try {
+      // 날짜/시간 파싱
+      const [year, month, day] = schedule.date.split('.').map(Number)
+      const [hours, minutes] = schedule.time.split(':').map(Number)
+
+      // 시작 시간 (예식 1시간 전)
+      const startDate = new Date(year, month - 1, day, hours - 1, minutes)
+      // 종료 시간 (예식 1시간 후)
+      const endDate = new Date(year, month - 1, day, hours + 1, minutes)
+
+      // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
+      const formatLocalISO = (date: Date) => {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const d = String(date.getDate()).padStart(2, '0')
+        const h = String(date.getHours()).padStart(2, '0')
+        const min = String(date.getMinutes()).padStart(2, '0')
+        return `${y}-${m}-${d}T${h}:${min}:00`
+      }
+
+      // 백엔드를 통해 Apple Calendar API 호출
+      const apiUrl = getApiUrl()
+      const response = await axios.post(
+        `${apiUrl}/api/calendar/apple`,
+        {
+          apple_id: appleCredentials.appleId,
+          app_password: appleCredentials.appPassword,
+          subject: `${schedule.location} - ${schedule.couple}`,
+          location: schedule.location,
+          start_datetime: formatLocalISO(startDate),
+          end_datetime: formatLocalISO(endDate),
+          description: schedule.memo || ''
+        }
+      )
+
+      if (response.data.success) {
+        toast.success('Apple Calendar에 일정이 추가되었습니다')
+      }
+    } catch (error: unknown) {
+      logger.error('Apple Calendar 추가 실패:', error)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number } }
+        if (axiosError.response?.status === 401) {
+          toast.error('Apple ID 또는 앱 전용 비밀번호가 올바르지 않습니다.')
+          return
+        }
+      }
+      toast.error('Apple Calendar 추가 중 오류가 발생했습니다')
+    } finally {
+      setAppleCalendarLoading(false)
     }
   }
 
@@ -449,7 +512,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             >
               <ListTodo className="h-4 w-4" />
             </Button>
-            {(enabledCalendars.google || enabledCalendars.naver) && (
+            {(enabledCalendars.google || enabledCalendars.naver || enabledCalendars.apple) && (
               <div className="flex gap-2">
                 {enabledCalendars.google && (
                   <Button
@@ -471,6 +534,18 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     title="네이버 캘린더"
                   >
                     <CalendarPlus className="h-4 w-4 text-naver" />
+                  </Button>
+                )}
+                {enabledCalendars.apple && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 rounded-full transition-all"
+                    onClick={handleAppleCalendar}
+                    disabled={appleCalendarLoading}
+                    title="Apple 캘린더"
+                  >
+                    <Apple className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -536,6 +611,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         onOpenChange={setNaverLoginPromptOpen}
         title="네이버 캘린더 연동 필요"
         description="네이버 캘린더에 일정을 추가하려면 설정 메뉴에서 네이버 캘린더를 연동해주세요."
+      />
+
+      {/* Apple Calendar Credentials Prompt Dialog */}
+      <AlertDialog
+        open={appleCredentialsPromptOpen}
+        onOpenChange={setAppleCredentialsPromptOpen}
+        title="Apple Calendar 설정 필요"
+        description="Apple Calendar에 일정을 추가하려면 설정 메뉴에서 Apple ID와 앱 전용 비밀번호를 입력해주세요."
       />
     </div>
   )
