@@ -36,7 +36,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -259,7 +259,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 location: value
               })
             }}
-            placeholder="장소"
+            placeholder={columnLabels.location}
             className="font-medium text-base !w-auto mb-1"
           />
           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -296,7 +296,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               })
             }}
             onDelete={(tag) => onDeleteTag(tag, 'brand')}
-            placeholder="브랜드"
+            placeholder={columnLabels.brand}
           />
           <div className="text-xs text-muted-foreground">
             <TagSelectCell
@@ -309,7 +309,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 })
               }}
               onDelete={(tag) => onDeleteTag(tag, 'album')}
-              placeholder="앨범"
+              placeholder={columnLabels.album}
             />
           </div>
         </div>
@@ -336,7 +336,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       couple: value
                     })
                   }}
-                  placeholder="신랑신부"
+                  placeholder={columnLabels.couple}
                   className="!w-auto"
                 />
               </div>
@@ -356,7 +356,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     })
                   }}
                   format={(val) => formatContact(String(val))}
-                  placeholder="연락처"
+                  placeholder={columnLabels.contact}
                   className="!w-auto"
                 />
               </div>
@@ -374,7 +374,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       photographer: value || ''
                     })
                   }}
-                  placeholder="작가"
+                  placeholder={columnLabels.photographer}
                   className="!w-auto"
                 />
               </div>
@@ -397,7 +397,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   }}
                   validate={isValidNumber}
                   format={formatNumber}
-                  placeholder="컷수"
+                  placeholder={columnLabels.cuts}
                   className="!w-auto"
                 />
               </div>
@@ -420,7 +420,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   }}
                   validate={isValidNumber}
                   format={formatNumber}
-                  placeholder="촬영비"
+                  placeholder={columnLabels.price}
                   className="!w-auto"
                 />
               </div>
@@ -438,7 +438,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       manager: value
                     })
                   }}
-                  placeholder="계약자"
+                  placeholder={columnLabels.manager}
                   className="!w-auto"
                 />
               </div>
