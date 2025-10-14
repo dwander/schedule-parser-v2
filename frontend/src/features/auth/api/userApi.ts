@@ -1,5 +1,19 @@
 import { apiClient } from '@/lib/api/client'
 import type { VoiceTrainingData } from '@/features/schedule/types/voiceRecognition'
+import type { ColumnLabels } from '@/stores/useSettingsStore'
+
+/**
+ * UI Settings type stored in database
+ */
+export interface UiSettings {
+  columnLabels?: Partial<ColumnLabels> // 부분 업데이트 지원
+  // 향후 추가될 설정들 (예시)
+  // listColumnVisibility?: ColumnVisibility
+  // cardColumnVisibility?: ColumnVisibility
+  // fontSize?: number
+  // priceMode?: 'total' | 'net'
+  [key: string]: unknown // 유연한 확장을 위한 index signature
+}
 
 /**
  * User detail type (from backend with snake_case fields)
@@ -13,6 +27,7 @@ export interface UserDetail {
   is_admin: boolean
   has_seen_sample_data: boolean
   voice_training_data: VoiceTrainingData | null
+  ui_settings: UiSettings | null
   created_at: string | null
   last_login: string | null
   schedule_count?: number
@@ -45,4 +60,25 @@ export async function updateVoiceTrainingData(
     voice_training_data: voiceTrainingData
   })
   return response.data.voice_training_data
+}
+
+/**
+ * Fetch UI settings for a user
+ */
+export async function fetchUiSettings(userId: string): Promise<UiSettings | null> {
+  const response = await apiClient.get(`/api/users/${userId}/settings`)
+  return response.data.ui_settings
+}
+
+/**
+ * Update UI settings for a user (partial update supported)
+ */
+export async function updateUiSettings(
+  userId: string,
+  uiSettings: Partial<UiSettings>
+): Promise<UiSettings> {
+  const response = await apiClient.patch(`/api/users/${userId}/settings`, {
+    ui_settings: uiSettings
+  })
+  return response.data.ui_settings
 }

@@ -14,6 +14,7 @@ import { LandingPage } from '@/components/landing/LandingPage'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules, useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
+import { useUiSettings } from '@/features/auth/hooks/useUsers'
 import { useState, useMemo, useEffect } from 'react'
 import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedules'
 import { markSampleDataSeen } from '@/lib/api/sampleData'
@@ -42,13 +43,14 @@ function AppContent() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [selectedCount, setSelectedCount] = useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const { testPanelVisible, fontSize, dateRangeFilter, sortBy, weekStartsOn } = useSettingsStore()
+  const { testPanelVisible, fontSize, dateRangeFilter, sortBy, weekStartsOn, setColumnLabel } = useSettingsStore()
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
   const batchAddSchedules = useBatchAddSchedules()
   const { user, login, updateNaverToken } = useAuthStore()
   const queryClient = useQueryClient()
+  const { data: uiSettings } = useUiSettings(user?.id)
   const [showLanding, setShowLanding] = useState(() => {
     // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
     return !user && !localStorage.getItem(APP_STORAGE_KEYS.SKIP_LANDING)
@@ -206,6 +208,18 @@ function AppContent() {
       syncTags.mutate()
     }
   }, [schedules, tags])
+
+  // DB에서 UI 설정(columnLabels) 불러와서 Zustand store에 적용
+  useEffect(() => {
+    if (uiSettings && uiSettings.columnLabels) {
+      // DB에서 불러온 columnLabels를 store에 적용
+      Object.entries(uiSettings.columnLabels).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          setColumnLabel(key as any, value)
+        }
+      })
+    }
+  }, [uiSettings, setColumnLabel])
 
   // 앱을 처음 사용하는 경우 예제 데이터 추가
   useEffect(() => {

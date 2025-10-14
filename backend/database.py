@@ -40,6 +40,9 @@ class User(Base):
     # Voice recognition training data
     voice_training_data = Column(JSON, nullable=True)
 
+    # UI settings (column labels, view preferences, etc.)
+    ui_settings = Column(JSON, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -55,6 +58,7 @@ class User(Base):
             'is_admin': self.is_admin,
             'has_seen_sample_data': self.has_seen_sample_data,
             'voice_training_data': self.voice_training_data,
+            'ui_settings': self.ui_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
         }
@@ -470,6 +474,11 @@ def run_migrations():
                 'name': 'voice_training_data column in users',
                 'check_query': 'SELECT voice_training_data FROM users LIMIT 1',
                 'alter_query': 'ALTER TABLE users ADD COLUMN voice_training_data JSON'
+            },
+            {
+                'name': 'ui_settings column in users',
+                'check_query': 'SELECT ui_settings FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN ui_settings JSON'
             },
             {
                 'name': 'current_template column in schedules',

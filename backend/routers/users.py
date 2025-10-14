@@ -165,3 +165,57 @@ async def update_voice_training_data(user_id: str, request: Request, db: Session
     except Exception as e:
         logger.error(f"❌ Update voice training data error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/users/{user_id}/settings")
+async def get_ui_settings(user_id: str, db: Session = Depends(get_database)):
+    """UI 설정 조회"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"success": True, "ui_settings": user.ui_settings}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Get UI settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/api/users/{user_id}/settings")
+async def update_ui_settings(user_id: str, request: Request, db: Session = Depends(get_database)):
+    """UI 설정 업데이트 (부분 업데이트 지원)"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        data = await request.json()
+        ui_settings = data.get("ui_settings")
+
+        if ui_settings is None:
+            raise HTTPException(status_code=400, detail="ui_settings is required")
+
+        # 부분 업데이트 지원 (기존 설정과 병합)
+        if user.ui_settings and isinstance(user.ui_settings, dict) and isinstance(ui_settings, dict):
+            # 기존 설정에 새 설정을 병합 (깊은 병합은 안 함, 1단계만)
+            merged_settings = {**user.ui_settings, **ui_settings}
+            user.ui_settings = merged_settings
+        else:
+            # 기존 설정이 없거나 dict가 아니면 새 설정으로 교체
+            user.ui_settings = ui_settings
+
+        db.commit()
+
+        logger.info(f"✅ Updated UI settings for user: {user_id}")
+        return {"success": True, "ui_settings": user.ui_settings}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Update UI settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

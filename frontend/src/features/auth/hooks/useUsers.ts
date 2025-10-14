@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchUsers, fetchVoiceTrainingData, updateVoiceTrainingData } from '../api/userApi'
+import { fetchUsers, fetchVoiceTrainingData, updateVoiceTrainingData, fetchUiSettings, updateUiSettings } from '../api/userApi'
 import { QUERY_CONFIG } from '@/lib/constants/query'
 import type { VoiceTrainingData } from '@/features/schedule/types/voiceRecognition'
+import type { UiSettings } from '../api/userApi'
 
 interface UseUsersOptions {
   enabled?: boolean
@@ -43,6 +44,34 @@ export function useUpdateVoiceTrainingData() {
       updateVoiceTrainingData(userId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['voice-training', variables.userId] })
+    },
+  })
+}
+
+/**
+ * Fetch UI settings for a user
+ */
+export function useUiSettings(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['ui-settings', userId],
+    queryFn: () => fetchUiSettings(userId!),
+    enabled: !!userId,
+    staleTime: 0, // 항상 최신 데이터 사용
+    refetchOnMount: true, // 마운트 시 재조회
+  })
+}
+
+/**
+ * Update UI settings for a user
+ */
+export function useUpdateUiSettings() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userId, settings }: { userId: string; settings: Partial<UiSettings> }) =>
+      updateUiSettings(userId, settings),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['ui-settings', variables.userId] })
     },
   })
 }

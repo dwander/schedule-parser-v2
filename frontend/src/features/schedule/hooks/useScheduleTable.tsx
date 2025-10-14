@@ -11,6 +11,8 @@ import { useState, useMemo, useCallback } from 'react'
 import type { Schedule } from '../types/schedule'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useUpdateSchedule, useSchedules } from './useSchedules'
+import { useUpdateUiSettings } from '@/features/auth/hooks/useUsers'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useState as useConfirmState } from 'react'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { toast } from 'sonner'
@@ -39,6 +41,8 @@ export function useScheduleTable(
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
   const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
+  const updateUiSettings = useUpdateUiSettings()
+  const { user } = useAuthStore()
 
   // 이미 App에서 필터링된 데이터를 받으므로 여기서는 추가 필터링 불필요
   const filteredData = data
@@ -58,7 +62,25 @@ export function useScheduleTable(
 
   // 컬럼 라벨 설정
   const columnLabels = useSettingsStore((state) => state.columnLabels)
-  const setColumnLabel = useSettingsStore((state) => state.setColumnLabel)
+  const setColumnLabelStore = useSettingsStore((state) => state.setColumnLabel)
+
+  // 컬럼 라벨 변경 핸들러 (로컬 store + DB 저장)
+  const handleSetColumnLabel = useCallback((columnId: keyof typeof columnLabels, label: string) => {
+    // 1. 로컬 store 업데이트 (즉시 반영)
+    setColumnLabelStore(columnId, label)
+
+    // 2. DB에 저장 (사용자가 로그인한 경우만)
+    if (user?.id) {
+      updateUiSettings.mutate({
+        userId: user.id,
+        settings: {
+          columnLabels: {
+            [columnId]: label
+          }
+        }
+      })
+    }
+  }, [setColumnLabelStore, user, updateUiSettings])
 
   // TanStack Table용 setter (Record<string, boolean> 형식 받음)
   const setColumnVisibility = (updater: Record<string, boolean> | ((old: Record<string, boolean>) => Record<string, boolean>)) => {
@@ -148,7 +170,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.date}
-            onSave={(value) => setColumnLabel('date', value)}
+            onSave={(value) => handleSetColumnLabel('date', value)}
             doubleClick
           />
         ),
@@ -170,7 +192,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.time}
-            onSave={(value) => setColumnLabel('time', value)}
+            onSave={(value) => handleSetColumnLabel('time', value)}
             doubleClick
           />
         ),
@@ -192,7 +214,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.location}
-            onSave={(value) => setColumnLabel('location', value)}
+            onSave={(value) => handleSetColumnLabel('location', value)}
             doubleClick
           />
         ),
@@ -214,7 +236,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.couple}
-            onSave={(value) => setColumnLabel('couple', value)}
+            onSave={(value) => handleSetColumnLabel('couple', value)}
             doubleClick
           />
         ),
@@ -236,7 +258,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.contact}
-            onSave={(value) => setColumnLabel('contact', value)}
+            onSave={(value) => handleSetColumnLabel('contact', value)}
             doubleClick
           />
         ),
@@ -260,7 +282,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.brand}
-            onSave={(value) => setColumnLabel('brand', value)}
+            onSave={(value) => handleSetColumnLabel('brand', value)}
             doubleClick
           />
         ),
@@ -279,7 +301,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.album}
-            onSave={(value) => setColumnLabel('album', value)}
+            onSave={(value) => handleSetColumnLabel('album', value)}
             doubleClick
           />
         ),
@@ -298,7 +320,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.photographer}
-            onSave={(value) => setColumnLabel('photographer', value)}
+            onSave={(value) => handleSetColumnLabel('photographer', value)}
             doubleClick
           />
         ),
@@ -320,7 +342,7 @@ export function useScheduleTable(
         header: () => (
           <EditableCell
             value={columnLabels.cuts}
-            onSave={(value) => setColumnLabel('cuts', value)}
+            onSave={(value) => handleSetColumnLabel('cuts', value)}
             doubleClick
           />
         ),
@@ -348,7 +370,7 @@ export function useScheduleTable(
           <EditableCell
             value={columnLabels.price}
             doubleClick
-            onSave={(value) => setColumnLabel('price', value)}
+            onSave={(value) => handleSetColumnLabel('price', value)}
           />
         ),
         size: 100,
@@ -375,7 +397,7 @@ export function useScheduleTable(
           <EditableCell
             doubleClick
             value={columnLabels.manager}
-            onSave={(value) => setColumnLabel('manager', value)}
+            onSave={(value) => handleSetColumnLabel('manager', value)}
           />
         ),
         size: 150,
@@ -397,7 +419,7 @@ export function useScheduleTable(
           <EditableCell
             doubleClick
             value={columnLabels.memo}
-            onSave={(value) => setColumnLabel('memo', value)}
+            onSave={(value) => handleSetColumnLabel('memo', value)}
           />
         ),
         size: 0, // 가변폭 (동적 계산)
@@ -461,7 +483,7 @@ export function useScheduleTable(
         cell: () => null,
       },
     ],
-    [columnLabels, brandOptions, albumOptions, updateSchedule, setColumnLabel, handleSaveTag, handleDeleteTag]
+    [columnLabels, brandOptions, albumOptions, updateSchedule, handleSetColumnLabel, handleSaveTag, handleDeleteTag]
   )
 
   const table = useReactTable({
