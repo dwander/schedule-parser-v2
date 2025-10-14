@@ -226,9 +226,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
       <div className="space-y-4 w-full">
         {/* Search and Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Date Range Filter Split Button */}
-          <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
+          <div className="flex items-center border border-input rounded-lg bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow overflow-hidden flex-shrink-0">
               {/* Main Button - Calendar Icon + Date Text */}
               <Button
                 variant="ghost"
@@ -290,7 +290,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             </div>
 
           {/* Sort Controls - Split Button */}
-          <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
+          <div className="flex items-center border border-input rounded-lg bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow overflow-hidden flex-shrink-0">
             {/* Sort Order Toggle Button (Icon only) */}
             <Button
               variant="ghost"
@@ -346,13 +346,13 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             onExpandedChange={setSearchExpanded}
           />
 
-        <div className="flex items-center gap-1 ml-auto">
+        <div className="flex items-center gap-2 ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-9 w-9 shadow-sm hover:shadow-md transition-all bg-background/50 backdrop-blur-sm rounded-lg"
               >
                 <MixerHorizontalIcon className="h-5 w-5" />
               </Button>
@@ -396,7 +396,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className="h-9 w-9 shadow-sm hover:shadow-md transition-all bg-background/50 backdrop-blur-sm rounded-lg"
             onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}
             title={viewMode === 'list' ? '카드형으로 전환' : '리스트형으로 전환'}
           >
@@ -410,7 +410,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
       </div>
 
       {/* Preset Buttons Row */}
-      <div className={`flex gap-1 transition-all duration-300 ease-in-out overflow-hidden ${
+      <div className={`flex gap-2 transition-all duration-300 ease-in-out overflow-hidden ${
         dateRangePresetsOpen
           ? 'max-h-20 opacity-100 py-1 my-0'
           : 'max-h-0 h-0 opacity-0 py-0 my-0 -mt-4'
@@ -418,7 +418,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'today' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'today' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('today')}
         >
           오늘
@@ -426,7 +426,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisWeek' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'thisWeek' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('thisWeek')}
         >
           이번주
@@ -434,7 +434,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisMonth' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'thisMonth' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('thisMonth')}
         >
           이번달
@@ -442,7 +442,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisYear' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'thisYear' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('thisYear')}
         >
           올해
@@ -450,7 +450,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'all' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'all' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('all')}
         >
           전체
@@ -458,7 +458,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'upcoming' ? 'border border-border' : ''}`}
+          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'upcoming' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('upcoming')}
         >
           예정된 스케줄

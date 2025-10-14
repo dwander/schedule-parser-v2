@@ -43,7 +43,7 @@ export const SearchInput = memo(function SearchInput({ value, onChange, onExpand
 
   return (
     <div
-      className={`flex items-center border border-input rounded-md bg-background overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`flex items-center border border-input rounded-lg bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md overflow-hidden transition-all duration-300 ease-in-out ${
         expanded ? 'w-full sm:w-64' : 'w-10'
       }`}
     >
