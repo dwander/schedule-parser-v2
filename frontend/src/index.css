@@ -42,6 +42,9 @@
   /* 버전 뱃지 */
   --version-badge-bg: 0 0% 0%;
   --version-badge-opacity: 0.8;
+
+  /* 모달 백드롭 */
+  --backdrop: 0 0% 100%;
 }
 
 .dark {
@@ -83,6 +86,9 @@
   /* 버전 뱃지 */
   --version-badge-bg: 0 0% 0%;
   --version-badge-opacity: 0.8;
+
+  /* 모달 백드롭 */
+  --backdrop: 222.2 20% 12%;
 }
 
 @layer base {

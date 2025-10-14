@@ -58,6 +58,7 @@ export default {
           foreground: "hsl(var(--error-foreground))",
           border: "hsl(var(--error-border))",
         },
+        backdrop: "hsl(var(--backdrop))",
       },
       borderRadius: {
         lg: "var(--radius)",
