@@ -252,7 +252,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <h3 className="text-sm font-semibold text-foreground">앱 정보</h3>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>버전 v{appVersion}</p>
-                  <p>© 2025 Bonsik Snaper, dqstyle@gmail.com</p>
+                  <p>© 2025 Bonsik Snaper, <a href="mailto:4to.app@gmail.com" className="text-primary hover:underline">4to.app@gmail.com</a></p>
                 </div>
               </div>
             </div>
