@@ -13,7 +13,9 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarPlus, Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Apple } from 'lucide-react'
+import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Apple } from 'lucide-react'
+import { GoogleIcon } from '@/components/icons/GoogleIcon'
+import { NaverIcon } from '@/components/icons/NaverIcon'
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
@@ -522,7 +524,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     onClick={handleGoogleCalendar}
                     title="구글 캘린더"
                   >
-                    <Calendar className="h-4 w-4" />
+                    <GoogleIcon className="h-4 w-4" />
                   </Button>
                 )}
                 {enabledCalendars.naver && (
@@ -533,7 +535,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     onClick={handleNaverCalendarClick}
                     title="네이버 캘린더"
                   >
-                    <CalendarPlus className="h-4 w-4 text-naver" />
+                    <NaverIcon className="h-4 w-4 text-naver" />
                   </Button>
                 )}
                 {enabledCalendars.apple && (
