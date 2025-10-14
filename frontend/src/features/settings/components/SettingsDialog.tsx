@@ -36,6 +36,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setWeekStartsOn,
     enabledCalendars,
     setEnabledCalendars,
+    appleCredentials,
+    setAppleCredentials,
     settingsSidebarCollapsed,
     setSettingsSidebarCollapsed,
     folderNameFormat,
@@ -226,6 +228,68 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         <Link className="mr-2 h-4 w-4" />
                         연동
                       </Button>
+                    )}
+                  </div>
+
+                  {/* Apple Calendar */}
+                  <div className="space-y-3 pt-3 border-t">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="apple-calendar"
+                        checked={enabledCalendars.apple}
+                        onCheckedChange={(checked) =>
+                          setEnabledCalendars({ ...enabledCalendars, apple: checked === true })
+                        }
+                      />
+                      <label
+                        htmlFor="apple-calendar"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        애플 캘린더
+                      </label>
+                    </div>
+
+                    {enabledCalendars.apple && (
+                      <div className="pl-6 space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground">Apple ID (iCloud 이메일)</label>
+                          <Input
+                            type="email"
+                            placeholder="example@icloud.com"
+                            value={appleCredentials.appleId}
+                            onChange={(e) =>
+                              setAppleCredentials({ ...appleCredentials, appleId: e.target.value })
+                            }
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs text-muted-foreground">앱 전용 비밀번호</label>
+                            <a
+                              href="https://support.apple.com/ko-kr/102654"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              생성 방법 →
+                            </a>
+                          </div>
+                          <Input
+                            type="password"
+                            placeholder="xxxx-xxxx-xxxx-xxxx"
+                            value={appleCredentials.appPassword}
+                            onChange={(e) =>
+                              setAppleCredentials({ ...appleCredentials, appPassword: e.target.value })
+                            }
+                            className="text-sm font-mono"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            iCloud 계정 설정에서 생성한 앱 전용 비밀번호를 입력하세요
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
