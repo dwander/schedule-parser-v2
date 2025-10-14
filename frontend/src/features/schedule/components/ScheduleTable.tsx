@@ -633,7 +633,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                       const isDuplicate = duplicateSchedules.has(rowIndex)
                       const isConflict = conflictSchedules.has(rowIndex)
                       return (
-                        <div key={schedule.id} className="min-w-0 overflow-hidden">
+                        <div key={schedule.id} className="min-w-0">
                           <ScheduleCard
                             schedule={schedule}
                             isSelected={row.getIsSelected()}

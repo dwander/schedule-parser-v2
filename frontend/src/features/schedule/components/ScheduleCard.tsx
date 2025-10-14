@@ -267,21 +267,22 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   return (
     <div
       className={`
-        rounded-lg border shadow-sm
-        transition-all hover:shadow-md w-full max-w-full overflow-hidden
-        ${isSelected ? 'ring-2 ring-primary' : ''}
+        rounded-xl border border-t-2 shadow-md
+        transition-all duration-300 hover:shadow-xl hover:scale-[1.02] w-full max-w-full
+        ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
         ${
           isDuplicate
             ? 'bg-warning border-warning-border border-l-4'
             : isConflict
             ? 'bg-error border-error-border border-l-4'
-            : 'border-border bg-card'
+            : 'border-border/50 bg-card'
         }
       `}
+      style={{ overflow: 'visible' }}
       onDoubleClick={handleCardDoubleClick}
     >
       {/* Header */}
-      <div className="flex items-start gap-3 p-4 pb-3">
+      <div className="flex items-start gap-3 p-5 pb-4 bg-muted/30">
         {/* Left: Checkbox */}
         {columnVisibility.select && (
           <input
@@ -303,7 +304,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               })
             }}
             placeholder={columnLabels.location}
-            className="font-medium text-base !w-auto mb-1"
+            className="font-semibold text-lg !w-auto mb-1"
           />
           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <DatePickerCell
@@ -359,18 +360,18 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       </div>
 
       {/* Separator */}
-      <div className="border-t border-border" />
+      <div className="border-t border-border/30" />
 
       {/* Content */}
-      <div className="p-4 pt-3 space-y-3">
+      <div className="p-5 pt-4 space-y-3">
         {/* Top: Fields with FAB Buttons */}
         <div className="flex gap-3">
           {/* Left: Fields */}
-          <div className="flex-1 space-y-3 min-w-0">
+          <div className="flex-1 space-y-3.5 min-w-0">
             {/* Couple */}
             {columnVisibility.couple && (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <User className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.couple}
                   onSave={(value) => {
@@ -387,8 +388,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Contact (카드뷰에서는 데이터가 있을 때만 표시) */}
             {schedule.contact && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <Phone className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.contact}
                   onSave={(value) => {
@@ -407,8 +408,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Photographer */}
             {columnVisibility.photographer && (
-              <div className="flex items-center gap-2">
-                <Camera className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <Camera className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.photographer || ''}
                   onSave={(value) => {
@@ -425,8 +426,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Cuts */}
             {columnVisibility.cuts && (
-              <div className="flex items-center gap-2">
-                <FileDigit className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <FileDigit className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.cuts}
                   onSave={(value) => {
@@ -448,8 +449,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Price */}
             {columnVisibility.price && (
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <DollarSign className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.price}
                   onSave={(value) => {
@@ -471,8 +472,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Manager */}
             {columnVisibility.manager && schedule.manager && (
-              <div className="flex items-center gap-2">
-                <UserCog className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2.5">
+                <UserCog className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.manager}
                   onSave={(value) => {
@@ -499,21 +500,21 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 rounded-full transition-all relative"
+                className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
                 onClick={() => setPhotoNoteOpen(true)}
                 title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-[1.1rem] w-[1.1rem]" />
               </Button>
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full transition-all"
+              className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
               onClick={() => setPhotoSequenceOpen(true)}
               title="원판순서"
             >
-              <ListTodo className="h-4 w-4" />
+              <ListTodo className="h-[1.1rem] w-[1.1rem]" />
             </Button>
             {(enabledCalendars.google || enabledCalendars.naver || enabledCalendars.apple) && (
               <div className="flex gap-2">
@@ -521,34 +522,34 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full transition-all"
+                    className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
                     onClick={handleGoogleCalendar}
                     title="구글 캘린더"
                   >
-                    <GoogleIcon className="h-3.5 w-3.5" />
+                    <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
                   </Button>
                 )}
                 {enabledCalendars.naver && (
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full transition-all"
+                    className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
                     onClick={handleNaverCalendarClick}
                     title="네이버 캘린더"
                   >
-                    <NaverIcon className="h-3.5 w-3.5 text-naver" />
+                    <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
                   </Button>
                 )}
                 {enabledCalendars.apple && (
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full transition-all"
+                    className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
                     onClick={handleAppleCalendar}
                     disabled={appleCalendarLoading}
                     title="Apple 캘린더"
                   >
-                    <AppleIcon className="h-[1.425rem] w-[1.425rem]" />
+                    <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
                   </Button>
                 )}
               </div>
@@ -556,18 +557,18 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full transition-all"
+              className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
               onClick={handleFolderCopy}
               title="폴더명 복사"
             >
-              <FolderCheck className="h-4 w-4" />
+              <FolderCheck className="h-[1.1rem] w-[1.1rem]" />
             </Button>
           </div>
         </div>
 
         {/* Memo - Full width */}
         {columnVisibility.memo && (
-          <div className="pt-2 border-t border-border">
+          <div className="pt-3 border-t border-border/30">
             <MemoCell
               value={schedule.memo || ''}
               onSave={(value) => {
