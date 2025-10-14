@@ -525,7 +525,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     onClick={handleGoogleCalendar}
                     title="구글 캘린더"
                   >
-                    <GoogleIcon className="h-4 w-4" />
+                    <GoogleIcon className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 {enabledCalendars.naver && (
@@ -536,7 +536,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     onClick={handleNaverCalendarClick}
                     title="네이버 캘린더"
                   >
-                    <NaverIcon className="h-4 w-4 text-naver" />
+                    <NaverIcon className="h-3.5 w-3.5 text-naver" />
                   </Button>
                 )}
                 {enabledCalendars.apple && (
@@ -548,7 +548,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     disabled={appleCalendarLoading}
                     title="Apple 캘린더"
                   >
-                    <AppleIcon className="h-4 w-4" />
+                    <AppleIcon className="h-[1.425rem] w-[1.425rem]" />
                   </Button>
                 )}
               </div>
