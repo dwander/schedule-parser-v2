@@ -35,7 +35,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
       <div
         className={`
           flex h-14 items-center justify-between px-[0.625rem]
-          bg-background/60 backdrop-blur-sm
+          bg-background/20 backdrop-blur-lg
           transition-all duration-500 ease-in-out
           ${isScrolled ? 'border-b-2 border-border/20' : 'border-b-2 border-transparent'}
         `}
@@ -60,7 +60,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
               size="icon"
               onClick={onDeleteClick}
               aria-label="선택 항목 삭제"
-              className="bg-background/50 backdrop-blur-sm"
+              className="bg-background/50 backdrop-blur-md"
             >
               <Trash2 className="h-[1.25rem] w-[1.25rem] text-destructive" />
             </Button>
