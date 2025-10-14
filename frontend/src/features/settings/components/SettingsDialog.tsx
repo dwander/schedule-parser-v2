@@ -172,25 +172,29 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-foreground">동기화</h2>
 
-              {/* 캘린더 선택 */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="google-calendar"
-                    checked={enabledCalendars.google}
-                    onCheckedChange={(checked) =>
-                      setEnabledCalendars({ ...enabledCalendars, google: checked === true })
-                    }
-                  />
-                  <label
-                    htmlFor="google-calendar"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    구글 캘린더
-                  </label>
-                </div>
+              {/* 캘린더 연동 */}
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 mb-6">
+                  <h3 className="text-sm font-semibold text-foreground">캘린더 연동</h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="google-calendar"
+                      checked={enabledCalendars.google}
+                      onCheckedChange={(checked) =>
+                        setEnabledCalendars({ ...enabledCalendars, google: checked === true })
+                      }
+                    />
+                    <label
+                      htmlFor="google-calendar"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      구글 캘린더
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3">
                     <Checkbox
                       id="naver-calendar"
                       checked={enabledCalendars.naver}
@@ -204,28 +208,26 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     >
                       네이버 캘린더
                     </label>
+                    {isNaverCalendarLinked ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNaverCalendarUnlink}
+                      >
+                        <Unlink className="mr-2 h-4 w-4" />
+                        연동 해제
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNaverCalendarLink}
+                      >
+                        <Link className="mr-2 h-4 w-4" />
+                        연동
+                      </Button>
+                    )}
                   </div>
-                  {isNaverCalendarLinked ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleNaverCalendarUnlink}
-                    >
-                      <Unlink className="mr-2 h-4 w-4" />
-                      네이버 캘린더 연동 해제
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={handleNaverCalendarLink}
-                    >
-                      <Link className="mr-2 h-4 w-4" />
-                      네이버 캘린더 연동
-                    </Button>
-                  )}
                 </div>
               </div>
 
