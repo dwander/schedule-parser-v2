@@ -411,26 +411,56 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
 
       {/* Preset Buttons Row */}
       <div className={`flex gap-1 transition-all duration-300 ease-in-out overflow-hidden ${
-        dateRangePresetsOpen && !dateRangeCollapsed
+        dateRangePresetsOpen
           ? 'max-h-20 opacity-100 py-1 my-0'
           : 'max-h-0 h-0 opacity-0 py-0 my-0 -mt-4'
       }`}>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('today')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'today' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('today')}
+        >
           오늘
         </Button>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisWeek')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'thisWeek' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('thisWeek')}
+        >
           이번주
         </Button>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisMonth')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'thisMonth' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('thisMonth')}
+        >
           이번달
         </Button>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisYear')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'thisYear' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('thisYear')}
+        >
           올해
         </Button>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('all')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'all' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('all')}
+        >
           전체
         </Button>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('upcoming')}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className={`text-xs h-7 ${dateRange.preset === 'upcoming' ? 'border-2 border-primary' : ''}`}
+          onClick={() => handleQuickSelect('upcoming')}
+        >
           남은 스케줄만
         </Button>
       </div>
