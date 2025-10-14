@@ -265,9 +265,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                 }`}
               >
                 {dateRangePresetsOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
                   <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
                 )}
               </Button>
 
