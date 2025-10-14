@@ -21,6 +21,7 @@ export const presetLabels: Record<string, string> = {
   'nextMonth': '다음달',
   'nextYear': '내년',
   'all': '전체기간',
+  'upcoming': '남은 스케줄만',
 }
 
 /**
@@ -90,6 +91,12 @@ export function calculateDateRangeFromPreset(
     case 'nextYear':
       from = startOfYear(addYears(now, 1))
       to = endOfYear(addYears(now, 1))
+      break
+
+    case 'upcoming':
+      // 오늘부터 10년 후까지 (남은 스케줄만)
+      from = startOfDay(now)
+      to = endOfYear(addYears(now, 10))
       break
 
     default:

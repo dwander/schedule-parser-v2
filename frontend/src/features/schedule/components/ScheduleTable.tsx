@@ -7,7 +7,7 @@ import { ScheduleCard } from './ScheduleCard'
 import { SearchInput } from './SearchInput'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -26,9 +26,9 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DateRangeFilterDialog } from './DateRangeFilterDialog'
 import { toast } from 'sonner'
 import { useState, useLayoutEffect, useRef, useEffect } from 'react'
-import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useSettingsStore, type DateRangePreset } from '@/stores/useSettingsStore'
 import { UI_SIZES } from '@/lib/constants/ui'
-import { presetLabels } from '@/lib/utils/datePresets'
+import { presetLabels, calculateDateRangeFromPreset } from '@/lib/utils/datePresets'
 
 interface ScheduleTableProps {
   data: Schedule[]
@@ -46,7 +46,17 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
   const [searchExpanded, setSearchExpanded] = useState(false)
   const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
   const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
-  const { dateRangeFilter, setDateRangeFilter: setDateRange, sortBy, setSortBy, dateRangeCollapsed, setDateRangeCollapsed } = useSettingsStore()
+  const {
+    dateRangeFilter,
+    setDateRangeFilter: setDateRange,
+    sortBy,
+    setSortBy,
+    dateRangeCollapsed,
+    setDateRangeCollapsed,
+    dateRangePresetsOpen,
+    setDateRangePresetsOpen,
+    weekStartsOn
+  } = useSettingsStore()
 
   // localStorage에서 불러온 문자열을 Date 객체로 변환
   const dateRange = {
@@ -83,6 +93,22 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
     const newOrder = sortOrder === 'asc' ? 'desc' : 'asc'
     const newSortBy = `${sortType}-${newOrder}` as 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc'
     setSortBy(newSortBy)
+  }
+
+  // 프리셋 버튼 클릭 핸들러
+  const handleQuickSelect = (preset: DateRangePreset) => {
+    if (preset === 'all') {
+      // 전체기간 선택 - preset만 저장하고 날짜는 null
+      setDateRange({ preset: 'all', from: null, to: null })
+      return
+    }
+
+    // 프리셋 기반으로 날짜 계산
+    const range = calculateDateRangeFromPreset(preset, weekStartsOn)
+    if (range) {
+      // 프리셋과 계산된 날짜 모두 저장하고 바로 적용
+      setDateRange({ preset, from: range.from, to: range.to })
+    }
   }
 
   const { table, flexColumnId, rowSelection, columnLabels, columnVisibility, setColumnVisibility, duplicateSchedules, conflictSchedules, handleDeleteTag, deleteConfirmDialog } = useScheduleTable(data)
@@ -203,44 +229,65 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Date Range Filter Split Button */}
           <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
-            {/* Main Button - Calendar Icon + Date Text */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDateRangeDialogOpen(true)}
-              className={`rounded-none overflow-hidden transition-all duration-300 ease-in-out ${
-                dateRangeCollapsed ? 'gap-0 px-2' : 'gap-2 px-3'
-              }`}
-            >
-              <Calendar className="h-4 w-4 flex-shrink-0" />
-              <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
-                dateRangeCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-              }`}>
-                {dateRange.preset && dateRange.preset !== 'custom'
-                  ? presetLabels[dateRange.preset] || '전체기간'
-                  : dateRange.from && dateRange.to
-                  ? `${formatShortDate(dateRange.from)} ~ ${formatShortDate(dateRange.to)}`
-                  : '전체기간'}
-              </span>
-            </Button>
+              {/* Main Button - Calendar Icon + Date Text */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDateRangeDialogOpen(true)}
+                className={`rounded-none overflow-hidden transition-all duration-300 ease-in-out ${
+                  dateRangeCollapsed ? 'gap-0 px-2' : 'gap-2 px-3'
+                }`}
+              >
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+                  dateRangeCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
+                }`}>
+                  {dateRange.preset && dateRange.preset !== 'custom'
+                    ? presetLabels[dateRange.preset] || '전체기간'
+                    : dateRange.from && dateRange.to
+                    ? `${formatShortDate(dateRange.from)} ~ ${formatShortDate(dateRange.to)}`
+                    : '전체기간'}
+                </span>
+              </Button>
 
-            {/* Divider */}
-            <div className="w-px h-4 bg-border" />
+              {/* Divider */}
+              <div className={`w-px h-4 bg-border transition-all duration-300 ease-in-out ${
+                dateRangeCollapsed ? 'opacity-0' : 'opacity-100'
+              }`} />
 
-            {/* Toggle Button - Chevron */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDateRangeCollapsed(!dateRangeCollapsed)}
-              className="h-8 w-8 p-0 rounded-none"
-            >
-              {dateRangeCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+              {/* ChevronUp/Down Button - 프리셋 버튼 토글 */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDateRangePresetsOpen(!dateRangePresetsOpen)}
+                className={`h-8 w-8 p-0 rounded-none transition-all duration-300 ease-in-out ${
+                  dateRangeCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-8 opacity-100'
+                }`}
+              >
+                {dateRangePresetsOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </Button>
+
+              {/* Divider */}
+              <div className="w-px h-4 bg-border" />
+
+              {/* Toggle Button - Collapse/Expand */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDateRangeCollapsed(!dateRangeCollapsed)}
+                className="h-8 w-8 p-0 rounded-none"
+              >
+                {dateRangeCollapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
 
           {/* Sort Controls - Split Button */}
           <div className="flex items-center border border-input rounded-md bg-background overflow-hidden flex-shrink-0">
@@ -360,6 +407,32 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
             )}
           </Button>
         </div>
+      </div>
+
+      {/* Preset Buttons Row */}
+      <div className={`flex gap-1 transition-all duration-300 ease-in-out overflow-hidden ${
+        dateRangePresetsOpen && !dateRangeCollapsed
+          ? 'max-h-20 opacity-100 py-1 my-0'
+          : 'max-h-0 h-0 opacity-0 py-0 my-0 -mt-4'
+      }`}>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('today')}>
+          오늘
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisWeek')}>
+          이번주
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisMonth')}>
+          이번달
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('thisYear')}>
+          올해
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('all')}>
+          전체
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => handleQuickSelect('upcoming')}>
+          남은 스케줄만
+        </Button>
       </div>
 
       {/* Content Area - Conditional Rendering */}

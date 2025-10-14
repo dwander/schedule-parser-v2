@@ -15,6 +15,7 @@ export type DateRangePreset =
   | 'nextMonth'
   | 'nextYear'
   | 'all'
+  | 'upcoming'
   | 'custom'
   | null
 
@@ -124,6 +125,10 @@ interface SettingsState {
   dateRangeCollapsed: boolean
   setDateRangeCollapsed: (collapsed: boolean) => void
 
+  // 날짜 범위 프리셋 플로팅 영역 펼침 여부
+  dateRangePresetsOpen: boolean
+  setDateRangePresetsOpen: (open: boolean) => void
+
   // 추후 추가될 설정들...
   // language: 'ko' | 'en'
   // notifications: boolean
@@ -200,6 +205,7 @@ export const useSettingsStore = create<SettingsState>()(
       weekStartsOn: 1, // 기본값: 월요일
       settingsSidebarCollapsed: typeof window !== 'undefined' && window.innerWidth < 640, // 모바일에서는 접힘
       dateRangeCollapsed: true, // 기본값: 접힌 상태
+      dateRangePresetsOpen: false, // 기본값: 닫힌 상태
 
       // Actions
       setTheme: (theme) => set({ theme }),
@@ -235,6 +241,7 @@ export const useSettingsStore = create<SettingsState>()(
       setWeekStartsOn: (day) => set({ weekStartsOn: day }),
       setSettingsSidebarCollapsed: (collapsed) => set({ settingsSidebarCollapsed: collapsed }),
       setDateRangeCollapsed: (collapsed) => set({ dateRangeCollapsed: collapsed }),
+      setDateRangePresetsOpen: (open) => set({ dateRangePresetsOpen: open }),
     }),
     {
       name: 'app-settings', // localStorage key
