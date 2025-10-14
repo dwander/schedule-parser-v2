@@ -295,12 +295,55 @@ function AppContent() {
         const fromDate = range.from
         const toDate = range.to
 
-        filtered = filtered.filter((schedule) => {
-          if (!schedule.date) return false
-          const [year, month, day] = schedule.date.split('.').map(Number)
-          const scheduleDate = new Date(year, month - 1, day)
-          return scheduleDate >= fromDate && scheduleDate <= toDate
-        })
+        // 'upcoming' 프리셋일 때는 시간도 고려
+        if (dateRangeFilter.preset === 'upcoming') {
+          const now = new Date()
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+          filtered = filtered.filter((schedule) => {
+            if (!schedule.date) return false
+            const [year, month, day] = schedule.date.split('.').map(Number)
+            const scheduleDate = new Date(year, month - 1, day)
+
+            // 날짜가 범위를 벗어나면 제외
+            if (scheduleDate < fromDate || scheduleDate > toDate) return false
+
+            // 오늘 이후 스케줄은 무조건 포함
+            if (scheduleDate > today) return true
+
+            // 오늘 스케줄은 시간 체크
+            if (scheduleDate.getTime() === today.getTime()) {
+              if (!schedule.time) return true // 시간 정보 없으면 포함
+
+              // 촬영 시간 파싱 (HH:MM 형식)
+              const [hours, minutes] = schedule.time.split(':').map(Number)
+              if (isNaN(hours) || isNaN(minutes)) return true // 파싱 실패 시 포함
+
+              // 촬영 종료 시간 = 촬영 시작 시간 + 1시간
+              const scheduleEndTime = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate(),
+                hours + 1, // 1시간 후
+                minutes
+              )
+
+              // 현재 시간이 촬영 종료 시간 이전이면 포함
+              return now < scheduleEndTime
+            }
+
+            // 과거 날짜는 제외
+            return false
+          })
+        } else {
+          // 다른 프리셋은 날짜만 체크
+          filtered = filtered.filter((schedule) => {
+            if (!schedule.date) return false
+            const [year, month, day] = schedule.date.split('.').map(Number)
+            const scheduleDate = new Date(year, month - 1, day)
+            return scheduleDate >= fromDate && scheduleDate <= toDate
+          })
+        }
       }
     } else if (dateRangeFilter.from && dateRangeFilter.to) {
       // 프리셋이 없으면 저장된 날짜 사용 (custom 모드)
