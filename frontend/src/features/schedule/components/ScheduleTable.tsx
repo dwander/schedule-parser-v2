@@ -418,7 +418,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'today' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'today' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('today')}
         >
           오늘
@@ -426,7 +426,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisWeek' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'thisWeek' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('thisWeek')}
         >
           이번주
@@ -434,7 +434,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisMonth' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'thisMonth' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('thisMonth')}
         >
           이번달
@@ -442,7 +442,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'thisYear' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'thisYear' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('thisYear')}
         >
           올해
@@ -450,7 +450,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'all' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'all' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('all')}
         >
           전체
@@ -458,10 +458,10 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 ${dateRange.preset === 'upcoming' ? 'border-2 border-primary' : ''}`}
+          className={`text-xs h-7 ${dateRange.preset === 'upcoming' ? 'border border-border' : ''}`}
           onClick={() => handleQuickSelect('upcoming')}
         >
-          남은 스케줄만
+          예정된 스케줄
         </Button>
       </div>
 
