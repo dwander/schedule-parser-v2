@@ -345,9 +345,9 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
                   variant="ghost"
                   size="icon"
                   onClick={() => window.history.back()}
-                  className="h-9 w-9"
+                  className="h-9 w-9 text-foreground hover:text-foreground"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5 text-foreground" />
                 </Button>
               </div>
               <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
@@ -449,9 +449,9 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
               variant="ghost"
               size="icon"
               onClick={() => window.history.back()}
-              className="h-9 w-9"
+              className="h-9 w-9 text-foreground hover:text-foreground"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 text-foreground" />
             </Button>
           </div>
           <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
