@@ -51,3 +51,4 @@ backend/*/__pycache__
 deploy-test.sh
 deploy.sh
 
+.gitattributes

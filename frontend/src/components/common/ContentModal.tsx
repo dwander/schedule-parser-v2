@@ -64,7 +64,7 @@ export function ContentModal({
   children,
   className,
   contentClassName,
-  hideClose = false,
+  hideClose = true,
   useHistory = true,
 }: ContentModalProps) {
   const isFullscreenMobile = size === 'fullscreen-mobile'
