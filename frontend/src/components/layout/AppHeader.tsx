@@ -86,7 +86,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
             className="bg-background/50 backdrop-blur-sm"
           >
             <CalendarPlus className="h-[1.25rem] w-[1.25rem]" />
-            <span>새 스케줄</span>
+            <span className="font-semibold">새 스케줄</span>
           </Button>
         </div>
       </div>

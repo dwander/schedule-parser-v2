@@ -208,7 +208,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               variant="ghost"
               size="sm"
               onClick={() => setDateRangeDialogOpen(true)}
-              className={`rounded-none hover:bg-accent overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`rounded-none overflow-hidden transition-all duration-300 ease-in-out ${
                 dateRangeCollapsed ? 'gap-0 px-2' : 'gap-2 px-3'
               }`}
             >
@@ -232,7 +232,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               variant="ghost"
               size="sm"
               onClick={() => setDateRangeCollapsed(!dateRangeCollapsed)}
-              className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+              className="h-8 w-8 p-0 rounded-none"
             >
               {dateRangeCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -249,7 +249,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               variant="ghost"
               size="sm"
               onClick={toggleSortOrder}
-              className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+              className="h-8 w-8 p-0 rounded-none"
             >
               {sortOrder === 'desc' ? (
                 <ArrowDown className="h-4 w-4" />
@@ -267,7 +267,7 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`rounded-none hover:bg-accent overflow-hidden transition-all duration-300 ease-in-out ${
+                  className={`rounded-none overflow-hidden transition-all duration-300 ease-in-out ${
                     searchExpanded ? 'w-0 px-0' : 'w-auto px-2'
                   }`}
                 >
