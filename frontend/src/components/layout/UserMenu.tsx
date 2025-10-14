@@ -77,10 +77,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   }
 
   const handleUsersManagement = useCallback(() => {
-    setMobileMenuOpen(false)
+    setUserManagementOpen(true)
     setTimeout(() => {
-      setUserManagementOpen(true)
-    }, 100)
+      setMobileMenuOpen(false)
+    }, 50)
   }, [])
 
   const handleUITestPanel = useCallback(() => {
@@ -88,11 +88,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   }, [testPanelVisible, setTestPanelVisible])
 
   const handleMenuItemClick = (action: () => void) => {
-    setMobileMenuOpen(false)
-    // 모달이 닫히는 애니메이션 후 action 실행
+    action() // 먼저 다이얼로그 열기
     setTimeout(() => {
-      action()
-    }, 100)
+      setMobileMenuOpen(false) // 그 후 메뉴 닫기
+    }, 50)
   }
 
   const toggleSection = (sectionId: string) => {
