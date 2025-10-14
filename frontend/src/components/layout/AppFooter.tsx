@@ -49,13 +49,8 @@ export function AppFooter({ stats }: AppFooterProps) {
       { label: '총액', value: `₩${totalPrice.toLocaleString()}` },
       { label: '실수령', value: `₩${netPrice.toLocaleString()}` },
     ] : [
-      // 접힌 경우: priceMode에 따라 하나만 표시
-      {
-        label: '촬영비',
-        value: priceMode === 'total'
-          ? `₩${totalPrice.toLocaleString()}`
-          : `₩${netPrice.toLocaleString()}`
-      }
+      // 접힌 경우: 항상 총액만 표시
+      { label: '촬영비', value: `₩${totalPrice.toLocaleString()}` }
     ])
   ]
 
@@ -96,12 +91,25 @@ export function AppFooter({ stats }: AppFooterProps) {
       {/* 데스크탑 버전 (펼침 버튼) */}
       <div className={`hidden sm:block mx-[26px] border border-border/50 rounded-lg bg-background transition-all ${priceExpanded ? 'max-w-[600px]' : 'max-w-[450px]'}`}>
         <div className="flex h-12 items-center justify-around pl-6 pr-4 gap-8">
-          {desktopItems.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground whitespace-nowrap">{item.label}</span>
-              <span className="font-semibold text-foreground whitespace-nowrap">{item.value}</span>
-            </div>
-          ))}
+          {desktopItems.map((item, index) => {
+            // ₩ 기호가 포함된 경우 분리하여 표시
+            const valueStr = String(item.value)
+            const hasWonSign = valueStr.startsWith('₩')
+
+            return (
+              <div key={index} className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground whitespace-nowrap">{item.label}</span>
+                {hasWonSign ? (
+                  <span className="font-semibold whitespace-nowrap">
+                    <span className="text-muted-foreground">₩</span>
+                    <span className="text-foreground">{valueStr.slice(1)}</span>
+                  </span>
+                ) : (
+                  <span className="font-semibold text-foreground whitespace-nowrap">{item.value}</span>
+                )}
+              </div>
+            )
+          })}
           <Button
             variant="ghost"
             size="icon"
