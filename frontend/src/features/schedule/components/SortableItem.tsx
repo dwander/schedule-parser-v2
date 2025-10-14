@@ -11,6 +11,7 @@ interface SortableItemProps {
   item: PhotoSequenceItem
   isLocked: boolean
   voiceEnabled: boolean
+  handlePosition: 'left' | 'right'
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
   trainingTargetId: string | null
@@ -26,6 +27,7 @@ export function SortableItem({
   item,
   isLocked,
   voiceEnabled,
+  handlePosition,
   onToggleComplete,
   onDelete,
   trainingTargetId,
@@ -111,46 +113,86 @@ export function SortableItem({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        className={`flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer group origin-right transition-[transform,opacity] duration-[250ms] ease-out will-change-transform ${
+        className={`flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer group transition-[transform,opacity] duration-[250ms] ease-out will-change-transform ${
           item.completed ? 'scale-[0.83] opacity-50' : 'scale-100 opacity-100'
-        } ${isTraining ? 'ring-2 ring-red-500' : ''}`}
+        } ${isTraining ? 'ring-2 ring-red-500' : ''} ${
+          handlePosition === 'right' ? 'origin-left' : 'origin-right'
+        }`}
       >
-        <div
-          {...attributes}
-          {...listeners}
-          onClick={(e) => e.stopPropagation()}
-          className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
-        >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
+        {handlePosition === 'left' ? (
+          <>
+            <div
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </div>
 
-        <div className="flex-1 text-base select-none flex items-center gap-2">
-          <span>{item.text}</span>
-          {isTraining && (
-            <Badge variant="destructive" className="ml-2">
-              🎯 {collectedCount}개
-            </Badge>
-          )}
-        </div>
+            <div className="flex-1 text-base select-none flex items-center gap-2">
+              <span>{item.text}</span>
+              {isTraining && (
+                <Badge variant="destructive" className="ml-2">
+                  🎯 {collectedCount}개
+                </Badge>
+              )}
+            </div>
 
-        {!isLocked && !item.completed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(item.id)
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            {!isLocked && !item.completed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(item.id)
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex-1 text-base select-none flex items-center gap-2 ml-3">
+              <span>{item.text}</span>
+              {isTraining && (
+                <Badge variant="destructive" className="ml-2">
+                  🎯 {collectedCount}개
+                </Badge>
+              )}
+            </div>
+
+            {!isLocked && !item.completed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(item.id)
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+
+            <div
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </>
         )}
       </div>
 
       {/* 펼쳐진 훈련 데이터 */}
       {isExpanded && editablePhrases.length > 0 && (
-        <div className="mt-2 ml-12 p-3 rounded-lg border bg-muted/30">
+        <div className={`mt-2 p-3 rounded-lg border bg-muted/30 ${handlePosition === 'right' ? 'mr-12' : 'ml-12'}`}>
           <div className="text-sm font-medium text-muted-foreground mb-2">
             수집된 문장 ({editablePhrases.length}개)
           </div>

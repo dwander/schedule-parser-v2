@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -88,6 +88,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
   const [voiceThreshold, setVoiceThreshold] = useLocalStorage<number>(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
   const [showClock, setShowClock] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.SHOW_CLOCK, true)
+  const [handlePosition, setHandlePosition] = useLocalStorage<'left' | 'right'>(PHOTO_SEQUENCE_STORAGE_KEYS.HANDLE_POSITION, 'left')
 
   // 현재 시간 표시용 state
   const [currentTime, setCurrentTime] = useState('')
@@ -535,15 +536,19 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowClock(!showClock)}>
+                <DropdownMenuItem onClick={() => setShowClock(!showClock)} className="cursor-pointer">
                   {showClock ? <Check className="h-4 w-4 mr-2" /> : <Clock className="h-4 w-4 mr-2" />}
                   현재시간 표시
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowTrainingManager(true)}>
+                <DropdownMenuItem onClick={() => setHandlePosition(prev => prev === 'left' ? 'right' : 'left')} className="cursor-pointer">
+                  {handlePosition === 'left' ? <ArrowRightToLine className="h-4 w-4 mr-2" /> : <ArrowLeftToLine className="h-4 w-4 mr-2" />}
+                  카드핸들 좌우 전환
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowTrainingManager(true)} className="cursor-pointer">
                   <CassetteTape className="h-4 w-4 mr-2" />
                   음성인식 훈련 데이터
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowAccuracySettings(true)}>
+                <DropdownMenuItem onClick={() => setShowAccuracySettings(true)} className="cursor-pointer">
                   <Sparkles className="h-4 w-4 mr-2" />
                   음성인식 정확도 설정
                 </DropdownMenuItem>
@@ -694,6 +699,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                       item={item}
                       isLocked={isLocked}
                       voiceEnabled={voiceEnabled}
+                      handlePosition={handlePosition}
                       onToggleComplete={toggleComplete}
                       onDelete={deleteItem}
                       trainingTargetId={trainingTargetId}
