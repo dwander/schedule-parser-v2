@@ -157,10 +157,10 @@ export function ContentModal({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 -ml-2"
+                    className="h-8 w-8 -ml-2 text-foreground hover:text-foreground"
                     onClick={handleClose}
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 text-foreground" />
                   </Button>
                   {title && (
                     <DialogTitle className="text-left flex-1 min-w-0">{title}</DialogTitle>
