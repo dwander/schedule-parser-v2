@@ -52,7 +52,7 @@ export function AppFooter({ stats }: AppFooterProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 -ml-2"
+            className="h-7 w-4"
             onClick={() => setPriceExpanded(!priceExpanded)}
             title={priceExpanded ? '접기' : '펼치기'}
           >
