@@ -11,6 +11,9 @@ from schemas.auth import (
 # Naver schemas
 from schemas.naver import NaverCalendarRequest
 
+# Apple schemas
+from schemas.apple import AppleCalendarRequest
+
 # Parser schemas
 from schemas.parser import ParseTextRequest
 
@@ -37,6 +40,8 @@ __all__ = [
     "KakaoAuthRequest",
     # Naver
     "NaverCalendarRequest",
+    # Apple
+    "AppleCalendarRequest",
     # Parser
     "ParseTextRequest",
     # Pricing
