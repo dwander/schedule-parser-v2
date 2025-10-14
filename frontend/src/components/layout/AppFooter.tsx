@@ -41,7 +41,7 @@ export function AppFooter({ stats }: AppFooterProps) {
 
   return (
     <footer className="w-full flex flex-col items-center py-4 bg-background mb-4">
-      <div className="max-w-[450px] mx-[26px] border border-border/50 rounded-lg bg-background">
+      <div className={`mx-[26px] border border-border/50 rounded-lg bg-background transition-all ${priceExpanded ? 'max-w-[600px]' : 'max-w-[450px]'}`}>
         <div className="flex h-12 items-center justify-around pl-6 pr-4 gap-4 sm:gap-8">
           {items.map((item, index) => (
             <div key={index} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
