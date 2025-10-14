@@ -34,7 +34,7 @@ export function DatePickerCell({ value, onSave }: DatePickerCellProps) {
         <Button
           variant="ghost"
           className={cn(
-            'w-full justify-start text-left font-normal px-2 py-1 h-auto hover:bg-accent/50 border border-input',
+            'w-full justify-start text-left font-normal px-2 py-1 h-auto hover:bg-accent/50',
             !date && 'text-muted-foreground'
           )}
         >
