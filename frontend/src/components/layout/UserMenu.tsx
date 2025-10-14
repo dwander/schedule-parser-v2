@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
-import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, ArrowLeft, LucideIcon, Trash2 } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { LogIn, Settings, FolderSync, Database, Code, Users, TestTube2, LogOut, Check, Calculator, ChartBar, ChevronRight, ChevronDown, LucideIcon, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,11 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { ContentModal } from '@/components/common/ContentModal'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { LoginDialog } from '@/features/auth/components/LoginDialog'
 import { APP_STORAGE_KEYS } from '@/lib/constants/storage'
@@ -63,30 +59,6 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
 
   // 모바일 서브메뉴 펼침 상태
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
-
-  // 브라우저 뒤로가기 처리
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      // 메뉴가 열릴 때 히스토리 추가
-      window.history.pushState({ mobileMenu: true }, '')
-
-      const handlePopState = () => {
-        // 뒤로가기 감지 시 메뉴 닫기
-        setMobileMenuOpen(false)
-      }
-
-      window.addEventListener('popstate', handlePopState)
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState)
-      }
-    } else {
-      // 메뉴가 프로그래밍적으로 닫힐 때 히스토리 정리
-      if (window.history.state?.mobileMenu) {
-        window.history.back()
-      }
-    }
-  }, [mobileMenuOpen])
 
   // 호버 핸들러 - 프로필 사진에 마우스 올리면 메뉴 열기
   const handleProfileMouseEnter = useCallback(() => {
@@ -323,38 +295,15 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 모바일 Sheet */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 md:hidden"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              className="h-screen pt-[env(safe-area-inset-top)] p-0"
-              hideClose
-            >
-              {/* 커스텀 헤더 */}
-              <div className="flex items-center h-14 px-4 border-b">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => window.history.back()}
-                  className="h-9 w-9 text-foreground hover:text-foreground"
-                >
-                  <ArrowLeft className="h-5 w-5 text-foreground" />
-                </Button>
-              </div>
-              <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
-                {renderMobileMenuContent()}
-              </div>
-            </SheetContent>
-          </Sheet>
+          {/* 모바일 메뉴 버튼 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 md:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
 
           <Button
             variant="ghost"
@@ -368,6 +317,18 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             </span>
           </Button>
         </div>
+
+        {/* 모바일 메뉴 모달 */}
+        <ContentModal
+          open={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          size="fullscreen-mobile"
+          title="메뉴"
+          showFooter={false}
+          contentClassName="p-0"
+        >
+          {renderMobileMenuContent()}
+        </ContentModal>
 
         <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
@@ -421,44 +382,35 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* 모바일 Sheet */}
-      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <div className="h-9 w-9 flex items-center justify-center cursor-pointer md:hidden">
-            {user.picture ? (
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="h-8 w-8 rounded-full"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+      {/* 모바일 프로필 버튼 */}
+      <div
+        className="h-9 w-9 flex items-center justify-center cursor-pointer md:hidden"
+        onClick={() => setMobileMenuOpen(true)}
+      >
+        {user.picture ? (
+          <img
+            src={user.picture}
+            alt={user.name}
+            className="h-8 w-8 rounded-full"
+          />
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+            {user.name.charAt(0).toUpperCase()}
           </div>
-        </SheetTrigger>
-        <SheetContent
-          side="bottom"
-          className="h-screen pt-[env(safe-area-inset-top)] p-0"
-          hideClose
-        >
-          {/* 커스텀 헤더 */}
-          <div className="flex items-center h-14 px-4 border-b">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => window.history.back()}
-              className="h-9 w-9 text-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-5 w-5 text-foreground" />
-            </Button>
-          </div>
-          <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
-            {renderMobileMenuContent()}
-          </div>
-        </SheetContent>
-      </Sheet>
+        )}
+      </div>
+
+      {/* 모바일 메뉴 모달 */}
+      <ContentModal
+        open={mobileMenuOpen}
+        onOpenChange={setMobileMenuOpen}
+        size="fullscreen-mobile"
+        title="메뉴"
+        showFooter={false}
+        contentClassName="p-0"
+      >
+        {renderMobileMenuContent()}
+      </ContentModal>
 
       {/* 설정 다이얼로그 */}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
