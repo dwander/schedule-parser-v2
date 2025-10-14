@@ -102,8 +102,12 @@ interface SettingsState {
   setDateRangeFilter: (range: { preset?: DateRangePreset; from: Date | null; to: Date | null }) => void
 
   // 캘린더 연동 설정
-  enabledCalendars: { google: boolean; naver: boolean }
-  setEnabledCalendars: (calendars: { google: boolean; naver: boolean }) => void
+  enabledCalendars: { google: boolean; naver: boolean; apple: boolean }
+  setEnabledCalendars: (calendars: { google: boolean; naver: boolean; apple: boolean }) => void
+
+  // Apple Calendar 인증 정보
+  appleCredentials: { appleId: string; appPassword: string }
+  setAppleCredentials: (credentials: { appleId: string; appPassword: string }) => void
 
   // 확인 다이얼로그 설정
   skipNaverCalendarConfirm: boolean
@@ -199,7 +203,8 @@ export const useSettingsStore = create<SettingsState>()(
         folderName: '폴더',
       },
       dateRangeFilter: { preset: null, from: null, to: null },
-      enabledCalendars: { google: true, naver: true },
+      enabledCalendars: { google: true, naver: true, apple: true },
+      appleCredentials: { appleId: '', appPassword: '' },
       skipNaverCalendarConfirm: false,
       sortBy: 'date-desc',
       weekStartsOn: 1, // 기본값: 월요일
@@ -236,6 +241,7 @@ export const useSettingsStore = create<SettingsState>()(
           }
         })),
       setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
+      setAppleCredentials: (credentials) => set({ appleCredentials: credentials }),
       setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
       setSortBy: (sort) => set({ sortBy: sort }),
       setWeekStartsOn: (day) => set({ weekStartsOn: day }),
