@@ -65,6 +65,10 @@ interface SettingsState {
   priceMode: 'total' | 'net'
   setPriceMode: (mode: 'total' | 'net') => void
 
+  // 가격 표시 펼침 여부
+  priceExpanded: boolean
+  setPriceExpanded: (expanded: boolean) => void
+
   // UI 테스트 패널 표시 여부
   testPanelVisible: boolean
   setTestPanelVisible: (visible: boolean) => void
@@ -126,6 +130,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       fontSize: 16,
       priceMode: 'total',
+      priceExpanded: false,
       testPanelVisible: false,
       viewMode: 'card',
       // 리스트뷰 컬럼 가시성
@@ -189,6 +194,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setFontSize: (size) => set({ fontSize: size }),
       setPriceMode: (mode) => set({ priceMode: mode }),
+      setPriceExpanded: (expanded) => set({ priceExpanded: expanded }),
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
       setViewMode: (mode) => set({ viewMode: mode }),
       setListColumnVisibility: (visibility) =>
