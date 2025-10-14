@@ -76,18 +76,23 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
     window.location.reload()
   }
 
-  const handleUsersManagement = () => {
-    setUserManagementOpen(true)
+  const handleUsersManagement = useCallback(() => {
     setMobileMenuOpen(false)
-  }
+    setTimeout(() => {
+      setUserManagementOpen(true)
+    }, 100)
+  }, [])
 
-  const handleUITestPanel = () => {
+  const handleUITestPanel = useCallback(() => {
     setTestPanelVisible(!testPanelVisible)
-  }
+  }, [testPanelVisible, setTestPanelVisible])
 
   const handleMenuItemClick = (action: () => void) => {
-    action()
     setMobileMenuOpen(false)
+    // 모달이 닫히는 애니메이션 후 action 실행
+    setTimeout(() => {
+      action()
+    }, 100)
   }
 
   const toggleSection = (sectionId: string) => {
@@ -170,7 +175,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
         }
       ]
     }
-  ], [onFolderSyncClick, onBackupRestoreClick, testPanelVisible])
+  ], [onFolderSyncClick, onBackupRestoreClick, testPanelVisible, handleUsersManagement, handleUITestPanel])
 
   // 관리자 전용 섹션 필터링
   const visibleSections = useMemo(() =>
