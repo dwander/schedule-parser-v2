@@ -234,7 +234,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-foreground">폴더명 포맷</h3>
                   <p className="text-xs text-muted-foreground">
-                    사용 가능한 키워드: [BRAND] [DATE] [TIME] [LOCATION] [COUPLE] [PHOTOGRAPHER] [CUTS]
+                    스케줄의 폴더명 복사 버튼을 눌렀을때 적용되는 규칙입니다.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">사용 가능한 키워드:</span> [BRAND] [DATE] [TIME] [LOCATION] [COUPLE] [PHOTOGRAPHER] [CUTS]
                   </p>
                 </div>
 
@@ -253,7 +256,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    예시: 브랜드A 2025.10.11 14시 예식장명(신랑 신부) - 작가명(480)
+                    <span className="font-medium text-foreground">예시:</span> 브랜드A 2025.10.11 14시 예식장명(신랑 신부) - 작가명(480)
                   </p>
                 </div>
 
@@ -272,7 +275,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    예시: 브랜드A 2025.10.11 14시 예식장명(신랑 신부)
+                    <span className="font-medium text-foreground">예시:</span> 브랜드A 2025.10.11 14시 예식장명(신랑 신부)
                   </p>
                 </div>
               </div>
