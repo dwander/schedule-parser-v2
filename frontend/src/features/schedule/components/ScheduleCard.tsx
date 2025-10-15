@@ -675,9 +675,10 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           <div className="pt-3">
             <button
               onClick={() => setImportantMemoOpen(true)}
-              className="w-full p-3 rounded-lg border border-yellow-400/30 bg-yellow-400/5 hover:bg-yellow-400/10 transition-colors text-left"
+              className="w-full p-3 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors text-left flex items-start gap-2.5"
             >
-              <div className="text-sm text-foreground/80 whitespace-pre-wrap break-words line-clamp-3">
+              <Check className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-foreground/80 whitespace-pre-wrap break-words line-clamp-3 flex-1">
                 {schedule.photoNote?.importantMemo}
               </div>
             </button>
