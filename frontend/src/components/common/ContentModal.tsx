@@ -172,7 +172,10 @@ export function ContentModal({
               <div className={cn(
                 'transition-all duration-300',
                 showHeader && (title || subtitle || headerContent)
-                  ? cn(isFullscreenMobile && !hideDivider && 'pb-4 border-b')
+                  ? cn(
+                      isFullscreenMobile && 'pb-4',
+                      isFullscreenMobile && !hideDivider && 'border-b'
+                    )
                   : 'pb-0 border-b-0'
               )}>
               {headerContent ? (
@@ -229,7 +232,8 @@ export function ContentModal({
               isFullscreenMobile && 'px-4 pt-4 sm:px-0 sm:pt-0'
             )}>
               <div className={cn(
-                isFullscreenMobile && !hideDivider && 'pb-4 border-b'
+                isFullscreenMobile && 'pb-4',
+                isFullscreenMobile && !hideDivider && 'border-b'
               )}>
               {headerContent ? (
                 headerContent
@@ -294,8 +298,8 @@ export function ContentModal({
             isFullscreenMobile && 'px-4 pb-4 sm:px-0 sm:pb-0'
           )}>
             <div className={cn(
-              isFullscreenMobile && 'w-full',
-              isFullscreenMobile && !hideDivider && 'pt-4 border-t'
+              isFullscreenMobile && 'w-full pt-4',
+              isFullscreenMobile && !hideDivider && 'border-t'
             )}>
               {footerContent}
             </div>
