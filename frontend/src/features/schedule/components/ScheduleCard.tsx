@@ -670,6 +670,20 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           </div>
         </div>
 
+        {/* Important Memo - Full width */}
+        {hasImportantMemo && (
+          <div className="pt-3">
+            <button
+              onClick={() => setImportantMemoOpen(true)}
+              className="w-full p-3 rounded-lg border border-yellow-400/30 bg-yellow-400/5 hover:bg-yellow-400/10 transition-colors text-left"
+            >
+              <div className="text-sm text-foreground/80 whitespace-pre-wrap break-words line-clamp-3">
+                {schedule.photoNote?.importantMemo}
+              </div>
+            </button>
+          </div>
+        )}
+
         {/* Memo - Full width */}
         {columnVisibility.memo && (
           <div className="pt-3 border-t border-border/30">
