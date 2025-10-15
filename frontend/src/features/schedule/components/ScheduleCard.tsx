@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
-import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Star, Calendar, MoreHorizontal } from 'lucide-react'
+import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Check, Calendar, MoreHorizontal } from 'lucide-react'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { NaverIcon } from '@/components/icons/NaverIcon'
 import { AppleIcon } from '@/components/icons/AppleIcon'
@@ -510,7 +510,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 onClick={() => setImportantMemoOpen(true)}
                 title={hasImportantMemo ? "중요 내용 (작성됨)" : "중요 내용"}
               >
-                <Star className="h-[1.1rem] w-[1.1rem]" />
+                <Check className="h-[1.1rem] w-[1.1rem]" />
               </Button>
             </div>
 

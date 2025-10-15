@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, ArrowLeftToLine, ArrowRightToLine, Star } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, ArrowLeftToLine, ArrowRightToLine, Check } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -894,7 +894,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                   className="bg-background rounded-t-xl px-4 pt-2 pb-3 shadow-md border border-b-0 transition-all duration-200"
                   title="중요 내용 보기"
                 >
-                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                  <Check className="h-4 w-4 text-yellow-400" />
                 </button>
               </div>
             )}
