@@ -501,24 +501,17 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
           {/* Right: FAB Buttons - 가로형 3그룹 레이아웃 */}
           <div className="flex flex-row gap-2 flex-shrink-0">
-            {/* 1. 중요내용 그룹 */}
+            {/* 1. 중요 내용 그룹 */}
             <div className="relative group">
-              <div className="relative">
-                {hasImportantMemo && (
-                  <span className="absolute inset-0 animate-gentle-ping">
-                    <span className="block h-full w-full rounded-full bg-primary" />
-                  </span>
-                )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                  onClick={() => setImportantMemoOpen(true)}
-                  title={hasImportantMemo ? "중요내용 (작성됨)" : "중요내용"}
-                >
-                  <Star className="h-[1.1rem] w-[1.1rem]" />
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                onClick={() => setImportantMemoOpen(true)}
+                title={hasImportantMemo ? "중요 내용 (작성됨)" : "중요 내용"}
+              >
+                <Star className="h-[1.1rem] w-[1.1rem]" />
+              </Button>
             </div>
 
             {/* 2. 캘린더 동기화 그룹 */}
@@ -571,7 +564,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
               // 여러 개 활성화된 경우: 캘린더 아이콘, 호버 시 펼침
               return (
-                <div className="relative group">
+                <div className="flex flex-col gap-2 group">
                   <Button
                     variant="outline"
                     size="icon"
@@ -581,7 +574,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                     <Calendar className="h-[1.1rem] w-[1.1rem]" />
                   </Button>
                   {/* 호버 시 펼쳐지는 서비스 버튼들 */}
-                  <div className="absolute top-full mt-2 right-0 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+                  <div className="flex flex-col gap-2 max-h-0 overflow-hidden opacity-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-200">
                     {enabledCalendars.google && (
                       <Button
                         variant="outline"
@@ -622,12 +615,11 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             })()}
 
             {/* 3. 기타기능 그룹 */}
-            <div className="relative group">
+            <div className="flex flex-col gap-2 group">
               <div className="relative">
+                {/* 데이터 있을 때 배지 표시 */}
                 {hasPhotoNoteData && (
-                  <span className="absolute inset-0 animate-gentle-ping">
-                    <span className="block h-full w-full rounded-full bg-primary" />
-                  </span>
+                  <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background z-10" />
                 )}
                 <Button
                   variant="outline"
@@ -639,12 +631,11 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 </Button>
               </div>
               {/* 호버 시 펼쳐지는 기능 버튼들 */}
-              <div className="absolute top-full mt-2 right-0 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+              <div className="flex flex-col gap-2 max-h-0 overflow-hidden opacity-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-200">
                 <div className="relative">
+                  {/* 데이터 있을 때 배지 표시 */}
                   {hasPhotoNoteData && (
-                    <span className="absolute inset-0 animate-gentle-ping">
-                      <span className="block h-full w-full rounded-full bg-primary" />
-                    </span>
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background z-10" />
                   )}
                   <Button
                     variant="outline"

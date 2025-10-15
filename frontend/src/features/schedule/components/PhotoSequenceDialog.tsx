@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check, ArrowLeftToLine, ArrowRightToLine, Star } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -122,6 +122,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [showRecognizedText, setShowRecognizedText] = useState(false)
   const [displayedText, setDisplayedText] = useState('')
   const [matchedItemText, setMatchedItemText] = useState('')
+  const [showImportantMemo, setShowImportantMemo] = useState(false)
 
   // 서버에서 로드한 데이터 또는 기본값 사용 (항상 서버 데이터 우선)
   const trainingData = serverTrainingData || DEFAULT_VOICE_TRAINING
@@ -698,7 +699,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         {/* 락 모드에 따른 레이아웃 분기 */}
         {isLocked ? (
           // 락 모드: 상단 컨테이너 + 좌우 분할 레이아웃
-          <div className="flex flex-col h-full gap-6">
+          <div className="relative flex flex-col h-full gap-6">
             {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
             <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
               {displayedText && (
@@ -839,7 +840,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                         </div>
 
                         {/* 구분선 */}
-                        <div className="border-t border-muted" />
+                        <div className="border-t border-muted w-20 mx-auto" />
 
                         {/* 남은 시간 */}
                         <div className="space-y-1">
@@ -868,27 +869,36 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                             )}
                           </div>
                         </div>
-
-                        {/* 중요내용 */}
-                        {schedule.photoNote?.importantMemo && (
-                          <>
-                            {/* 구분선 */}
-                            <div className="border-t border-muted" />
-
-                            <div className="space-y-2 max-w-full px-2">
-                              <div className="text-sm text-muted-foreground text-center">⭐ 중요내용</div>
-                              <div className="text-sm whitespace-pre-wrap break-words text-center leading-relaxed bg-warning/10 border border-warning-border/30 rounded-lg p-3">
-                                {schedule.photoNote.importantMemo}
-                              </div>
-                            </div>
-                          </>
-                        )}
                       </div>
                     </div>
+
                   </>
                 )}
               </div>
             </div>
+
+            {/* 중요 내용 - 오른쪽 알림 버튼 */}
+            {schedule.photoNote?.importantMemo && (
+              <div className="absolute top-[66%] right-0 z-40">
+                {/* 동그란 아이콘 버튼 */}
+                <button
+                  onClick={() => setShowImportantMemo(!showImportantMemo)}
+                  className="bg-background hover:bg-accent rounded-full p-2.5 shadow-md border transition-all duration-200"
+                  title="중요 내용 보기"
+                >
+                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                </button>
+
+                {/* 내용 박스 (버튼 아래에 표시) */}
+                {showImportantMemo && (
+                  <div className="absolute top-full mt-3 right-0 w-max min-w-[200px] max-w-md bg-background border rounded-lg shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                      {schedule.photoNote.importantMemo}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           // 일반 모드: 기존 레이아웃

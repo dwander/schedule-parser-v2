@@ -53,7 +53,7 @@ export function ImportantMemoDialog({ open, onOpenChange, schedule }: ImportantM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">중요내용</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">중요 내용</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {schedule.location} · {schedule.couple}
           </p>
@@ -61,12 +61,6 @@ export function ImportantMemoDialog({ open, onOpenChange, schedule }: ImportantM
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              중요 메모
-              <span className="text-muted-foreground ml-2 font-normal">
-                (촬영 당일 꼭 확인해야 할 중요 정보를 작성하세요)
-              </span>
-            </label>
             <Textarea
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -80,13 +74,7 @@ export function ImportantMemoDialog({ open, onOpenChange, schedule }: ImportantM
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-          >
-            취소
-          </Button>
+        <div className="flex justify-end pt-4">
           <Button
             onClick={handleSave}
             disabled={updateSchedule.isPending}
