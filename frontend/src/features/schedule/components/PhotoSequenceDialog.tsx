@@ -868,6 +868,21 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                             )}
                           </div>
                         </div>
+
+                        {/* 중요내용 */}
+                        {schedule.photoNote?.importantMemo && (
+                          <>
+                            {/* 구분선 */}
+                            <div className="border-t border-muted" />
+
+                            <div className="space-y-2 max-w-full px-2">
+                              <div className="text-sm text-muted-foreground text-center">⭐ 중요내용</div>
+                              <div className="text-sm whitespace-pre-wrap break-words text-center leading-relaxed bg-warning/10 border border-warning-border/30 rounded-lg p-3">
+                                {schedule.photoNote.importantMemo}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </>
