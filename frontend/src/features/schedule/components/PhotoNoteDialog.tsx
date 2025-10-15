@@ -19,7 +19,6 @@ import {
   MessageSquare,
   AlertCircle,
   FileText,
-  Phone,
   type LucideIcon
 } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
@@ -368,24 +367,23 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
       className="sm:max-w-4xl"
       title={`${schedule.location} · ${schedule.couple}`}
       subtitle={
-        <span className="flex items-center gap-1">
+        <div className="flex flex-col gap-1 text-muted-foreground/80">
           <span>{schedule.date} · {schedule.time}</span>
           {schedule.contact && (
-            <>
-              <Phone className="h-3.5 w-3.5 ml-2" />
+            <span>
               {schedule.contact.includes('@') ? (
                 <span>{schedule.contact}</span>
               ) : (
                 <a
                   href={`tel:${schedule.contact.replace(/\D/g, '')}`}
-                  className="hover:text-foreground hover:underline transition-colors"
+                  className="hover:text-foreground/90 hover:underline transition-colors"
                 >
                   {schedule.contact}
                 </a>
               )}
-            </>
+            </span>
           )}
-        </span>
+        </div>
       }
       headerAction={
         <div className="flex items-center gap-2">
