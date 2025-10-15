@@ -49,8 +49,8 @@ export function calculateDateRangeFromPreset(
       break
 
     case 'thisWeek':
-      from = startOfWeek(now, { weekStartsOn })
-      to = endOfWeek(now, { weekStartsOn })
+      from = startOfDay(startOfWeek(now, { weekStartsOn }))
+      to = endOfDay(endOfWeek(now, { weekStartsOn }))
       break
 
     case 'thisMonth':
@@ -64,8 +64,8 @@ export function calculateDateRangeFromPreset(
       break
 
     case 'lastWeek':
-      from = startOfWeek(addWeeks(now, -1), { weekStartsOn })
-      to = endOfWeek(addWeeks(now, -1), { weekStartsOn })
+      from = startOfDay(startOfWeek(addWeeks(now, -1), { weekStartsOn }))
+      to = endOfDay(endOfWeek(addWeeks(now, -1), { weekStartsOn }))
       break
 
     case 'lastMonth':
@@ -79,8 +79,8 @@ export function calculateDateRangeFromPreset(
       break
 
     case 'nextWeek':
-      from = startOfWeek(addWeeks(now, 1), { weekStartsOn })
-      to = endOfWeek(addWeeks(now, 1), { weekStartsOn })
+      from = startOfDay(startOfWeek(addWeeks(now, 1), { weekStartsOn }))
+      to = endOfDay(endOfWeek(addWeeks(now, 1), { weekStartsOn }))
       break
 
     case 'nextMonth':
