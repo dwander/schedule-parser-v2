@@ -57,8 +57,12 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false)
 
-  // 모바일 서브메뉴 펼침 상태
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+  // 모바일 서브메뉴 펼침 상태 (모든 섹션 기본 펼침)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    settings: true,
+    data: true,
+    dev: true,
+  })
 
   // 호버 핸들러 - 프로필 사진에 마우스 올리면 메뉴 열기
   const handleProfileMouseEnter = useCallback(() => {
@@ -229,13 +233,13 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent rounded-md transition-colors"
           >
             <div className="flex items-center gap-3">
-              <section.icon className="h-5 w-5" />
-              <span className="font-medium">{section.label}</span>
+              <section.icon className="h-4 w-4" />
+              <span className="text-sm font-medium">{section.label}</span>
             </div>
             {expandedSections[section.id] ? (
-              <ChevronDown className="h-5 w-5" />
+              <ChevronDown className="h-4 w-4" />
             ) : (
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             )}
           </button>
           {expandedSections[section.id] && (
@@ -244,10 +248,10 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
                 <button
                   key={item.id}
                   onClick={() => handleMenuItemClick(item.action)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent rounded-md transition-colors"
                 >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
                   {item.badge}
                 </button>
               ))}
@@ -261,17 +265,17 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
           <div className="border-t my-2" />
           <button
             onClick={() => handleMenuItemClick(() => setTrashDialogOpen(true))}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-3 hover:bg-accent rounded-md transition-colors"
           >
             <Trash2 className="h-5 w-5" />
-            <span className="font-medium">휴지통</span>
+            <span>휴지통</span>
           </button>
           <button
             onClick={() => handleMenuItemClick(handleLogout)}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent rounded-md transition-colors text-destructive"
+            className="w-full flex items-center gap-2 px-4 py-3 hover:bg-accent rounded-md transition-colors text-destructive"
           >
             <LogOut className="h-5 w-5" />
-            <span className="font-medium">로그아웃</span>
+            <span>로그아웃</span>
           </button>
         </>
       )}
