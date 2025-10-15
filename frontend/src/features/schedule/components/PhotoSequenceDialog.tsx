@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import type { Schedule, PhotoSequenceItem } from '../types/schedule'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useState, useEffect } from 'react'
-import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, Check, ArrowLeftToLine, ArrowRightToLine, Star } from 'lucide-react'
+import { Plus, RotateCcw, Lock, Unlock, Mic, MicOff, CassetteTape, X, ChevronLeft, Settings, Sparkles, Clock, ArrowLeftToLine, ArrowRightToLine, Star } from 'lucide-react'
 import { generatePhotoSequence, PHOTO_SEQUENCE_TEMPLATES, type TemplateKey } from '../constants/photoSequenceTemplates'
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition'
 import {
@@ -90,7 +90,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
   const [voiceThreshold, setVoiceThreshold] = useLocalStorage<number>(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_THRESHOLD, VOICE_RECOGNITION_THRESHOLD.DEFAULT)
-  const [showClock, setShowClock] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.SHOW_CLOCK, true)
   const [handlePosition, setHandlePosition] = useLocalStorage<'left' | 'right'>(PHOTO_SEQUENCE_STORAGE_KEYS.HANDLE_POSITION, 'left')
 
   // 촬영 예상 시간 (로컬 state로 관리)
@@ -371,8 +370,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 현재 시간 업데이트 (1초마다)
   useEffect(() => {
-    if (!showClock) return
-
     const endDateTime = calculateEndTime()
 
     const updateTime = () => {
@@ -418,7 +415,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     const interval = setInterval(updateTime, 1000) // 1초마다 업데이트
 
     return () => clearInterval(interval)
-  }, [showClock, schedule.date, schedule.time, shootingDuration])
+  }, [schedule.date, schedule.time, shootingDuration])
 
   // 모달이 닫히면 음성 인식 강제 종료 및 오버레이 즉시 제거
   useEffect(() => {
@@ -614,10 +611,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowClock(!showClock)} className="cursor-pointer">
-                  {showClock ? <Check className="h-4 w-4 mr-2" /> : <Clock className="h-4 w-4 mr-2" />}
-                  현재시간 표시
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setHandlePosition(prev => prev === 'left' ? 'right' : 'left')} className="cursor-pointer">
                   {handlePosition === 'left' ? <ArrowRightToLine className="h-4 w-4 mr-2" /> : <ArrowLeftToLine className="h-4 w-4 mr-2" />}
                   카드핸들 좌우 전환
@@ -765,7 +758,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               {/* 오른쪽: 정보 패널 (시계) (40%) */}
               <div className="flex-[2] flex flex-col items-center justify-start pt-8 gap-6">
                 {/* 시계 표시 */}
-                {showClock && currentTime && (
+                {currentTime && (
                   <>
                     <div className="flex items-start" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}>
                       <span className="text-4xl">
