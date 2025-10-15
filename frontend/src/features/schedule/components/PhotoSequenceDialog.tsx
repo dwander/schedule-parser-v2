@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DEFAULT_VOICE_TRAINING, type VoiceTrainingData } from '../types/voiceRecognition'
-import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD, SCHEDULE_TIMER } from '@/lib/constants/photoSequence'
+import { PHOTO_SEQUENCE_STORAGE_KEYS, PHOTO_SEQUENCE_TIMERS, PHOTO_SEQUENCE_DRAG, VOICE_RECOGNITION_THRESHOLD } from '@/lib/constants/photoSequence'
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage'
 import { SortableItem } from './SortableItem'
 import { TrainingDataManager } from './TrainingDataManager'
