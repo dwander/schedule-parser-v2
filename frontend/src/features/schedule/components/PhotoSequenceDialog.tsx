@@ -324,6 +324,9 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     threshold: voiceThreshold,
   })
 
+  // 현재 시간 및 초 state
+  const [currentSeconds, setCurrentSeconds] = useState(0)
+
   // 현재 시간 업데이트 (1초마다)
   useEffect(() => {
     if (!showClock) return
@@ -334,8 +337,9 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       hours = hours % 12
       hours = hours ? hours : 12 // 0시는 12시로 표시
       const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-      setCurrentTime(`${hours}:${minutes}:${seconds}`)
+      const seconds = now.getSeconds()
+      setCurrentTime(`${hours}:${minutes}`)
+      setCurrentSeconds(seconds)
     }
 
     updateTime() // 즉시 표시
@@ -687,17 +691,56 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               </div>
 
               {/* 오른쪽: 정보 패널 (시계) */}
-              <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col items-center justify-start pt-8 gap-6">
                 {/* 시계 표시 */}
                 {showClock && currentTime && (
-                  <div className="text-center">
-                    <div
-                      className="text-6xl tracking-wider"
-                      style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
-                    >
-                      {currentTime}
+                  <>
+                    <div className="flex items-start" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}>
+                      <span className="text-4xl">
+                        {currentTime.split(':')[0]}
+                      </span>
+                      <span className="text-4xl opacity-30 mx-1">:</span>
+                      <span className="text-6xl tracking-wider">
+                        {currentTime.split(':')[1]}
+                      </span>
                     </div>
-                  </div>
+
+                    {/* 원형 진행바 (초) */}
+                    <div className="relative w-16 h-16">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+                        {/* 배경 원 */}
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          className="text-muted-foreground/20"
+                        />
+                        {/* 진행 원 */}
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          className="text-foreground/50 transition-all duration-1000 ease-linear"
+                          strokeDasharray={`${2 * Math.PI * 28}`}
+                          strokeDashoffset={`${2 * Math.PI * 28 * (1 - currentSeconds / 60)}`}
+                        />
+                      </svg>
+                      {/* 중앙 초 숫자 */}
+                      <div
+                        className="absolute inset-0 flex items-center justify-center text-2xl font-light"
+                        style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                      >
+                        {String(currentSeconds).padStart(2, '0')}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
