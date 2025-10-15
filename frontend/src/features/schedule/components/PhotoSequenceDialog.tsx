@@ -598,9 +598,18 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         </div>
       }
     >
-        {/* 락 걸렸을 때 우측 상단 플로팅 unlock 버튼 */}
+        {/* 락 걸렸을 때 우측 상단 플로팅 버튼들 */}
         {isLocked && (
-          <div className="absolute top-4 right-4 z-50">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleVoice}
+              className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''} ${isListening ? 'animate-pulse' : ''}`}
+              title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
+            >
+              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -613,150 +622,166 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           </div>
         )}
 
-        {/* 화면 중앙 플로팅 오버레이 - 인식된 텍스트 */}
-        {displayedText && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-            <div className={`bg-background/80 backdrop-blur-md border rounded-full px-6 py-4 max-w-md mx-4 transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-              <div className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}>
-                {displayedText}
+        {/* 락 모드에 따른 레이아웃 분기 */}
+        {isLocked ? (
+          // 락 모드: 상단 컨테이너 + 좌우 분할 레이아웃
+          <div className="flex flex-col h-full gap-6">
+            {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
+            <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
+              {displayedText && (
+                <div className={`transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+                  <div
+                    className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
+                    style={{ fontFamily: "'Gowun Batang', serif" }}
+                  >
+                    {displayedText}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 좌우 분할 레이아웃 */}
+            <div className="flex gap-4 flex-1">
+              {/* 왼쪽: 카드 리스트 */}
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {activeItems.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    촬영 순서를 추가해주세요
+                  </div>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={activeItems.map(item => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {activeItems.map((item) => (
+                          <SortableItem
+                            key={item.id}
+                            item={item}
+                            isLocked={isLocked}
+                            voiceEnabled={voiceEnabled}
+                            handlePosition={handlePosition}
+                            onToggleComplete={toggleComplete}
+                            onDelete={deleteItem}
+                            trainingTargetId={trainingTargetId}
+                            collectedCount={trainingTargetId === item.id ? collectedPhrases.length : 0}
+                            isExpanded={expandedTrainingId === item.id}
+                            collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
+                            onStartTraining={startTraining}
+                            onSaveTraining={saveTrainingData}
+                            onCancelTraining={() => {
+                              setExpandedTrainingId(null)
+                              setCollectedPhrases([])
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+
+              {/* 오른쪽: 정보 패널 (시계) */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {/* 시계 표시 */}
+                {showClock && currentTime && (
+                  <div className="text-center">
+                    <div
+                      className="text-6xl tracking-wider"
+                      style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                    >
+                      {currentTime}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        )}
-
-        {/* 현재 시간 표시 영역 */}
-        <div
-          className={`overflow-hidden transition-all duration-500 ease-in-out ${
-            showClock ? 'max-h-32 opacity-100 -mt-2 mb-2' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="pb-1">
-            <div className="text-center tabular-nums flex items-baseline justify-center gap-0" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}>
-              {(() => {
-                const parts = currentTime.split(':')
-                return (
-                  <>
-                    <span className="text-6xl">{parts[0]}</span>
-                    <span className="text-6xl opacity-40">:</span>
-                    <span className="text-6xl">{parts[1]}</span>
-                    {parts[2] && <span className="text-3xl ml-3">{parts[2]}</span>}
-                  </>
-                )
-              })()}
-            </div>
-            {schedule.time && schedule.date && (() => {
-              // 스케줄 날짜 파싱 (YYYY.MM.DD 형식)
-              const [year, month, day] = schedule.date.split('.').map(Number)
-
-              // 예약 시간 파싱
-              const [scheduleHours, scheduleMinutes] = schedule.time.split(':').map(Number)
-
-              // 현재 시간
-              const now = new Date()
-
-              // 목표 시간 (스케줄 날짜 + 예약 시간 + 진행 시간)
-              const targetDate = new Date(year, month - 1, day, scheduleHours, scheduleMinutes, 0, 0)
-              targetDate.setMinutes(targetDate.getMinutes() + SCHEDULE_TIMER.DURATION_MINUTES)
-
-              // 타임스탬프로 남은 시간 계산
-              const remainingMs = targetDate.getTime() - now.getTime()
-
-              // 이미 지났으면 표시하지 않음
-              if (remainingMs <= 0) {
-                return null
-              }
-
-              // 남은 시간을 시간과 분으로 변환
-              const remainingTotalMinutes = Math.floor(remainingMs / 60000)
-              const remainingHours = Math.floor(remainingTotalMinutes / 60)
-              const remainingMinutes = remainingTotalMinutes % 60
-
-              // 목표 시간 포맷팅
-              const targetHours = targetDate.getHours()
-              const targetMinutes = targetDate.getMinutes()
-
-              return (
-                <div className="text-center text-sm text-muted-foreground mt-1">
-                  <span className="font-bold text-base">{String(targetHours).padStart(2, '0')}:{String(targetMinutes).padStart(2, '0')}</span>
-                  <span className="opacity-50">분 까지 </span>
-                  {remainingHours > 0 && (
-                    <>
-                      <span className="font-bold text-base">{String(remainingHours).padStart(2, '0')}</span>
-                      <span className="opacity-50">시간 </span>
-                    </>
-                  )}
-                  <span className="font-bold text-base">{String(remainingMinutes).padStart(2, '0')}</span>
-                  <span className="opacity-50">분 남음</span>
+        ) : (
+          // 일반 모드: 기존 레이아웃
+          <>
+            {/* 화면 중앙 플로팅 오버레이 - 인식된 텍스트 (일반 모드만) */}
+            {displayedText && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                <div className={`bg-background/80 backdrop-blur-md border rounded-full px-6 py-4 max-w-md mx-4 transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+                  <div
+                    className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
+                    style={{ fontFamily: "'Gowun Batang', serif" }}
+                  >
+                    {displayedText}
+                  </div>
                 </div>
-              )
-            })()}
-          </div>
-        </div>
+              </div>
+            )}
 
-        {/* 체크리스트 */}
-        <div className="space-y-4">
-          {activeItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              촬영 순서를 추가해주세요
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={activeItems.map(item => item.id)}
-                strategy={verticalListSortingStrategy}
+            {activeItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                촬영 순서를 추가해주세요
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                <div className="space-y-2">
-                  {activeItems.map((item) => (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      isLocked={isLocked}
-                      voiceEnabled={voiceEnabled}
-                      handlePosition={handlePosition}
-                      onToggleComplete={toggleComplete}
-                      onDelete={deleteItem}
-                      trainingTargetId={trainingTargetId}
-                      collectedCount={trainingTargetId === item.id ? collectedPhrases.length : 0}
-                      isExpanded={expandedTrainingId === item.id}
-                      collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
-                      onStartTraining={startTraining}
-                      onSaveTraining={saveTrainingData}
-                      onCancelTraining={() => {
-                        setExpandedTrainingId(null)
-                        setCollectedPhrases([])
+                <SortableContext
+                  items={activeItems.map(item => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {activeItems.map((item) => (
+                      <SortableItem
+                        key={item.id}
+                        item={item}
+                        isLocked={isLocked}
+                        voiceEnabled={voiceEnabled}
+                        handlePosition={handlePosition}
+                        onToggleComplete={toggleComplete}
+                        onDelete={deleteItem}
+                        trainingTargetId={trainingTargetId}
+                        collectedCount={trainingTargetId === item.id ? collectedPhrases.length : 0}
+                        isExpanded={expandedTrainingId === item.id}
+                        collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
+                        onStartTraining={startTraining}
+                        onSaveTraining={saveTrainingData}
+                        onCancelTraining={() => {
+                          setExpandedTrainingId(null)
+                          setCollectedPhrases([])
+                        }}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {/* 삭제된 항목 배지 */}
+            {deletedItems.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-[15px] pr-[5px] pb-[10px] pl-[5px]">
+                {deletedItems.map((item) => (
+                  <Badge
+                    key={item.id}
+                    variant="secondary"
+                    className="cursor-pointer hover:bg-accent flex items-center gap-1.5 px-3 py-1.5 font-normal"
+                  >
+                    <span onClick={() => restoreItem(item.id)}>{item.text}</span>
+                    <X
+                      className="h-3 w-3 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        permanentlyDelete(item.id)
                       }}
                     />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
-
-        {/* 삭제된 항목 배지 */}
-        {!isLocked && deletedItems.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-[15px] pr-[5px] pb-[10px] pl-[5px]">
-            {deletedItems.map((item) => (
-              <Badge
-                key={item.id}
-                variant="secondary"
-                className="cursor-pointer hover:bg-accent flex items-center gap-1.5 px-3 py-1.5 font-normal"
-              >
-                <span onClick={() => restoreItem(item.id)}>{item.text}</span>
-                <X
-                  className="h-3 w-3 hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    permanentlyDelete(item.id)
-                  }}
-                />
-              </Badge>
-            ))}
-          </div>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </>
         )}
     </ContentModal>
 
