@@ -6,6 +6,7 @@ import { TimePickerCell } from './TimePickerCell'
 import { TagSelectCell } from './TagSelectCell'
 import { PhotoNoteDialog } from './PhotoNoteDialog'
 import { PhotoSequenceDialog } from './PhotoSequenceDialog'
+import { ImportantMemoDialog } from './ImportantMemoDialog'
 import { useUpdateSchedule } from '../hooks/useSchedules'
 import { useTagOptions } from '../hooks/useTagOptions'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -44,6 +45,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
+  const [importantMemoOpen, setImportantMemoOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
   const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
   const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
@@ -237,6 +239,11 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     e.preventDefault()
     onToggleCheckboxVisibility()
   }
+
+  // 중요내용 데이터 존재 여부 확인
+  const hasImportantMemo = useMemo(() => {
+    return !!(schedule.photoNote?.importantMemo)
+  }, [schedule.photoNote?.importantMemo])
 
   // 촬영노트 데이터 존재 여부 확인
   const hasPhotoNoteData = useMemo(() => {
@@ -496,15 +503,22 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
           <div className="flex flex-row gap-2 flex-shrink-0">
             {/* 1. 중요내용 그룹 */}
             <div className="relative group">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                onClick={() => toast.info('중요내용 기능 준비 중')}
-                title="중요내용"
-              >
-                <Star className="h-[1.1rem] w-[1.1rem]" />
-              </Button>
+              <div className="relative">
+                {hasImportantMemo && (
+                  <span className="absolute inset-0 animate-gentle-ping">
+                    <span className="block h-full w-full rounded-full bg-primary" />
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                  onClick={() => setImportantMemoOpen(true)}
+                  title={hasImportantMemo ? "중요내용 (작성됨)" : "중요내용"}
+                >
+                  <Star className="h-[1.1rem] w-[1.1rem]" />
+                </Button>
+              </div>
             </div>
 
             {/* 2. 캘린더 동기화 그룹 */}
@@ -693,6 +707,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       <PhotoSequenceDialog
         open={photoSequenceOpen}
         onOpenChange={setPhotoSequenceOpen}
+        schedule={schedule}
+      />
+
+      {/* ImportantMemo Dialog */}
+      <ImportantMemoDialog
+        open={importantMemoOpen}
+        onOpenChange={setImportantMemoOpen}
         schedule={schedule}
       />
 
