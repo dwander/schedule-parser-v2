@@ -876,26 +876,26 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               </div>
             </div>
 
-            {/* 중요 내용 - 오른쪽 알림 버튼 */}
+            {/* 중요 내용 - 하단 중앙 핸들 */}
             {schedule.photoNote?.importantMemo && (
-              <div className="absolute top-[66%] right-0 z-40">
-                {/* 동그란 아이콘 버튼 */}
-                <button
-                  onClick={() => setShowImportantMemo(!showImportantMemo)}
-                  className="bg-background hover:bg-accent rounded-full p-2.5 shadow-md border transition-all duration-200"
-                  title="중요 내용 보기"
-                >
-                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                </button>
-
-                {/* 내용 박스 (버튼 아래에 표시) */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 -mb-4 z-40">
+                {/* 내용 박스 (버튼 윗쪽에 표시) */}
                 {showImportantMemo && (
-                  <div className="absolute top-full mt-3 right-0 w-max min-w-[200px] max-w-md bg-background border rounded-lg shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max min-w-[200px] max-w-md bg-background border rounded-lg shadow-xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                       {schedule.photoNote.importantMemo}
                     </div>
                   </div>
                 )}
+
+                {/* 핸들 버튼 (바닥에서 튀어나온 형태) */}
+                <button
+                  onClick={() => setShowImportantMemo(!showImportantMemo)}
+                  className="bg-background rounded-t-xl px-4 pt-2 pb-3 shadow-md border border-b-0 transition-all duration-200"
+                  title="중요 내용 보기"
+                >
+                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                </button>
               </div>
             )}
             </>
