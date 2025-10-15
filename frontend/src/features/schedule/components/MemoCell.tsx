@@ -26,7 +26,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
   const parsedMemo = useMemo(() => parseMemo(value), [value])
   const isStructured = useMemo(() => hasStructuredMemo(value), [value])
 
-  // 텍스트가 잘렸는지 확인
+  // 텍스트가 잘렸는지 확인 (value 변경 시에만 체크)
   useEffect(() => {
     // 구조화된 메모: 아이템 개수로 판단
     if (isStructured) {
@@ -36,13 +36,12 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
       return
     }
 
-    // 일반 텍스트: scrollHeight로 판단
-    if (textRef.current) {
-      const element = textRef.current
-      const isOverflowing = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
-      setIsTruncated(isOverflowing)
-    }
-  }, [value, cardMode, isExpanded, isStructured, parsedMemo.length])
+    // 일반 텍스트: 간단히 줄바꿈 개수나 길이로 판단
+    const lines = value.split('\n').length
+    const avgCharsPerLine = 30 // 평균 한 줄 글자 수
+    const estimatedLines = Math.ceil(value.length / avgCharsPerLine)
+    setIsTruncated(lines > 2 || estimatedLines > 2)
+  }, [value, cardMode, isStructured, parsedMemo.length])
 
   // value 변경 시 editValue 동기화
   useEffect(() => {
@@ -314,9 +313,12 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
             {value && !isStructured && (
               <div
                 ref={textRef}
-                className={`text-muted-foreground text-sm ${
+                className={`text-muted-foreground text-sm overflow-hidden transition-all duration-500 ease-in-out ${
                   isExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'
                 }`}
+                style={{
+                  maxHeight: isExpanded ? '1000px' : '3rem'
+                }}
               >
                 {value}
               </div>
@@ -328,16 +330,23 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
                 className="space-y-2 text-sm"
               >
                 {parsedMemo.map((item, index) => {
-                  // 접힌 상태에서는 첫 3개 아이템만 표시
-                  if (!isExpanded && index >= 3) {
-                    return null
-                  }
+                  // 접힌 상태에서는 첫 3개 아이템만 표시 (CSS로 처리)
+                  const shouldHide = !isExpanded && index >= 3
 
                   // 내용 길이 판단: 25자 이상 또는 줄바꿈 포함 시 블록 형태
                   const isLongContent = item.content.length > 25 || item.content.includes('\n')
 
                   return (
-                    <div key={index}>
+                    <div
+                      key={index}
+                      className="overflow-hidden transition-all duration-500 ease-in-out"
+                      style={{
+                        maxHeight: shouldHide ? '0' : '500px',
+                        opacity: shouldHide ? 0 : 1,
+                        marginTop: shouldHide ? '0' : undefined,
+                        marginBottom: shouldHide ? '0' : undefined
+                      }}
+                    >
                       {/* 제목 있음 + 짧은 내용 → 한 줄 */}
                       {item.title && !isLongContent && (
                         <dl className="flex gap-2">
@@ -392,11 +401,15 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
         )}
 
         {/* 접힌 상태일 때 하단 v 아이콘 (편집중이 아닐 때만) */}
-        {!isEditing && isTruncated && !isExpanded && (
-          <div className="w-full flex items-center justify-center h-4">
-            <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
-          </div>
-        )}
+        <div
+          className="w-full flex items-center justify-center overflow-hidden transition-all duration-500 ease-in-out"
+          style={{
+            maxHeight: !isEditing && isTruncated && !isExpanded ? '1rem' : '0',
+            opacity: !isEditing && isTruncated && !isExpanded ? 1 : 0
+          }}
+        >
+          <ChevronDown className="h-3 w-3 text-muted-foreground animate-bounce" />
+        </div>
       </div>
     </>
   )
