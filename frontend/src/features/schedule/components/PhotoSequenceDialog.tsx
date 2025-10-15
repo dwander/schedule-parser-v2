@@ -446,7 +446,9 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 음성 인식 켜지면 힌트 표시
   useEffect(() => {
     if (voiceEnabled) {
-      setDisplayedText('카드를 길게 누르면 훈련 모드로 진입합니다.')
+      // 락 상태에 따라 다른 메시지 표시
+      const message = isLocked ? '듣는 중' : '카드를 길게 누르면 훈련 모드로 진입합니다.'
+      setDisplayedText(message)
       setShowRecognizedText(true)
 
       const timer = setTimeout(() => {
@@ -455,7 +457,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
       return () => clearTimeout(timer)
     }
-  }, [voiceEnabled])
+  }, [voiceEnabled, isLocked])
 
   // 인식된 텍스트 표시 및 자동 페이드 아웃
   useEffect(() => {
@@ -566,8 +568,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             <ChevronLeft className="h-5 w-5" />
           </Button>
 
-          {/* 템플릿 선택 (잠금 모드가 아닐 때만) */}
-          {!isLocked ? (
+          {/* 템플릿 선택 (잠금 모드가 아니고 음성인식이 꺼져있을 때만) */}
+          {!isLocked && !voiceEnabled ? (
             <div className="flex-1 min-w-0">
               <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
                 <SelectTrigger className="w-auto">
