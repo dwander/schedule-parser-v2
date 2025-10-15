@@ -55,19 +55,28 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
       {/* Safe area for mobile status bar */}
       <div className="h-[env(safe-area-inset-top)]" />
 
+      {/* Outer container with padding that appears on scroll */}
       <div
         className={`
-          flex h-14 items-center justify-between px-[0.625rem] gap-3
-          bg-background/20 backdrop-blur-lg
           transition-all duration-500 ease-in-out
-          ${isScrolled ? 'border-b-2 border-border/20' : 'border-b-2 border-transparent'}
+          ${isScrolled ? 'px-4 py-2' : 'px-0 py-0'}
         `}
-        style={{
-          boxShadow: isScrolled
-            ? '0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.15)'
-            : '0 0 0 0 rgba(0, 0, 0, 0)'
-        }}
       >
+        <div
+          className={`
+            flex h-14 items-center justify-between px-[0.625rem] gap-3
+            bg-background/20 backdrop-blur-lg
+            transition-all duration-500 ease-in-out
+            ${isScrolled
+              ? 'border-2 border-border/30 rounded-full mx-auto w-full md:max-w-[700px]'
+              : 'border-0'}
+          `}
+          style={{
+            boxShadow: isScrolled
+              ? '0 8px 16px -4px rgba(0, 0, 0, 0.25), 0 4px 8px -2px rgba(0, 0, 0, 0.2)'
+              : '0 0 0 0 rgba(0, 0, 0, 0)'
+          }}
+        >
         {/* Left: User Menu */}
         <UserMenu
           onFolderSyncClick={onFolderSyncClick}
@@ -125,6 +134,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
             <CalendarPlus className="h-[1.25rem] w-[1.25rem]" />
             <span className="font-semibold">새 스케줄</span>
           </Button>
+        </div>
         </div>
       </div>
     </header>
