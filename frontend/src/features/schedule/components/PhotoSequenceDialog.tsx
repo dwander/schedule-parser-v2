@@ -16,6 +16,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectLabel,
+  SelectGroup,
+  SelectSeparator,
 } from '@/components/ui/select'
 import {
   DropdownMenu,
@@ -816,15 +819,20 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                           <div className="flex items-center justify-center gap-2">
                             <span className="text-lg font-medium">{endTime}</span>
                             <Select value={String(shootingDuration)} onValueChange={(value) => handleShootingDurationChange(Number(value))}>
-                              <SelectTrigger className="w-auto h-5 px-1 border-0 bg-transparent hover:bg-accent">
+                              <SelectTrigger className="w-auto h-5 px-1 border-0 bg-transparent hover:bg-accent focus:ring-0">
                                 <Clock className="h-3.5 w-3.5" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="60">1시간</SelectItem>
-                                <SelectItem value="80">1시간 20분</SelectItem>
-                                <SelectItem value="90">1시간 30분</SelectItem>
-                                <SelectItem value="100">1시간 40분</SelectItem>
-                                <SelectItem value="120">2시간</SelectItem>
+                                <SelectGroup>
+                                  <SelectLabel>예식 간격</SelectLabel>
+                                  <SelectSeparator />
+                                  <SelectItem value="60">1시간</SelectItem>
+                                  <SelectItem value="70">1시간 10분</SelectItem>
+                                  <SelectItem value="80">1시간 20분</SelectItem>
+                                  <SelectItem value="90">1시간 30분</SelectItem>
+                                  <SelectItem value="100">1시간 40분</SelectItem>
+                                  <SelectItem value="120">2시간</SelectItem>
+                                </SelectGroup>
                               </SelectContent>
                             </Select>
                           </div>
