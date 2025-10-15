@@ -23,6 +23,14 @@ interface ContentModalProps {
   headerContent?: ReactNode
   headerAction?: ReactNode
   showHeader?: boolean
+  /**
+   * 헤더 애니메이션 활성화 여부
+   * - true: showHeader가 변경될 때 헤더가 위로 슬라이드하며 사라짐 (DOM 유지)
+   * - false: showHeader에 따라 헤더를 조건부 렌더링 (DOM 제거, 기본값)
+   *
+   * 사용 예시: 락 모드 전환 시 헤더를 부드럽게 숨기고 컨텐츠 공간 확보
+   */
+  animateHeader?: boolean
 
   // Footer options
   footerContent?: ReactNode
@@ -59,6 +67,7 @@ export function ContentModal({
   headerContent,
   headerAction,
   showHeader = true,
+  animateHeader = false,
   footerContent,
   showFooter = false,
   children,
@@ -143,14 +152,20 @@ export function ContentModal({
         hideClose={hideClose}
       >
         {/* Header */}
-        {showHeader && (title || subtitle || headerContent) && (
+        {animateHeader ? (
+          // 애니메이션 모드: DOM 유지, CSS 트랜지션으로 숨김
           <DialogHeader className={cn(
-            'text-left space-y-0',
-            isFullscreenMobile && 'pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0'
+            'text-left space-y-0 transition-all duration-300 overflow-hidden',
+            isFullscreenMobile && 'px-4 pt-4 sm:px-0 sm:pt-0',
+            showHeader && (title || subtitle || headerContent)
+              ? cn(isFullscreenMobile && 'pb-4 border-b', 'max-h-20 opacity-100')
+              : 'max-h-0 opacity-0 pb-0 border-b-0 -translate-y-full'
           )}>
-            {headerContent ? (
-              headerContent
-            ) : (
+            {(title || subtitle || headerContent) && (
+              <>
+              {headerContent ? (
+                headerContent
+              ) : (
               <div className="space-y-2">
                 {/* 첫 번째 줄: 뒤로가기 + 타이틀 */}
                 <div className="flex items-center gap-3">
@@ -191,7 +206,61 @@ export function ContentModal({
                 )}
               </div>
             )}
+              </>
+            )}
           </DialogHeader>
+        ) : (
+          // 기본 모드: 조건부 렌더링 (DOM 제거)
+          showHeader && (title || subtitle || headerContent) && (
+            <DialogHeader className={cn(
+              'text-left space-y-0',
+              isFullscreenMobile && 'pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0'
+            )}>
+              {headerContent ? (
+                headerContent
+              ) : (
+                <div className="space-y-2">
+                  {/* 첫 번째 줄: 뒤로가기 + 타이틀 */}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 -ml-2 text-foreground hover:text-foreground"
+                      onClick={handleClose}
+                    >
+                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                    </Button>
+                    {title && (
+                      <DialogTitle className="text-left flex-1 min-w-0">{title}</DialogTitle>
+                    )}
+                  </div>
+
+                  {/* 두 번째 줄: 서브타이틀 + 액션버튼 */}
+                  {(subtitle || headerAction) && (
+                    <div className="flex items-center gap-3 pl-11">
+                      {/* 서브타이틀 */}
+                      {subtitle && (
+                        <div className="flex-1 min-w-0">
+                          {typeof subtitle === 'string' ? (
+                            <p className="text-sm text-muted-foreground text-left">{subtitle}</p>
+                          ) : (
+                            <div className="text-left">{subtitle}</div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 오른쪽 액션 (토글 버튼 등) */}
+                      {headerAction && (
+                        <div className="flex-shrink-0">
+                          {headerAction}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </DialogHeader>
+          )
         )}
 
         {/* Content */}
