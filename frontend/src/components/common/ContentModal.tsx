@@ -158,11 +158,16 @@ export function ContentModal({
             'text-left space-y-0 transition-all duration-300 overflow-hidden',
             isFullscreenMobile && 'px-4 pt-4 sm:px-0 sm:pt-0',
             showHeader && (title || subtitle || headerContent)
-              ? cn(isFullscreenMobile && 'pb-4 border-b', 'max-h-20 opacity-100')
-              : 'max-h-0 opacity-0 pb-0 border-b-0 -translate-y-full'
+              ? 'max-h-20 opacity-100'
+              : 'max-h-0 opacity-0 pb-0 -translate-y-full'
           )}>
             {(title || subtitle || headerContent) && (
-              <>
+              <div className={cn(
+                'transition-all duration-300',
+                showHeader && (title || subtitle || headerContent)
+                  ? cn(isFullscreenMobile && 'pb-4 border-b')
+                  : 'pb-0 border-b-0'
+              )}>
               {headerContent ? (
                 headerContent
               ) : (
@@ -206,7 +211,7 @@ export function ContentModal({
                 )}
               </div>
             )}
-              </>
+              </div>
             )}
           </DialogHeader>
         ) : (
@@ -214,8 +219,11 @@ export function ContentModal({
           showHeader && (title || subtitle || headerContent) && (
             <DialogHeader className={cn(
               'text-left space-y-0',
-              isFullscreenMobile && 'pb-4 border-b px-4 pt-4 sm:px-0 sm:pt-0'
+              isFullscreenMobile && 'px-4 pt-4 sm:px-0 sm:pt-0'
             )}>
+              <div className={cn(
+                isFullscreenMobile && 'pb-4 border-b'
+              )}>
               {headerContent ? (
                 headerContent
               ) : (
@@ -259,6 +267,7 @@ export function ContentModal({
                   )}
                 </div>
               )}
+              </div>
             </DialogHeader>
           )
         )}
@@ -275,9 +284,13 @@ export function ContentModal({
         {/* Footer */}
         {showFooter && footerContent && (
           <DialogFooter className={cn(
-            isFullscreenMobile && 'pt-4 border-t px-4 pb-4 sm:px-0 sm:pb-0'
+            isFullscreenMobile && 'px-4 pb-4 sm:px-0 sm:pb-0'
           )}>
-            {footerContent}
+            <div className={cn(
+              isFullscreenMobile && 'pt-4 border-t w-full'
+            )}>
+              {footerContent}
+            </div>
           </DialogFooter>
         )}
       </DialogContent>
