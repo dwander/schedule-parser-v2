@@ -553,6 +553,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       className="md:max-w-2xl md:min-w-[500px] md:h-[90dvh]"
       showHeader={!isLocked}
       animateHeader={true}
+      hideDivider={true}
       headerContent={
         <div className="flex items-center gap-3 w-full">
           {/* 뒤로가기 버튼 */}
@@ -691,25 +692,26 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           </div>
         )}
 
-        {/* 락 모드에 따른 레이아웃 분기 */}
-        {isLocked ? (
-          // 락 모드: 상단 컨테이너 + 좌우 분할 레이아웃
-          <div className="relative flex flex-col h-full gap-6">
-            {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
-            <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
-              {displayedText && (
-                <div className={`transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                  <div
-                    className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
-                    style={{ fontFamily: "'Gowun Batang', serif" }}
-                  >
-                    {displayedText}
-                  </div>
+        {/* 공통 레이아웃: 상단 컨테이너 + 본문 */}
+        <div className="relative flex flex-col h-full gap-6">
+          {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
+          <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
+            {displayedText && (
+              <div className={`transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+                <div
+                  className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
+                  style={{ fontFamily: "'Gowun Batang', serif" }}
+                >
+                  {displayedText}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            {/* 좌우 분할 레이아웃 (6:4 비율) */}
+          {/* 락 모드에 따른 본문 레이아웃 분기 */}
+          {isLocked ? (
+            <>
+            {/* 락 모드: 좌우 분할 레이아웃 (6:4 비율) */}
             <div className="flex gap-4 flex-1">
               {/* 왼쪽: 카드 리스트 (60%) */}
               <div className="flex-[3] overflow-y-auto space-y-2 pr-1">
@@ -894,24 +896,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 )}
               </div>
             )}
-          </div>
-        ) : (
-          // 일반 모드: 기존 레이아웃
+            </>
+          ) : (
+          // 일반 모드: 단일 컬럼 레이아웃
           <>
-            {/* 화면 중앙 플로팅 오버레이 - 인식된 텍스트 (일반 모드만) */}
-            {displayedText && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                <div className={`bg-background/80 backdrop-blur-md border rounded-full px-6 py-4 max-w-md mx-4 transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                  <div
-                    className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
-                    style={{ fontFamily: "'Gowun Batang', serif" }}
-                  >
-                    {displayedText}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 촬영 순서를 추가해주세요
@@ -976,6 +964,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             )}
           </>
         )}
+        </div>
     </ContentModal>
 
       {/* 훈련 데이터 관리 다이얼로그 */}

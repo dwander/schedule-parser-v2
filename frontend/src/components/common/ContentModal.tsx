@@ -31,6 +31,12 @@ interface ContentModalProps {
    * 사용 예시: 락 모드 전환 시 헤더를 부드럽게 숨기고 컨텐츠 공간 확보
    */
   animateHeader?: boolean
+  /**
+   * 헤더 하단 구분선 숨김 여부
+   * - true: border-b 제거
+   * - false: 기본값, fullscreen-mobile 모드에서 border-b 표시
+   */
+  hideDivider?: boolean
 
   // Footer options
   footerContent?: ReactNode
@@ -68,6 +74,7 @@ export function ContentModal({
   headerAction,
   showHeader = true,
   animateHeader = false,
+  hideDivider = false,
   footerContent,
   showFooter = false,
   children,
@@ -165,7 +172,7 @@ export function ContentModal({
               <div className={cn(
                 'transition-all duration-300',
                 showHeader && (title || subtitle || headerContent)
-                  ? cn(isFullscreenMobile && 'pb-4 border-b')
+                  ? cn(isFullscreenMobile && !hideDivider && 'pb-4 border-b')
                   : 'pb-0 border-b-0'
               )}>
               {headerContent ? (
@@ -222,7 +229,7 @@ export function ContentModal({
               isFullscreenMobile && 'px-4 pt-4 sm:px-0 sm:pt-0'
             )}>
               <div className={cn(
-                isFullscreenMobile && 'pb-4 border-b'
+                isFullscreenMobile && !hideDivider && 'pb-4 border-b'
               )}>
               {headerContent ? (
                 headerContent
@@ -287,7 +294,8 @@ export function ContentModal({
             isFullscreenMobile && 'px-4 pb-4 sm:px-0 sm:pb-0'
           )}>
             <div className={cn(
-              isFullscreenMobile && 'pt-4 border-t w-full'
+              isFullscreenMobile && 'w-full',
+              isFullscreenMobile && !hideDivider && 'pt-4 border-t'
             )}>
               {footerContent}
             </div>
