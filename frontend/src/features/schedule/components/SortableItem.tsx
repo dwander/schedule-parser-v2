@@ -121,16 +121,18 @@ export function SortableItem({
       >
         {handlePosition === 'left' ? (
           <>
-            <div
-              {...attributes}
-              {...listeners}
-              onClick={(e) => e.stopPropagation()}
-              className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </div>
+            {!isLocked && (
+              <div
+                {...attributes}
+                {...listeners}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
 
-            <div className="flex-1 text-base select-none flex items-center gap-2">
+            <div className={`flex-1 min-h-8 text-base select-none flex items-center gap-2 ${isLocked ? 'ml-3' : ''}`}>
               <span>{item.text}</span>
               {isTraining && (
                 <Badge variant="destructive" className="ml-2">
@@ -155,7 +157,7 @@ export function SortableItem({
           </>
         ) : (
           <>
-            <div className="flex-1 text-base select-none flex items-center gap-2 ml-3">
+            <div className="flex-1 min-h-8 text-base select-none flex items-center gap-2 ml-3">
               <span>{item.text}</span>
               {isTraining && (
                 <Badge variant="destructive" className="ml-2">
@@ -178,14 +180,16 @@ export function SortableItem({
               </Button>
             )}
 
-            <div
-              {...attributes}
-              {...listeners}
-              onClick={(e) => e.stopPropagation()}
-              className={`flex-shrink-0 ${isLocked ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing'}`}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </div>
+            {!isLocked && (
+              <div
+                {...attributes}
+                {...listeners}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
           </>
         )}
       </div>
