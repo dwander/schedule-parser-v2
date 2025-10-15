@@ -3,6 +3,7 @@ import { useSchedules, useDeleteSchedules } from '../hooks/useSchedules'
 import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
+import { useCardScrollEffect } from '../hooks/useCardScrollEffect'
 import { ScheduleCard } from './ScheduleCard'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,43 @@ interface ScheduleTableProps {
   onSelectedCountChange?: (count: number) => void
   deleteDialogOpen?: boolean
   onDeleteDialogChange?: (open: boolean) => void
+}
+
+// 스크롤 효과를 적용한 카드 wrapper 컴포넌트
+function CardWithScrollEffect({
+  schedule,
+  isSelected,
+  isDuplicate,
+  isConflict,
+  onToggleSelect,
+  onToggleCheckboxVisibility,
+  onDeleteTag,
+  enableScrollEffect
+}: {
+  schedule: Schedule
+  isSelected: boolean
+  isDuplicate: boolean
+  isConflict: boolean
+  onToggleSelect: () => void
+  onToggleCheckboxVisibility: () => void
+  onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
+  enableScrollEffect: boolean
+}) {
+  const { ref, style } = useCardScrollEffect(enableScrollEffect)
+
+  return (
+    <ScheduleCard
+      schedule={schedule}
+      isSelected={isSelected}
+      isDuplicate={isDuplicate}
+      isConflict={isConflict}
+      onToggleSelect={onToggleSelect}
+      onToggleCheckboxVisibility={onToggleCheckboxVisibility}
+      onDeleteTag={onDeleteTag}
+      cardRef={ref}
+      cardStyle={style}
+    />
+  )
 }
 
 export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange }: ScheduleTableProps) {
@@ -603,7 +641,7 @@ export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: e
                       const isConflict = conflictSchedules.has(rowIndex)
                       return (
                         <div key={schedule.id} className="min-w-0">
-                          <ScheduleCard
+                          <CardWithScrollEffect
                             schedule={schedule}
                             isSelected={row.getIsSelected()}
                             isDuplicate={isDuplicate}
@@ -611,6 +649,7 @@ export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: e
                             onToggleSelect={() => row.toggleSelected()}
                             onToggleCheckboxVisibility={() => setColumnVisibility({ ...columnVisibility, select: !columnVisibility.select })}
                             onDeleteTag={handleDeleteTag}
+                            enableScrollEffect={gridColumns === 1}
                           />
                         </div>
                       )

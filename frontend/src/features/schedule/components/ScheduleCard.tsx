@@ -33,9 +33,11 @@ interface ScheduleCardProps {
   onToggleSelect: () => void
   onToggleCheckboxVisibility: () => void
   onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
+  cardRef?: React.RefObject<HTMLDivElement | null>
+  cardStyle?: React.CSSProperties
 }
 
-export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag }: ScheduleCardProps) {
+export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
   const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials } = useSettingsStore()
@@ -266,6 +268,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
   return (
     <div
+      ref={cardRef}
       className={`
         rounded-xl border border-t-2 shadow-md
         transition-all duration-300 hover:shadow-xl hover:scale-[1.02] w-full max-w-full
@@ -278,7 +281,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             : 'border-border/50 bg-card'
         }
       `}
-      style={{ overflow: 'visible' }}
+      style={{ overflow: 'visible', ...cardStyle }}
       onDoubleClick={handleCardDoubleClick}
     >
       {/* Header */}
