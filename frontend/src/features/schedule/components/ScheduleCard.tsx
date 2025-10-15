@@ -271,7 +271,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       ref={cardRef}
       className={`
         rounded-xl border border-t-2 shadow-md
-        transition-all duration-300 hover:shadow-xl hover:scale-[1.02] w-full max-w-full
+        transition-all duration-300 md:hover:shadow-xl md:hover:scale-[1.02] w-full max-w-full
         ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
         ${
           isDuplicate
