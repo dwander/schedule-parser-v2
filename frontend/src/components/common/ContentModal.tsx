@@ -147,13 +147,13 @@ export function ContentModal({
       <DialogContent
         className={cn(
           // 기본 크기: 모바일에서 마진과 라운딩 적용
-          'w-[calc(100%-2rem)] rounded-lg',
+          'w-[calc(100%-2rem)] rounded-2xl',
           // Flex 레이아웃과 최대 높이 설정 (grid 오버라이드)
           '!flex flex-col gap-0 max-h-[85dvh]',
           // 패딩 조정
           'p-4',
           sizeClasses[size],
-          isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-lg sm:border sm:max-h-[85dvh] p-0 pt-[env(safe-area-inset-top)] sm:p-4',
+          isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-2xl sm:border sm:max-h-[85dvh] p-0 pt-[env(safe-area-inset-top)] sm:p-4',
           className
         )}
         hideClose={hideClose}
