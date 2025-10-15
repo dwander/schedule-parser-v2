@@ -418,14 +418,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
         <Button
           size="sm"
           variant="ghost"
-          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'today' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
-          onClick={() => handleQuickSelect('today')}
-        >
-          오늘
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
           className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'thisWeek' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
           onClick={() => handleQuickSelect('thisWeek')}
         >
@@ -438,14 +430,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
           onClick={() => handleQuickSelect('thisMonth')}
         >
           이번달
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className={`text-xs h-7 rounded-md transition-all ${dateRange.preset === 'thisYear' ? 'bg-primary/10 border border-primary/30 shadow-sm' : 'hover:bg-accent'}`}
-          onClick={() => handleQuickSelect('thisYear')}
-        >
-          올해
         </Button>
         <Button
           size="sm"
