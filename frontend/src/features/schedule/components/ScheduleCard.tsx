@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
-import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck } from 'lucide-react'
+import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo, FolderCheck, Star, Calendar, MoreHorizontal } from 'lucide-react'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { NaverIcon } from '@/components/icons/NaverIcon'
 import { AppleIcon } from '@/components/icons/AppleIcon'
@@ -492,80 +492,176 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             )}
           </div>
 
-          {/* Right: FAB Buttons */}
-          <div className="flex flex-col gap-2 flex-shrink-0 items-end">
-            <div className="relative">
-              {hasPhotoNoteData && (
-                <span className="absolute inset-0 animate-gentle-ping">
-                  <span className="block h-full w-full rounded-full bg-primary" />
-                </span>
-              )}
+          {/* Right: FAB Buttons - 가로형 3그룹 레이아웃 */}
+          <div className="flex flex-row gap-2 flex-shrink-0">
+            {/* 1. 중요내용 그룹 */}
+            <div className="relative group">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                onClick={() => setPhotoNoteOpen(true)}
-                title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
+                className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                onClick={() => toast.info('중요내용 기능 준비 중')}
+                title="중요내용"
               >
-                <FileText className="h-[1.1rem] w-[1.1rem]" />
+                <Star className="h-[1.1rem] w-[1.1rem]" />
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-              onClick={() => setPhotoSequenceOpen(true)}
-              title="원판순서"
-            >
-              <ListTodo className="h-[1.1rem] w-[1.1rem]" />
-            </Button>
-            {(enabledCalendars.google || enabledCalendars.naver || enabledCalendars.apple) && (
-              <div className="flex gap-2">
-                {enabledCalendars.google && (
+
+            {/* 2. 캘린더 동기화 그룹 */}
+            {(enabledCalendars.google || enabledCalendars.naver || enabledCalendars.apple) && (() => {
+              const enabledCount = [enabledCalendars.google, enabledCalendars.naver, enabledCalendars.apple].filter(Boolean).length
+
+              // 1개만 활성화된 경우: 해당 서비스 버튼만 표시
+              if (enabledCount === 1) {
+                if (enabledCalendars.google) {
+                  return (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                      onClick={handleGoogleCalendar}
+                      title="구글 캘린더"
+                    >
+                      <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
+                    </Button>
+                  )
+                }
+                if (enabledCalendars.naver) {
+                  return (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                      onClick={handleNaverCalendarClick}
+                      title="네이버 캘린더"
+                    >
+                      <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
+                    </Button>
+                  )
+                }
+                if (enabledCalendars.apple) {
+                  return (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                      onClick={handleAppleCalendar}
+                      disabled={appleCalendarLoading}
+                      title="Apple 캘린더"
+                    >
+                      <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
+                    </Button>
+                  )
+                }
+              }
+
+              // 여러 개 활성화된 경우: 캘린더 아이콘, 호버 시 펼침
+              return (
+                <div className="relative group">
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                    onClick={handleGoogleCalendar}
-                    title="구글 캘린더"
+                    title="캘린더 동기화"
                   >
-                    <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
+                    <Calendar className="h-[1.1rem] w-[1.1rem]" />
                   </Button>
+                  {/* 호버 시 펼쳐지는 서비스 버튼들 */}
+                  <div className="absolute top-full mt-2 right-0 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+                    {enabledCalendars.google && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        onClick={handleGoogleCalendar}
+                        title="구글 캘린더"
+                      >
+                        <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
+                      </Button>
+                    )}
+                    {enabledCalendars.naver && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        onClick={handleNaverCalendarClick}
+                        title="네이버 캘린더"
+                      >
+                        <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
+                      </Button>
+                    )}
+                    {enabledCalendars.apple && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        onClick={handleAppleCalendar}
+                        disabled={appleCalendarLoading}
+                        title="Apple 캘린더"
+                      >
+                        <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* 3. 기타기능 그룹 */}
+            <div className="relative group">
+              <div className="relative">
+                {hasPhotoNoteData && (
+                  <span className="absolute inset-0 animate-gentle-ping">
+                    <span className="block h-full w-full rounded-full bg-primary" />
+                  </span>
                 )}
-                {enabledCalendars.naver && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                    onClick={handleNaverCalendarClick}
-                    title="네이버 캘린더"
-                  >
-                    <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
-                  </Button>
-                )}
-                {enabledCalendars.apple && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                    onClick={handleAppleCalendar}
-                    disabled={appleCalendarLoading}
-                    title="Apple 캘린더"
-                  >
-                    <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                  title="기타기능"
+                >
+                  <MoreHorizontal className="h-[1.1rem] w-[1.1rem]" />
+                </Button>
               </div>
-            )}
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-              onClick={handleFolderCopy}
-              title="폴더명 복사"
-            >
-              <FolderCheck className="h-[1.1rem] w-[1.1rem]" />
-            </Button>
+              {/* 호버 시 펼쳐지는 기능 버튼들 */}
+              <div className="absolute top-full mt-2 right-0 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+                <div className="relative">
+                  {hasPhotoNoteData && (
+                    <span className="absolute inset-0 animate-gentle-ping">
+                      <span className="block h-full w-full rounded-full bg-primary" />
+                    </span>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-full transition-all relative shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                    onClick={() => setPhotoNoteOpen(true)}
+                    title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
+                  >
+                    <FileText className="h-[1.1rem] w-[1.1rem]" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                  onClick={() => setPhotoSequenceOpen(true)}
+                  title="원판순서"
+                >
+                  <ListTodo className="h-[1.1rem] w-[1.1rem]" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                  onClick={handleFolderCopy}
+                  title="폴더명 복사"
+                >
+                  <FolderCheck className="h-[1.1rem] w-[1.1rem]" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
