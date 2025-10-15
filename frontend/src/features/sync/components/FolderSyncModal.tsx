@@ -286,7 +286,7 @@ export function FolderSyncModal({ open, onOpenChange }: FolderSyncModalProps) {
         </div>
       }
     >
-      <div className="flex gap-4 min-h-[500px] max-h-[60vh]">
+      <div className="flex gap-4 min-h-[500px] max-h-[60dvh]">
           {/* 왼쪽: 드롭존 & 리스트 */}
           <div className="flex-1 flex flex-col gap-4">
             {/* 드롭존 */}

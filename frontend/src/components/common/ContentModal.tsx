@@ -46,8 +46,8 @@ const sizeClasses: Record<ContentModalSize, string> = {
   'lg': 'sm:max-w-lg',
   'xl': 'sm:max-w-xl',
   '2xl': 'sm:max-w-2xl',
-  'full': 'sm:max-w-[90vw] sm:h-[90vh]',
-  'fullscreen-mobile': 'w-full h-full max-w-full sm:max-w-[900px] sm:h-auto sm:max-h-[85vh] p-0 sm:p-6',
+  'full': 'sm:max-w-[90vw] sm:h-[90dvh]',
+  'fullscreen-mobile': 'w-full h-full max-w-full sm:max-w-[900px] sm:h-auto sm:max-h-[85dvh] p-0 sm:p-6',
 }
 
 export function ContentModal({
@@ -133,11 +133,11 @@ export function ContentModal({
           // 기본 크기: 모바일에서 마진과 라운딩 적용
           'w-[calc(100%-2rem)] rounded-lg',
           // Flex 레이아웃과 최대 높이 설정 (grid 오버라이드)
-          '!flex flex-col gap-0 max-h-[85vh]',
+          '!flex flex-col gap-0 max-h-[85dvh]',
           // 패딩 조정
           'p-4',
           sizeClasses[size],
-          isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-lg sm:border sm:max-h-[85vh] p-0 pt-[env(safe-area-inset-top)] sm:p-4',
+          isFullscreenMobile && 'w-full h-full max-h-full rounded-none border-0 sm:w-[calc(100%-2rem)] sm:rounded-lg sm:border sm:max-h-[85dvh] p-0 pt-[env(safe-area-inset-top)] sm:p-4',
           className
         )}
         hideClose={hideClose}

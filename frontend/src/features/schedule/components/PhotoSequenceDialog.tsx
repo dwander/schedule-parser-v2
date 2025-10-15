@@ -477,7 +477,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       open={open}
       onOpenChange={onOpenChange}
       size="fullscreen-mobile"
-      className="md:max-w-2xl md:min-w-[500px] md:h-[90vh]"
+      className="md:max-w-2xl md:min-w-[500px] md:h-[90dvh]"
       headerContent={
         <div className="flex items-center gap-3 w-full">
           {/* 뒤로가기 버튼 */}
