@@ -719,7 +719,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             {/* 좌우 분할 레이아웃 (6:4 비율) */}
             <div className="flex gap-4 flex-1">
               {/* 왼쪽: 카드 리스트 (60%) */}
-              <div className="flex-[3] overflow-y-auto space-y-2">
+              <div className="flex-[3] overflow-y-auto space-y-2 pr-1">
                 {activeItems.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     촬영 순서를 추가해주세요
