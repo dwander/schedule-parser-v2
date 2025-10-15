@@ -631,7 +631,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           }`}
         >
           <div className="pb-1">
-            <div className="text-center font-mono font-thin tabular-nums flex items-baseline justify-center gap-0">
+            <div className="text-center tabular-nums flex items-baseline justify-center gap-0" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}>
               {(() => {
                 const parts = currentTime.split(':')
                 return (
