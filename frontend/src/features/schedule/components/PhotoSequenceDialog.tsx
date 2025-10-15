@@ -478,6 +478,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       onOpenChange={onOpenChange}
       size="fullscreen-mobile"
       className="md:max-w-2xl md:min-w-[500px] md:h-[90dvh]"
+      showHeader={!isLocked}
       headerContent={
         <div className="flex items-center gap-3 w-full">
           {/* 뒤로가기 버튼 */}
@@ -557,20 +558,20 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             <Button
               variant="ghost"
               size="icon"
-              onClick={toggleLock}
-              className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
-              title={isLocked ? "잠금 해제" : "잠금"}
-            >
-              {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
               onClick={handleReset}
               className="h-9 w-9"
               title="모두 초기화"
             >
               <RotateCcw className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLock}
+              className={`h-9 w-9 ${isLocked ? 'text-destructive hover:text-destructive' : 'opacity-50'}`}
+              title={isLocked ? "잠금 해제" : "잠금"}
+            >
+              {isLocked ? <Lock className="h-5 w-5" /> : <Unlock className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -596,6 +597,21 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         </div>
       }
     >
+        {/* 락 걸렸을 때 우측 상단 플로팅 unlock 버튼 */}
+        {isLocked && (
+          <div className="absolute top-4 right-4 z-50">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLock}
+              className="text-destructive"
+              title="잠금 해제"
+            >
+              <Lock className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
+
         {/* 화면 중앙 플로팅 오버레이 - 인식된 텍스트 */}
         {displayedText && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
