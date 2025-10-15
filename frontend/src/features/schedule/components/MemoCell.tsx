@@ -304,7 +304,7 @@ export function MemoCell({ value, onSave, cardMode = false }: MemoCellProps) {
             className={`px-2 py-1 rounded transition-colors ${
               value ? 'pr-8' : ''
             } ${
-              !value || isTruncated || isExpanded ? 'cursor-pointer hover:bg-accent/50' : ''
+              !value || isTruncated || isExpanded ? 'cursor-pointer' : ''
             }`}
           >
           {!value && (
