@@ -69,6 +69,7 @@ export interface Schedule {
   photoNote?: PhotoNote
   photoSequence?: PhotoSequenceItem[]
   currentTemplate?: string // POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
+  shootTimeDuration?: number // 촬영 예상 시간 (분)
   isDuplicate: boolean
   createdAt: string
   updatedAt: string

@@ -187,6 +187,9 @@ class Schedule(Base):
     # Current template for photo sequence
     current_template = Column(String(50), nullable=True)  # POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
 
+    # Shooting duration (in minutes) for photo sequence timer
+    shoot_time_duration = Column(Integer, nullable=False, default=60)  # 촬영 예상 시간 (분)
+
     # New fields
     cuts = Column(Integer, nullable=False, default=0)  # 컷 수
     folder_name = Column(String(500), nullable=False, default="")  # 폴더명
@@ -212,6 +215,7 @@ class Schedule(Base):
             'photo_note': 'photoNote',
             'photo_sequence': 'photoSequence',
             'current_template': 'currentTemplate',
+            'shoot_time_duration': 'shootTimeDuration',
             'folder_name': 'folderName',
         }
 
@@ -240,6 +244,7 @@ class Schedule(Base):
             'photoNote': 'photo_note',
             'photoSequence': 'photo_sequence',
             'currentTemplate': 'current_template',
+            'shootTimeDuration': 'shoot_time_duration',
             'folderName': 'folder_name',
         }
 
@@ -309,6 +314,9 @@ class TrashSchedule(Base):
     # Current template for photo sequence
     current_template = Column(String(50), nullable=True)  # POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
 
+    # Shooting duration (in minutes) for photo sequence timer
+    shoot_time_duration = Column(Integer, nullable=False, default=60)  # 촬영 예상 시간 (분)
+
     # New fields
     cuts = Column(Integer, nullable=False, default=0)
     folder_name = Column(String(500), nullable=False, default="")
@@ -346,6 +354,7 @@ class TrashSchedule(Base):
             'photoNote': self.photo_note,
             'photoSequence': self.photo_sequence,
             'currentTemplate': self.current_template,
+            'shootTimeDuration': self.shoot_time_duration,
             'cuts': self.cuts,
             'folderName': self.folder_name,
             'deletedAt': self.deleted_at.isoformat() if self.deleted_at else None,
@@ -375,6 +384,7 @@ class TrashSchedule(Base):
             photo_note=schedule.photo_note,
             photo_sequence=schedule.photo_sequence,
             current_template=schedule.current_template,
+            shoot_time_duration=schedule.shoot_time_duration,
             cuts=schedule.cuts,
             folder_name=schedule.folder_name,
             created_at=schedule.created_at,
@@ -489,6 +499,16 @@ def run_migrations():
                 'name': 'current_template column in trash_schedules',
                 'check_query': 'SELECT current_template FROM trash_schedules LIMIT 1',
                 'alter_query': 'ALTER TABLE trash_schedules ADD COLUMN current_template VARCHAR(50)'
+            },
+            {
+                'name': 'shoot_time_duration column in schedules',
+                'check_query': 'SELECT shoot_time_duration FROM schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE schedules ADD COLUMN shoot_time_duration INTEGER DEFAULT 60 NOT NULL'
+            },
+            {
+                'name': 'shoot_time_duration column in trash_schedules',
+                'check_query': 'SELECT shoot_time_duration FROM trash_schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE trash_schedules ADD COLUMN shoot_time_duration INTEGER DEFAULT 60 NOT NULL'
             }
         ]
 
@@ -629,7 +649,7 @@ class ScheduleService:
             allowed_fields = [
                 'date', 'location', 'time', 'couple', 'contact', 'brand',
                 'album', 'photographer', 'memo', 'manager', 'price',
-                'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'current_template', 'cuts', 'folder_name'
+                'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'current_template', 'shoot_time_duration', 'cuts', 'folder_name'
             ]
 
             if field not in allowed_fields:
@@ -771,6 +791,7 @@ class ScheduleService:
                 photo_note=trash_item.photo_note,
                 photo_sequence=trash_item.photo_sequence,
                 current_template=trash_item.current_template,
+                shoot_time_duration=trash_item.shoot_time_duration,
                 cuts=trash_item.cuts,
                 folder_name=trash_item.folder_name,
             )
@@ -821,6 +842,7 @@ class ScheduleService:
                     photo_note=trash_item.photo_note,
                     photo_sequence=trash_item.photo_sequence,
                     current_template=trash_item.current_template,
+                    shoot_time_duration=trash_item.shoot_time_duration,
                     cuts=trash_item.cuts,
                     folder_name=trash_item.folder_name,
                 )
@@ -876,6 +898,7 @@ class ScheduleService:
                     photo_note=trash_item.photo_note,
                     photo_sequence=trash_item.photo_sequence,
                     current_template=trash_item.current_template,
+                    shoot_time_duration=trash_item.shoot_time_duration,
                     cuts=trash_item.cuts,
                     folder_name=trash_item.folder_name,
                 )

@@ -90,6 +90,23 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [showClock, setShowClock] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.SHOW_CLOCK, true)
   const [handlePosition, setHandlePosition] = useLocalStorage<'left' | 'right'>(PHOTO_SEQUENCE_STORAGE_KEYS.HANDLE_POSITION, 'left')
 
+  // 촬영 예상 시간 (로컬 state로 관리)
+  const [shootingDuration, setShootingDuration] = useState(schedule.shootTimeDuration ?? 60)
+
+  // schedule.shootTimeDuration이 변경되면 로컬 state 동기화
+  useEffect(() => {
+    setShootingDuration(schedule.shootTimeDuration ?? 60)
+  }, [schedule.shootTimeDuration])
+
+  // 촬영 예상 시간 변경 핸들러
+  const handleShootingDurationChange = (duration: number) => {
+    setShootingDuration(duration) // 즉시 UI 업데이트
+    updateSchedule.mutate({
+      id: schedule.id,
+      shootTimeDuration: duration,
+    })
+  }
+
   // 현재 시간 표시용 state
   const [currentTime, setCurrentTime] = useState('')
 
@@ -326,13 +343,36 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 현재 시간 및 초 state
   const [currentSeconds, setCurrentSeconds] = useState(0)
+  const [endTime, setEndTime] = useState('')
+  const [remainingTime, setRemainingTime] = useState('')
+
+  // 종료 시간 계산 (스케줄 시간 + (촬영시간 - 15분))
+  const calculateEndTime = () => {
+    try {
+      // schedule.date: "YYYY.MM.DD", schedule.time: "HH:MM"
+      const [year, month, day] = schedule.date.split('.').map(Number)
+      const [hour, minute] = schedule.time.split(':').map(Number)
+
+      const startTime = new Date(year, month - 1, day, hour, minute)
+      const actualDuration = shootingDuration - 15 // 촬영 예상 시간에서 15분 빼기
+      const endDateTime = new Date(startTime.getTime() + actualDuration * 60 * 1000)
+
+      return endDateTime
+    } catch (error) {
+      return null
+    }
+  }
 
   // 현재 시간 업데이트 (1초마다)
   useEffect(() => {
     if (!showClock) return
 
+    const endDateTime = calculateEndTime()
+
     const updateTime = () => {
       const now = new Date()
+
+      // 현재 시간 (12시간 형식)
       let hours = now.getHours()
       hours = hours % 12
       hours = hours ? hours : 12 // 0시는 12시로 표시
@@ -340,13 +380,39 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       const seconds = now.getSeconds()
       setCurrentTime(`${hours}:${minutes}`)
       setCurrentSeconds(seconds)
+
+      // 종료 시간 및 남은 시간 계산
+      if (endDateTime) {
+        // 종료 시간 (24시간 형식)
+        const endHours = String(endDateTime.getHours()).padStart(2, '0')
+        const endMinutes = String(endDateTime.getMinutes()).padStart(2, '0')
+        setEndTime(`${endHours}:${endMinutes}`)
+
+        // 남은 시간
+        const remainingMs = endDateTime.getTime() - now.getTime()
+        if (remainingMs > 0) {
+          const totalMinutes = Math.ceil(remainingMs / 60000) // 올림 처리
+          const hours = Math.floor(totalMinutes / 60)
+          const minutes = totalMinutes % 60
+
+          if (totalMinutes < 60) {
+            // 60분 미만: 분만 표시
+            setRemainingTime(`${minutes}분`)
+          } else {
+            // 60분 이상: 시간:분 형식
+            setRemainingTime(`${hours}:${String(minutes).padStart(2, '0')}`)
+          }
+        } else {
+          setRemainingTime('0분')
+        }
+      }
     }
 
     updateTime() // 즉시 표시
     const interval = setInterval(updateTime, 1000) // 1초마다 업데이트
 
     return () => clearInterval(interval)
-  }, [showClock])
+  }, [showClock, schedule.date, schedule.time, shootingDuration])
 
   // 모달이 닫히면 음성 인식 강제 종료 및 오버레이 즉시 제거
   useEffect(() => {
@@ -644,10 +710,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               )}
             </div>
 
-            {/* 좌우 분할 레이아웃 */}
+            {/* 좌우 분할 레이아웃 (6:4 비율) */}
             <div className="flex gap-4 flex-1">
-              {/* 왼쪽: 카드 리스트 */}
-              <div className="flex-1 overflow-y-auto space-y-2">
+              {/* 왼쪽: 카드 리스트 (60%) */}
+              <div className="flex-[3] overflow-y-auto space-y-2">
                 {activeItems.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     촬영 순서를 추가해주세요
@@ -690,8 +756,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 )}
               </div>
 
-              {/* 오른쪽: 정보 패널 (시계) */}
-              <div className="flex-1 flex flex-col items-center justify-start pt-8 gap-6">
+              {/* 오른쪽: 정보 패널 (시계) (40%) */}
+              <div className="flex-[2] flex flex-col items-center justify-start pt-8 gap-6">
                 {/* 시계 표시 */}
                 {showClock && currentTime && (
                   <>
@@ -738,6 +804,62 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                         style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
                       >
                         {String(currentSeconds).padStart(2, '0')}
+                      </div>
+                    </div>
+
+                    {/* 종료 시간 및 남은 시간 */}
+                    <div className="flex justify-center">
+                      <div className="space-y-3 text-center">
+                        {/* 종료 시간 */}
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">종료 시간</div>
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="text-lg font-medium">{endTime}</span>
+                            <Select value={String(shootingDuration)} onValueChange={(value) => handleShootingDurationChange(Number(value))}>
+                              <SelectTrigger className="w-auto h-5 px-1 border-0 bg-transparent hover:bg-accent">
+                                <Clock className="h-3.5 w-3.5" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="60">1시간</SelectItem>
+                                <SelectItem value="80">1시간 20분</SelectItem>
+                                <SelectItem value="90">1시간 30분</SelectItem>
+                                <SelectItem value="100">1시간 40분</SelectItem>
+                                <SelectItem value="120">2시간</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* 구분선 */}
+                        <div className="border-t border-muted" />
+
+                        {/* 남은 시간 */}
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">남은 시간</div>
+                          <div className="flex items-baseline justify-center gap-1">
+                            {remainingTime.includes('분') ? (
+                              <>
+                                {(() => {
+                                  const minutes = parseInt(remainingTime.replace('분', ''))
+                                  const isWarning = minutes < 10
+                                  return (
+                                    <>
+                                      <span
+                                        className={`text-2xl ${isWarning ? 'font-bold bg-black text-yellow-400 px-2 rounded' : 'font-light'}`}
+                                        style={!isWarning ? { fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 } : { fontFamily: "'Rajdhani', sans-serif" }}
+                                      >
+                                        {minutes}
+                                      </span>
+                                      <span className="font-medium">분</span>
+                                    </>
+                                  )
+                                })()}
+                              </>
+                            ) : (
+                              <span className="font-medium">{remainingTime}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </>
