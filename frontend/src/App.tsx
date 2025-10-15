@@ -437,13 +437,13 @@ function AppContent() {
         onBackupRestoreClick={() => setBackupRestoreOpen(true)}
         selectedCount={selectedCount}
         onDeleteClick={() => setDeleteDialogOpen(true)}
+        globalFilter={globalFilter}
+        onGlobalFilterChange={setGlobalFilter}
       >
         {/* 스케줄 테이블 - 100% 뷰포트 폭 사용 */}
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
           <ScheduleTable
             data={filteredSchedules}
-            globalFilter={globalFilter}
-            onGlobalFilterChange={setGlobalFilter}
             onSelectedCountChange={setSelectedCount}
             deleteDialogOpen={deleteDialogOpen}
             onDeleteDialogChange={setDeleteDialogOpen}

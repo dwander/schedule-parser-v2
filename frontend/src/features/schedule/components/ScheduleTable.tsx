@@ -4,7 +4,6 @@ import { useScheduleTable } from '../hooks/useScheduleTable'
 import { useScheduleVirtual } from '../hooks/useScheduleVirtual'
 import { useFlexColumnWidth } from '../hooks/useFlexColumnWidth'
 import { ScheduleCard } from './ScheduleCard'
-import { SearchInput } from './SearchInput'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
 import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
@@ -32,18 +31,15 @@ import { presetLabels, calculateDateRangeFromPreset } from '@/lib/utils/datePres
 
 interface ScheduleTableProps {
   data: Schedule[]
-  globalFilter: string
-  onGlobalFilterChange: (value: string) => void
   onSelectedCountChange?: (count: number) => void
   deleteDialogOpen?: boolean
   onDeleteDialogChange?: (open: boolean) => void
 }
 
-export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange }: ScheduleTableProps) {
+export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange }: ScheduleTableProps) {
   const { isLoading, error } = useSchedules()
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
-  const [searchExpanded, setSearchExpanded] = useState(false)
   const deleteDialogOpen = externalDeleteDialogOpen ?? internalDeleteDialogOpen
   const setDeleteDialogOpen = onDeleteDialogChange ?? setInternalDeleteDialogOpen
   const {
@@ -314,13 +310,9 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`rounded-none overflow-hidden transition-all duration-300 ease-in-out ${
-                    searchExpanded ? 'w-0 px-0' : 'w-auto px-2'
-                  }`}
+                  className="rounded-none px-2"
                 >
-                  <span className={`transition-all duration-300 ease-in-out whitespace-nowrap ${
-                    searchExpanded ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-                  }`}>
+                  <span className="whitespace-nowrap">
                     {sortTypeLabels[sortType]}
                   </span>
                 </Button>
@@ -338,13 +330,6 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {/* Search Input Component */}
-          <SearchInput
-            value={globalFilter}
-            onChange={onGlobalFilterChange}
-            onExpandedChange={setSearchExpanded}
-          />
 
         <div className="flex items-center gap-2 ml-auto">
           <DropdownMenu>
@@ -459,8 +444,8 @@ export function ScheduleTable({ data, globalFilter, onGlobalFilterChange, onSele
       ) : !data || data.length === 0 ? (
         <EmptyState
           icon={CalendarOff}
-          title="스케줄이 없습니다"
-          description={globalFilter ? "검색 결과가 없습니다" : "새로운 스케줄을 추가하거나 카카오톡 메시지를 파싱해보세요"}
+          title="표시할 스케줄이 없습니다"
+          description="검색어나 날짜 필터를 변경하거나, 새로운 스케줄을 추가해보세요"
         />
       ) : (
         <>

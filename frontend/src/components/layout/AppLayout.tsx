@@ -15,9 +15,11 @@ interface AppLayoutProps {
   onBackupRestoreClick?: () => void
   selectedCount?: number
   onDeleteClick?: () => void
+  globalFilter?: string
+  onGlobalFilterChange?: (value: string) => void
 }
 
-export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount, onDeleteClick }: AppLayoutProps) {
+export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount, onDeleteClick, globalFilter, onGlobalFilterChange }: AppLayoutProps) {
   return (
     <div className="relative min-h-screen bg-background">
       {/* Floating Header */}
@@ -27,6 +29,8 @@ export function AppLayout({ children, stats, onAddClick, onFolderSyncClick, onBa
         onBackupRestoreClick={onBackupRestoreClick}
         selectedCount={selectedCount}
         onDeleteClick={onDeleteClick}
+        globalFilter={globalFilter}
+        onGlobalFilterChange={onGlobalFilterChange}
       />
 
       {/* Main Content */}

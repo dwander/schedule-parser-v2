@@ -1,7 +1,8 @@
-import { CalendarPlus, FolderSync, Trash2 } from 'lucide-react'
+import { CalendarPlus, FolderSync, Trash2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from './UserMenu'
 import { useEffect, useState } from 'react'
+import { DEBOUNCE } from '@/lib/constants/timing'
 
 interface AppHeaderProps {
   onAddClick?: () => void
@@ -9,11 +10,15 @@ interface AppHeaderProps {
   onBackupRestoreClick?: () => void
   selectedCount?: number
   onDeleteClick?: () => void
+  globalFilter?: string
+  onGlobalFilterChange?: (value: string) => void
 }
 
-export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount = 0, onDeleteClick }: AppHeaderProps) {
+export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick, selectedCount = 0, onDeleteClick, globalFilter = '', onGlobalFilterChange }: AppHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [localFilter, setLocalFilter] = useState(globalFilter)
 
+  // 스크롤 감지
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY > 20
@@ -27,6 +32,24 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // 디바운싱된 검색
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localFilter !== globalFilter) {
+        onGlobalFilterChange?.(localFilter)
+      }
+    }, DEBOUNCE.SEARCH)
+
+    return () => clearTimeout(timeoutId)
+  }, [localFilter, globalFilter, onGlobalFilterChange])
+
+  // 외부 globalFilter 변경 시 동기화
+  useEffect(() => {
+    if (globalFilter !== localFilter) {
+      setLocalFilter(globalFilter)
+    }
+  }, [globalFilter])
+
   return (
     <header className="sticky top-0 z-40">
       {/* Safe area for mobile status bar */}
@@ -34,7 +57,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
 
       <div
         className={`
-          flex h-14 items-center justify-between px-[0.625rem]
+          flex h-14 items-center justify-between px-[0.625rem] gap-3
           bg-background/20 backdrop-blur-lg
           transition-all duration-500 ease-in-out
           ${isScrolled ? 'border-b-2 border-border/20' : 'border-b-2 border-transparent'}
@@ -50,6 +73,20 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
           onFolderSyncClick={onFolderSyncClick}
           onBackupRestoreClick={onBackupRestoreClick}
         />
+
+        {/* Center: Search Bar */}
+        <div className="flex-1 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={localFilter}
+              onChange={(e) => setLocalFilter(e.target.value)}
+              placeholder="스케줄 검색..."
+              className="w-full h-9 pl-9 pr-4 rounded-full border border-input bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+        </div>
 
         {/* Right: Buttons */}
         <div className="flex items-center gap-2">
