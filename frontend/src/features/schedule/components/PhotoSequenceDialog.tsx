@@ -96,10 +96,12 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 촬영 예상 시간 (로컬 state로 관리)
   const [shootingDuration, setShootingDuration] = useState(schedule.shootTimeDuration ?? 60)
 
-  // schedule.shootTimeDuration이 변경되면 로컬 state 동기화
+  // 모달이 열릴 때 schedule.shootTimeDuration 다시 로드
   useEffect(() => {
-    setShootingDuration(schedule.shootTimeDuration ?? 60)
-  }, [schedule.shootTimeDuration])
+    if (open) {
+      setShootingDuration(schedule.shootTimeDuration ?? 60)
+    }
+  }, [open, schedule.shootTimeDuration])
 
   // 촬영 예상 시간 변경 핸들러
   const handleShootingDurationChange = (duration: number) => {
