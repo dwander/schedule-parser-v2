@@ -700,8 +700,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       onOpenChange={onOpenChange}
       size="fullscreen-mobile"
       className="md:max-w-2xl md:min-w-[500px] md:h-[90dvh]"
-      showHeader={!isLocked}
-      animateHeader={true}
+      showHeader={true}
+      animateHeader={false}
       hideDivider={true}
       headerContent={
         <div className="flex items-center gap-3 w-full">
@@ -749,41 +749,45 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             >
               {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  title="설정"
-                >
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setHandlePosition(prev => prev === 'left' ? 'right' : 'left')} className="cursor-pointer">
-                  {handlePosition === 'left' ? <ArrowRightToLine className="h-4 w-4 mr-2" /> : <ArrowLeftToLine className="h-4 w-4 mr-2" />}
-                  카드핸들 좌우 전환
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showTrainingManager: true }))} className="cursor-pointer">
-                  <CassetteTape className="h-4 w-4 mr-2" />
-                  음성인식 훈련 데이터
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showAccuracySettings: true }))} className="cursor-pointer">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  음성인식 정확도 설정
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleReset}
-              className="h-9 w-9"
-              title="모두 초기화"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </Button>
+            {!isLocked && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    title="설정"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setHandlePosition(prev => prev === 'left' ? 'right' : 'left')} className="cursor-pointer">
+                    {handlePosition === 'left' ? <ArrowRightToLine className="h-4 w-4 mr-2" /> : <ArrowLeftToLine className="h-4 w-4 mr-2" />}
+                    카드핸들 좌우 전환
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showTrainingManager: true }))} className="cursor-pointer">
+                    <CassetteTape className="h-4 w-4 mr-2" />
+                    음성인식 훈련 데이터
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showAccuracySettings: true }))} className="cursor-pointer">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    음성인식 정확도 설정
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {!isLocked && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleReset}
+                className="h-9 w-9"
+                title="모두 초기화"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -817,30 +821,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         </div>
       }
     >
-        {/* 락 걸렸을 때 우측 상단 플로팅 버튼들 */}
-        {isLocked && (
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleVoice}
-              className={`h-9 w-9 ${voiceEnabled ? 'text-red-500' : ''} ${isListening ? 'animate-pulse' : ''}`}
-              title={voiceEnabled ? "음성 인식 끄기" : "음성 인식 켜기"}
-            >
-              {voiceEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleLock}
-              className="text-destructive"
-              title="잠금 해제"
-            >
-              <Lock className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-
         {/* 공통 레이아웃: 상단 컨테이너 + 본문 */}
         <div className="relative flex flex-col h-full gap-6">
           {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
