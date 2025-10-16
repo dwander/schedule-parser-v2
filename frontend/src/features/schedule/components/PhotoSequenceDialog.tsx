@@ -986,7 +986,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               </div>
             </div>
 
-            {/* 중요 내용 - 하단 중앙 플로팅 버튼/카드 */}
+            {/* 중요 메모 - 하단 중앙 플로팅 버튼/카드 */}
             {schedule.photoNote?.importantMemo && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
                 {/* 항상 렌더링하되 조건부 스타일 적용 */}

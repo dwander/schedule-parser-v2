@@ -48,7 +48,7 @@ export function ImportantMemoDialog({ open, onOpenChange, schedule }: ImportantM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">중요 내용</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">중요 메모</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {schedule.location} · {schedule.couple}
           </p>

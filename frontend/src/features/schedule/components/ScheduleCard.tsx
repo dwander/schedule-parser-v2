@@ -501,14 +501,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
           {/* Right: FAB Buttons - 가로형 3그룹 레이아웃 */}
           <div className="flex flex-row gap-2 flex-shrink-0">
-            {/* 1. 중요 내용 그룹 */}
+            {/* 1. 중요 메모 그룹 */}
             <div className="relative group">
               <Button
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
                 onClick={() => setImportantMemoOpen(true)}
-                title={hasImportantMemo ? "중요 내용 (작성됨)" : "중요 내용"}
+                title={hasImportantMemo ? "중요 메모 (작성됨)" : "중요 메모"}
               >
                 <Check className="h-[1.1rem] w-[1.1rem]" />
               </Button>
