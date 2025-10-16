@@ -822,13 +822,13 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       }
     >
         {/* 공통 레이아웃: 상단 컨테이너 + 본문 */}
-        <div className="relative flex flex-col h-full gap-6">
+        <div className="relative flex flex-col h-full">
           {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
-          <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
+          <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[1rem] mb-6' : 'min-h-0'}`}>
             {voiceUIState.displayedText && (
               <div className={`transition-all duration-500 ${voiceUIState.showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                 <div
-                  className={`text-lg font-medium text-center ${voiceUIState.matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
+                  className={`text-lg font-medium text-center whitespace-nowrap overflow-hidden ${voiceUIState.matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
                   style={{ fontFamily: "'Gowun Batang', serif" }}
                 >
                   {voiceUIState.displayedText}
