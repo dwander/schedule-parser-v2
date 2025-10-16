@@ -1,5 +1,4 @@
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
@@ -472,7 +471,6 @@ function AppContent() {
 
       <Toaster position="top-center" />
       {testPanelVisible && <DialogTestPanel />}
-      <ReactQueryDevtools initialIsOpen={false} />
     </>
   )
 }
