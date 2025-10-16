@@ -113,11 +113,9 @@ export function SortableItem({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        className={`flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer group transition-[transform,opacity] duration-[250ms] ease-out will-change-transform ${
+        className={`flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer group transition-[transform,opacity] duration-[250ms] ease-out will-change-transform origin-right ${
           item.completed ? 'scale-[0.83] opacity-50' : 'scale-100 opacity-100'
-        } ${isTraining ? 'ring-2 ring-red-500' : ''} ${
-          handlePosition === 'right' ? 'origin-left' : 'origin-right'
-        }`}
+        } ${isTraining ? 'ring-2 ring-red-500' : ''}`}
       >
         {handlePosition === 'left' ? (
           <>
