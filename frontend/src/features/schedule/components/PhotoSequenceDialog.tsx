@@ -408,9 +408,15 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 훈련 데이터 저장 (서버에만 저장, React Query가 자동 업데이트)
   const saveTrainingData = (itemText: string, selectedPhrases: string[]) => {
+    // 기존 데이터 보존하고 새 데이터 추가
+    const existingPhrases = trainingData[itemText] || []
+    const combinedPhrases = [...existingPhrases, ...selectedPhrases]
+    // 중복 제거
+    const uniquePhrases = Array.from(new Set(combinedPhrases))
+
     const updatedData = {
       ...trainingData,
-      [itemText]: selectedPhrases,
+      [itemText]: uniquePhrases,
     }
 
     // 서버에 저장 (로그인한 사용자만)
