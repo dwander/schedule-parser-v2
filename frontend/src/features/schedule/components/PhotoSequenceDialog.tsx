@@ -606,11 +606,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 인식된 텍스트 표시 및 자동 페이드 아웃
   useEffect(() => {
     if (lastRecognized) {
-      setVoiceUIState({
+      setVoiceUIState(prev => ({
+        ...prev,
         displayedText: lastRecognized,
         showRecognizedText: true,
-        matchedItemText: '',
-      })
+      }))
 
       const timer = setTimeout(() => {
         setVoiceUIState(prev => ({
