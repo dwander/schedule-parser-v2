@@ -44,12 +44,17 @@ export const TEMPLATE_POSE_LAST: Omit<PhotoSequenceItem, 'id'>[] = [
 
 export const DEFAULT_PHOTO_SEQUENCE = TEMPLATE_POSE_FIRST
 
-export const PHOTO_SEQUENCE_TEMPLATES = {
+type TemplateInfo = {
+  name: string
+  items: Omit<PhotoSequenceItem, 'id'>[]
+}
+
+export const PHOTO_SEQUENCE_TEMPLATES: Record<string, TemplateInfo> = {
   POSE_FIRST: { name: '포즈컷 먼저', items: TEMPLATE_POSE_FIRST },
   FRIENDS_FIRST: { name: '지인 먼저', items: TEMPLATE_FRIENDS_FIRST },
   POSE_LAST: { name: '포즈컷 나중에', items: TEMPLATE_POSE_LAST },
   CUSTOM: { name: '사용자 지정', items: [] }, // 사용자가 커스터마이징한 순서
-} as const
+}
 
 export type TemplateKey = keyof typeof PHOTO_SEQUENCE_TEMPLATES
 

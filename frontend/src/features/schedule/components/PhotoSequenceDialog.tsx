@@ -55,6 +55,95 @@ interface PhotoSequenceDialogProps {
   schedule: Schedule
 }
 
+/**
+ * TemplateKey 타입 가드
+ */
+function isTemplateKey(key: string | undefined): key is TemplateKey {
+  return key !== undefined && key in PHOTO_SEQUENCE_TEMPLATES
+}
+
+/**
+ * 카드 리스트 렌더링 컴포넌트
+ * 락 모드와 일반 모드에서 공통으로 사용
+ */
+interface CardListContentProps {
+  activeItems: PhotoSequenceItem[]
+  sensors: ReturnType<typeof useSensors>
+  isLocked: boolean
+  voiceEnabled: boolean
+  handlePosition: 'left' | 'right'
+  trainingTargetId: string | null
+  collectedPhrasesLength: number
+  expandedTrainingId: string | null
+  collectedPhrases: string[]
+  onDragEnd: (event: DragEndEvent) => void
+  onToggleComplete: (id: string) => void
+  onDelete: (id: string) => void
+  onStartTraining: (id: string) => void
+  onSaveTraining: (itemText: string, phrases: string[]) => void
+  onCancelTraining: () => void
+}
+
+function CardListContent({
+  activeItems,
+  sensors,
+  isLocked,
+  voiceEnabled,
+  handlePosition,
+  trainingTargetId,
+  collectedPhrasesLength,
+  expandedTrainingId,
+  collectedPhrases,
+  onDragEnd,
+  onToggleComplete,
+  onDelete,
+  onStartTraining,
+  onSaveTraining,
+  onCancelTraining,
+}: CardListContentProps) {
+  if (activeItems.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        촬영 순서를 추가해주세요
+      </div>
+    )
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onDragEnd}
+    >
+      <SortableContext
+        items={activeItems.map(item => item.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-2">
+          {activeItems.map((item) => (
+            <SortableItem
+              key={item.id}
+              item={item}
+              isLocked={isLocked}
+              voiceEnabled={voiceEnabled}
+              handlePosition={handlePosition}
+              onToggleComplete={onToggleComplete}
+              onDelete={onDelete}
+              trainingTargetId={trainingTargetId}
+              collectedCount={trainingTargetId === item.id ? collectedPhrasesLength : 0}
+              isExpanded={expandedTrainingId === item.id}
+              collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
+              onStartTraining={onStartTraining}
+              onSaveTraining={onSaveTraining}
+              onCancelTraining={onCancelTraining}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  )
+}
+
 export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSequenceDialogProps) {
   const updateSchedule = useUpdateSchedule()
   const { user } = useAuthStore()
@@ -70,10 +159,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     if (schedule.currentTemplate === 'CUSTOM' && schedule.photoSequence) {
       // 사용자 지정 템플릿
       return schedule.photoSequence
-    } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
+    } else if (isTemplateKey(schedule.currentTemplate)) {
       // 템플릿 1,2,3
-      const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
-      return generatePhotoSequence(template.items as Omit<PhotoSequenceItem, 'id'>[])
+      const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate]
+      return generatePhotoSequence(template.items)
     }
     // 기본 템플릿
     return generatePhotoSequence()
@@ -81,8 +170,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const [newItemText, setNewItemText] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>(() => {
     // currentTemplate을 먼저 확인
-    if (schedule.currentTemplate) {
-      return schedule.currentTemplate as TemplateKey
+    if (isTemplateKey(schedule.currentTemplate)) {
+      return schedule.currentTemplate
     }
     // 기본값
     return 'POSE_FIRST'
@@ -111,19 +200,35 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     })
   }
 
-  // 현재 시간 표시용 state
-  const [currentTime, setCurrentTime] = useState('')
+  // 모달 상태 통합
+  const [modalStates, setModalStates] = useState({
+    showTrainingManager: false,
+    showAccuracySettings: false,
+    voiceNotSupportedOpen: false,
+    showImportantMemo: false,
+  })
 
-  const [trainingTargetId, setTrainingTargetId] = useState<string | null>(null)
-  const [collectedPhrases, setCollectedPhrases] = useState<string[]>([])
-  const [expandedTrainingId, setExpandedTrainingId] = useState<string | null>(null)
-  const [showTrainingManager, setShowTrainingManager] = useState(false)
-  const [showAccuracySettings, setShowAccuracySettings] = useState(false)
-  const [voiceNotSupportedOpen, setVoiceNotSupportedOpen] = useState(false)
-  const [showRecognizedText, setShowRecognizedText] = useState(false)
-  const [displayedText, setDisplayedText] = useState('')
-  const [matchedItemText, setMatchedItemText] = useState('')
-  const [showImportantMemo, setShowImportantMemo] = useState(false)
+  // 음성 인식 UI 상태 통합
+  const [voiceUIState, setVoiceUIState] = useState({
+    showRecognizedText: false,
+    displayedText: '',
+    matchedItemText: '',
+  })
+
+  // 훈련 모드 상태 통합
+  const [trainingState, setTrainingState] = useState({
+    targetId: null as string | null,
+    collectedPhrases: [] as string[],
+    expandedId: null as string | null,
+  })
+
+  // 시계 상태 통합
+  const [clockState, setClockState] = useState({
+    currentTime: '',
+    currentSeconds: 0,
+    endTime: '',
+    remainingTime: '',
+  })
 
   // 서버에서 로드한 데이터 또는 기본값 사용 (항상 서버 데이터 우선)
   const trainingData = serverTrainingData || DEFAULT_VOICE_TRAINING
@@ -146,11 +251,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         // 사용자 지정 템플릿
         setItems(schedule.photoSequence)
         setSelectedTemplate('CUSTOM')
-      } else if (schedule.currentTemplate && schedule.currentTemplate !== 'CUSTOM') {
+      } else if (isTemplateKey(schedule.currentTemplate)) {
         // 템플릿 1,2,3
-        const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate as TemplateKey]
-        setItems(generatePhotoSequence(template.items as Omit<PhotoSequenceItem, 'id'>[]))
-        setSelectedTemplate(schedule.currentTemplate as TemplateKey)
+        const template = PHOTO_SEQUENCE_TEMPLATES[schedule.currentTemplate]
+        setItems(generatePhotoSequence(template.items))
+        setSelectedTemplate(schedule.currentTemplate)
       } else {
         // 기본 템플릿
         setItems(generatePhotoSequence())
@@ -256,7 +361,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   const toggleVoice = () => {
     // 켜려고 할 때 브라우저가 지원하지 않으면 경고
     if (!voiceEnabled && !isSupported) {
-      setVoiceNotSupportedOpen(true)
+      setModalStates(prev => ({
+        ...prev,
+        voiceNotSupportedOpen: true,
+      }))
       return
     }
 
@@ -266,24 +374,36 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 훈련 모드 시작
   const startTraining = (itemId: string) => {
     // 같은 카드를 다시 롱프레스하면 마킹 해제
-    if (trainingTargetId === itemId) {
-      setTrainingTargetId(null)
-      setCollectedPhrases([])
-      setExpandedTrainingId(null)
+    if (trainingState.targetId === itemId) {
+      setTrainingState({
+        targetId: null,
+        collectedPhrases: [],
+        expandedId: null,
+      })
     } else {
       // 다른 카드로 마킹 이동
-      setTrainingTargetId(itemId)
-      setCollectedPhrases([])
-      setExpandedTrainingId(null)
+      setTrainingState({
+        targetId: itemId,
+        collectedPhrases: [],
+        expandedId: null,
+      })
     }
   }
 
   // 훈련 모드 종료
   const endTraining = () => {
-    if (trainingTargetId && collectedPhrases.length > 0) {
-      setExpandedTrainingId(trainingTargetId)
+    if (trainingState.targetId && trainingState.collectedPhrases.length > 0) {
+      setTrainingState(prev => ({
+        ...prev,
+        expandedId: prev.targetId,
+        targetId: null,
+      }))
+    } else {
+      setTrainingState(prev => ({
+        ...prev,
+        targetId: null,
+      }))
     }
-    setTrainingTargetId(null)
   }
 
   // 훈련 데이터 저장 (서버에만 저장, React Query가 자동 업데이트)
@@ -301,8 +421,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       })
     }
 
-    setExpandedTrainingId(null)
-    setCollectedPhrases([])
+    setTrainingState(prev => ({
+      ...prev,
+      expandedId: null,
+      collectedPhrases: [],
+    }))
   }
 
   // TrainingDataManager에서 저장 시 호출되는 함수
@@ -319,20 +442,26 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 음성 인식 매칭 콜백
   const handleVoiceMatch = (itemText: string) => {
     // 훈련 모드가 아닐 때만 자동 체크
-    if (!trainingTargetId) {
+    if (!trainingState.targetId) {
       const matchedItem = items.find(item => !item.deleted && item.text === itemText)
       if (matchedItem && !matchedItem.completed) {
         toggleComplete(matchedItem.id)
         // 매칭된 카드 제목 저장
-        setMatchedItemText(matchedItem.text)
+        setVoiceUIState(prev => ({
+          ...prev,
+          matchedItemText: matchedItem.text,
+        }))
       }
     }
   }
 
   // 음성 인식 데이터 수집 콜백 (훈련 모드)
   const handleVoiceCollect = (phrase: string) => {
-    if (trainingTargetId) {
-      setCollectedPhrases(prev => [...prev, phrase])
+    if (trainingState.targetId) {
+      setTrainingState(prev => ({
+        ...prev,
+        collectedPhrases: [...prev.collectedPhrases, phrase],
+      }))
     }
   }
 
@@ -345,11 +474,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     onCollect: handleVoiceCollect,
     threshold: voiceThreshold,
   })
-
-  // 현재 시간 및 초 state
-  const [currentSeconds, setCurrentSeconds] = useState(0)
-  const [endTime, setEndTime] = useState('')
-  const [remainingTime, setRemainingTime] = useState('')
 
   // 종료 시간 계산 (스케줄 시간 + (촬영시간 - 15분))
   const calculateEndTime = () => {
@@ -381,15 +505,17 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       hours = hours ? hours : 12 // 0시는 12시로 표시
       const minutes = String(now.getMinutes()).padStart(2, '0')
       const seconds = now.getSeconds()
-      setCurrentTime(`${hours}:${minutes}`)
-      setCurrentSeconds(seconds)
+      const currentTime = `${hours}:${minutes}`
+      const currentSeconds = seconds
 
       // 종료 시간 및 남은 시간 계산
+      let endTime = ''
+      let remainingTime = ''
       if (endDateTime) {
         // 종료 시간 (24시간 형식)
         const endHours = String(endDateTime.getHours()).padStart(2, '0')
         const endMinutes = String(endDateTime.getMinutes()).padStart(2, '0')
-        setEndTime(`${endHours}:${endMinutes}`)
+        endTime = `${endHours}:${endMinutes}`
 
         // 남은 시간
         const remainingMs = endDateTime.getTime() - now.getTime()
@@ -400,15 +526,17 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
           if (totalMinutes < 60) {
             // 60분 미만: 분만 표시
-            setRemainingTime(`${minutes}분`)
+            remainingTime = `${minutes}분`
           } else {
             // 60분 이상: 시간:분 형식
-            setRemainingTime(`${hours}:${String(minutes).padStart(2, '0')}`)
+            remainingTime = `${hours}:${String(minutes).padStart(2, '0')}`
           }
         } else {
-          setRemainingTime('0분')
+          remainingTime = '0분'
         }
       }
+
+      setClockState({ currentTime, currentSeconds, endTime, remainingTime })
     }
 
     updateTime() // 즉시 표시
@@ -424,22 +552,26 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         setVoiceEnabled(false)
       }
       // 오버레이 즉시 제거
-      setDisplayedText('')
-      setShowRecognizedText(false)
-      setMatchedItemText('')
+      setVoiceUIState({
+        showRecognizedText: false,
+        displayedText: '',
+        matchedItemText: '',
+      })
     }
   }, [open])
 
   // 음성 끄면 훈련 종료 및 오버레이 즉시 제거
   useEffect(() => {
     if (!voiceEnabled) {
-      if (trainingTargetId) {
+      if (trainingState.targetId) {
         endTraining()
       }
       // 오버레이 즉시 제거
-      setDisplayedText('')
-      setShowRecognizedText(false)
-      setMatchedItemText('')
+      setVoiceUIState({
+        showRecognizedText: false,
+        displayedText: '',
+        matchedItemText: '',
+      })
     }
   }, [voiceEnabled])
 
@@ -448,11 +580,17 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
     if (voiceEnabled) {
       // 락 상태에 따라 다른 메시지 표시
       const message = isLocked ? '듣는 중' : '카드를 길게 누르면 훈련 모드로 진입합니다.'
-      setDisplayedText(message)
-      setShowRecognizedText(true)
+      setVoiceUIState(prev => ({
+        ...prev,
+        displayedText: message,
+        showRecognizedText: true,
+      }))
 
       const timer = setTimeout(() => {
-        setShowRecognizedText(false)
+        setVoiceUIState(prev => ({
+          ...prev,
+          showRecognizedText: false,
+        }))
       }, PHOTO_SEQUENCE_TIMERS.FADE_OUT)
 
       return () => clearTimeout(timer)
@@ -462,12 +600,18 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
   // 인식된 텍스트 표시 및 자동 페이드 아웃
   useEffect(() => {
     if (lastRecognized) {
-      setDisplayedText(lastRecognized)
-      setShowRecognizedText(true)
+      setVoiceUIState({
+        displayedText: lastRecognized,
+        showRecognizedText: true,
+        matchedItemText: '',
+      })
 
       const timer = setTimeout(() => {
-        setShowRecognizedText(false)
-        setMatchedItemText('') // 페이드 아웃 후 초기화
+        setVoiceUIState(prev => ({
+          ...prev,
+          showRecognizedText: false,
+          matchedItemText: '', // 페이드 아웃 후 초기화
+        }))
       }, PHOTO_SEQUENCE_TIMERS.FADE_OUT)
 
       return () => clearTimeout(timer)
@@ -476,11 +620,14 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
   // 매칭된 카드 제목 표시 (즉시)
   useEffect(() => {
-    if (matchedItemText) {
-      setDisplayedText(`✓ ${matchedItemText}`)
-      setShowRecognizedText(true)
+    if (voiceUIState.matchedItemText) {
+      setVoiceUIState(prev => ({
+        ...prev,
+        displayedText: `✓ ${prev.matchedItemText}`,
+        showRecognizedText: true,
+      }))
     }
-  }, [matchedItemText])
+  }, [voiceUIState.matchedItemText])
 
   // 드래그 앤 드롭 센서 설정
   const sensors = useSensors(
@@ -618,11 +765,11 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                   {handlePosition === 'left' ? <ArrowRightToLine className="h-4 w-4 mr-2" /> : <ArrowLeftToLine className="h-4 w-4 mr-2" />}
                   카드핸들 좌우 전환
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowTrainingManager(true)} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showTrainingManager: true }))} className="cursor-pointer">
                   <CassetteTape className="h-4 w-4 mr-2" />
                   음성인식 훈련 데이터
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowAccuracySettings(true)} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => setModalStates(prev => ({ ...prev, showAccuracySettings: true }))} className="cursor-pointer">
                   <Sparkles className="h-4 w-4 mr-2" />
                   음성인식 정확도 설정
                 </DropdownMenuItem>
@@ -698,13 +845,13 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
         <div className="relative flex flex-col h-full gap-6">
           {/* 상단 컨테이너 (전체 폭, 확장 가능) - 음성 인식 텍스트 표시 */}
           <div className={`flex items-center justify-center transition-all duration-300 ${voiceEnabled ? 'min-h-[60px]' : 'min-h-[24px]'}`}>
-            {displayedText && (
-              <div className={`transition-all duration-500 ${showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            {voiceUIState.displayedText && (
+              <div className={`transition-all duration-500 ${voiceUIState.showRecognizedText ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                 <div
-                  className={`text-lg font-medium text-center ${matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
+                  className={`text-lg font-medium text-center ${voiceUIState.matchedItemText ? 'text-primary' : 'text-muted-foreground'}`}
                   style={{ fontFamily: "'Gowun Batang', serif" }}
                 >
-                  {displayedText}
+                  {voiceUIState.displayedText}
                 </div>
               </div>
             )}
@@ -717,60 +864,43 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
             <div className="flex gap-4 flex-1">
               {/* 왼쪽: 카드 리스트 (60%) */}
               <div className="flex-[3] overflow-y-auto space-y-2 pr-1">
-                {activeItems.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    촬영 순서를 추가해주세요
-                  </div>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={activeItems.map(item => item.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {activeItems.map((item) => (
-                          <SortableItem
-                            key={item.id}
-                            item={item}
-                            isLocked={isLocked}
-                            voiceEnabled={voiceEnabled}
-                            handlePosition={handlePosition}
-                            onToggleComplete={toggleComplete}
-                            onDelete={deleteItem}
-                            trainingTargetId={trainingTargetId}
-                            collectedCount={trainingTargetId === item.id ? collectedPhrases.length : 0}
-                            isExpanded={expandedTrainingId === item.id}
-                            collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
-                            onStartTraining={startTraining}
-                            onSaveTraining={saveTrainingData}
-                            onCancelTraining={() => {
-                              setExpandedTrainingId(null)
-                              setCollectedPhrases([])
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                )}
+                <CardListContent
+                  activeItems={activeItems}
+                  sensors={sensors}
+                  isLocked={isLocked}
+                  voiceEnabled={voiceEnabled}
+                  handlePosition={handlePosition}
+                  trainingTargetId={trainingState.targetId}
+                  collectedPhrasesLength={trainingState.collectedPhrases.length}
+                  expandedTrainingId={trainingState.expandedId}
+                  collectedPhrases={trainingState.collectedPhrases}
+                  onDragEnd={handleDragEnd}
+                  onToggleComplete={toggleComplete}
+                  onDelete={deleteItem}
+                  onStartTraining={startTraining}
+                  onSaveTraining={saveTrainingData}
+                  onCancelTraining={() => {
+                    setTrainingState(prev => ({
+                      ...prev,
+                      expandedId: null,
+                      collectedPhrases: [],
+                    }))
+                  }}
+                />
               </div>
 
               {/* 오른쪽: 정보 패널 (시계) (40%) */}
               <div className="flex-[2] flex flex-col items-center justify-start pt-8 gap-6">
                 {/* 시계 표시 */}
-                {currentTime && (
+                {clockState.currentTime && (
                   <>
                     <div className="flex items-start" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}>
                       <span className="text-4xl">
-                        {currentTime.split(':')[0]}
+                        {clockState.currentTime.split(':')[0]}
                       </span>
                       <span className="text-4xl opacity-30 mx-1">:</span>
                       <span className="text-6xl tracking-wider">
-                        {currentTime.split(':')[1]}
+                        {clockState.currentTime.split(':')[1]}
                       </span>
                     </div>
 
@@ -798,7 +928,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                           strokeLinecap="round"
                           className="text-foreground/50 transition-all duration-1000 ease-linear"
                           strokeDasharray={`${2 * Math.PI * 28}`}
-                          strokeDashoffset={`${2 * Math.PI * 28 * (1 - currentSeconds / 60)}`}
+                          strokeDashoffset={`${2 * Math.PI * 28 * (1 - clockState.currentSeconds / 60)}`}
                         />
                       </svg>
                       {/* 중앙 초 숫자 */}
@@ -806,7 +936,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                         className="absolute inset-0 flex items-center justify-center text-2xl font-light"
                         style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
                       >
-                        {String(currentSeconds).padStart(2, '0')}
+                        {String(clockState.currentSeconds).padStart(2, '0')}
                       </div>
                     </div>
 
@@ -817,7 +947,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">종료 시간</div>
                           <div className="flex items-center justify-center gap-2">
-                            <span className="text-lg font-medium">{endTime}</span>
+                            <span className="text-lg font-medium">{clockState.endTime}</span>
                             <Select value={String(shootingDuration)} onValueChange={(value) => handleShootingDurationChange(Number(value))}>
                               <SelectTrigger className="w-auto h-5 px-1 border-0 bg-transparent hover:bg-accent focus:ring-0">
                                 <Clock className="h-3.5 w-3.5" />
@@ -845,10 +975,10 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">남은 시간</div>
                           <div className="flex items-baseline justify-center gap-1">
-                            {remainingTime.includes('분') ? (
+                            {clockState.remainingTime.includes('분') ? (
                               <>
                                 {(() => {
-                                  const minutes = parseInt(remainingTime.replace('분', ''))
+                                  const minutes = parseInt(clockState.remainingTime.replace('분', ''))
                                   const isWarning = minutes < 10
                                   return (
                                     <>
@@ -864,7 +994,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                                 })()}
                               </>
                             ) : (
-                              <span className="font-medium">{remainingTime}</span>
+                              <span className="font-medium">{clockState.remainingTime}</span>
                             )}
                           </div>
                         </div>
@@ -881,17 +1011,17 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
                 {/* 항상 렌더링하되 조건부 스타일 적용 */}
                 <div className={`relative bg-background border shadow-xl rounded-full transition-all duration-300 ease-out ${
-                  showImportantMemo
+                  modalStates.showImportantMemo
                     ? 'py-4 pl-4 pr-2 w-[300px] max-w-[90vw] opacity-100 scale-100'
                     : 'p-3 w-auto opacity-100 scale-100 cursor-pointer hover:scale-110'
                 }`}
-                onClick={() => !showImportantMemo && setShowImportantMemo(true)}
+                onClick={() => !modalStates.showImportantMemo && setModalStates(prev => ({ ...prev, showImportantMemo: true }))}
                 >
-                  {showImportantMemo ? (
+                  {modalStates.showImportantMemo ? (
                     <>
                       {/* 닫기 버튼 - 오른쪽 상단 모서리 바깥쪽 */}
                       <button
-                        onClick={() => setShowImportantMemo(false)}
+                        onClick={() => setModalStates(prev => ({ ...prev, showImportantMemo: false }))}
                         className="absolute -top-2 -right-2 bg-background rounded-full p-1.5 shadow-md border transition-all duration-300 hover:scale-110 z-10"
                         title="닫기"
                       >
@@ -917,46 +1047,29 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
           ) : (
           // 일반 모드: 단일 컬럼 레이아웃
           <>
-            {activeItems.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                촬영 순서를 추가해주세요
-              </div>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={activeItems.map(item => item.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {activeItems.map((item) => (
-                      <SortableItem
-                        key={item.id}
-                        item={item}
-                        isLocked={isLocked}
-                        voiceEnabled={voiceEnabled}
-                        handlePosition={handlePosition}
-                        onToggleComplete={toggleComplete}
-                        onDelete={deleteItem}
-                        trainingTargetId={trainingTargetId}
-                        collectedCount={trainingTargetId === item.id ? collectedPhrases.length : 0}
-                        isExpanded={expandedTrainingId === item.id}
-                        collectedPhrases={expandedTrainingId === item.id ? collectedPhrases : []}
-                        onStartTraining={startTraining}
-                        onSaveTraining={saveTrainingData}
-                        onCancelTraining={() => {
-                          setExpandedTrainingId(null)
-                          setCollectedPhrases([])
-                        }}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
+            <CardListContent
+              activeItems={activeItems}
+              sensors={sensors}
+              isLocked={isLocked}
+              voiceEnabled={voiceEnabled}
+              handlePosition={handlePosition}
+              trainingTargetId={trainingState.targetId}
+              collectedPhrasesLength={trainingState.collectedPhrases.length}
+              expandedTrainingId={trainingState.expandedId}
+              collectedPhrases={trainingState.collectedPhrases}
+              onDragEnd={handleDragEnd}
+              onToggleComplete={toggleComplete}
+              onDelete={deleteItem}
+              onStartTraining={startTraining}
+              onSaveTraining={saveTrainingData}
+              onCancelTraining={() => {
+                setTrainingState(prev => ({
+                  ...prev,
+                  expandedId: null,
+                  collectedPhrases: [],
+                }))
+              }}
+            />
 
             {/* 삭제된 항목 배지 */}
             {deletedItems.length > 0 && (
@@ -986,8 +1099,8 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
       {/* 훈련 데이터 관리 다이얼로그 */}
       <TrainingDataManager
-        open={showTrainingManager}
-        onOpenChange={setShowTrainingManager}
+        open={modalStates.showTrainingManager}
+        onOpenChange={(open) => setModalStates(prev => ({ ...prev, showTrainingManager: open }))}
         trainingData={trainingData}
         onSave={handleSaveTrainingManager}
         items={activeItems}
@@ -995,22 +1108,22 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
 
       {/* 브라우저 미지원 알림 */}
       <AlertDialog
-        open={voiceNotSupportedOpen}
-        onOpenChange={setVoiceNotSupportedOpen}
+        open={modalStates.voiceNotSupportedOpen}
+        onOpenChange={(open) => setModalStates(prev => ({ ...prev, voiceNotSupportedOpen: open }))}
         title="음성 인식 지원 안 됨"
         description="현재 브라우저는 음성 인식을 지원하지 않습니다. Chrome, Edge, Safari 등의 브라우저를 사용해주세요."
       />
 
       {/* 음성인식 정확도 설정 다이얼로그 */}
       <ContentModal
-        open={showAccuracySettings}
-        onOpenChange={setShowAccuracySettings}
+        open={modalStates.showAccuracySettings}
+        onOpenChange={(open) => setModalStates(prev => ({ ...prev, showAccuracySettings: open }))}
         size="md"
         title="음성인식 정확도 설정"
         showFooter={true}
         footerContent={
           <div className="flex justify-end w-full">
-            <Button onClick={() => setShowAccuracySettings(false)}>
+            <Button onClick={() => setModalStates(prev => ({ ...prev, showAccuracySettings: false }))}>
               확인
             </Button>
           </div>
