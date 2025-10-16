@@ -252,6 +252,8 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
   const onMatchRef = useRef(onMatch)
   const onCollectRef = useRef(onCollect)
   const thresholdRef = useRef(threshold)
+  const collectDebounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastCollectedTranscriptRef = useRef<string>('')
 
   // ref 업데이트
   useEffect(() => {
@@ -329,9 +331,21 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
 
       // 최종 결과일 때만 매칭
       if (isFinal) {
-        // onCollect 콜백이 있으면 수집 (훈련 모드)
+        // onCollect 콜백이 있으면 디바운싱하여 수집 (훈련 모드)
         if (onCollectRef.current) {
-          onCollectRef.current(transcript)
+          // 기존 타이머 취소
+          if (collectDebounceTimerRef.current) {
+            clearTimeout(collectDebounceTimerRef.current)
+          }
+
+          // 1.5초 후에 수집 (그 사이 새로운 입력이 없으면 완성된 문장으로 간주)
+          collectDebounceTimerRef.current = setTimeout(() => {
+            // 마지막으로 수집한 문장과 다를 때만 수집 (중복 방지)
+            if (lastCollectedTranscriptRef.current !== transcript) {
+              lastCollectedTranscriptRef.current = transcript
+              onCollectRef.current?.(transcript)
+            }
+          }, 1500)
         }
 
         const normalizedTranscript = normalizeText(transcript)
@@ -412,6 +426,10 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
       if (recognitionRef.current) {
         recognitionRef.current.stop()
       }
+      // 디바운스 타이머 정리
+      if (collectDebounceTimerRef.current) {
+        clearTimeout(collectDebounceTimerRef.current)
+      }
     }
   }, []) // 한 번만 실행
 
@@ -445,9 +463,16 @@ export function useVoiceRecognition({ enabled, trainingData, itemTexts, onMatch,
         // 중지 실패 무시
       }
 
+      // 디바운스 타이머 정리
+      if (collectDebounceTimerRef.current) {
+        clearTimeout(collectDebounceTimerRef.current)
+        collectDebounceTimerRef.current = null
+      }
+
       // 상태를 즉시 초기화
       setIsListening(false)
       setLastRecognized('')
+      lastCollectedTranscriptRef.current = ''
     }
   }, [enabled])
 
