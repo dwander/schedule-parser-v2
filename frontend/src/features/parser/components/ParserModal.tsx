@@ -116,9 +116,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       return
     }
 
-    // 유효성 검사 (구글 제외)
+    // 유효성 검사 (구글 제외, 네이버는 백엔드가 토큰 자동 확인)
     const enabledCalendarList = []
-    if (enabledCalendars.naver && user?.naverAccessToken) enabledCalendarList.push('네이버')
+    if (enabledCalendars.naver && user?.id) enabledCalendarList.push('네이버')
     if (enabledCalendars.apple && appleCredentials.appleId && appleCredentials.appPassword) enabledCalendarList.push('애플')
 
     // 선택된 캘린더가 없는 경우
@@ -129,12 +129,10 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         warningMsg += '설정 → 동기화에서 네이버 또는 애플 캘린더를 선택해주세요.\n(구글 캘린더는 자동 동기화가 지원되지 않습니다)'
       } else {
         const issues = []
-        if (enabledCalendars.naver && !user?.naverAccessToken) {
-          issues.push('• 네이버: 계정 연동이 필요합니다')
-        }
         if (enabledCalendars.apple && (!appleCredentials.appleId || !appleCredentials.appPassword)) {
           issues.push('• 애플: iCloud 계정 설정이 필요합니다')
         }
+        // 네이버는 체크하지 않음 (백엔드가 DB에서 토큰 확인)
         warningMsg += issues.join('\n')
       }
 
@@ -190,14 +188,13 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       return `${y}-${m}-${d}T${h}:${min}:00`
     }
 
-    // 네이버 캘린더
-    if (enabledCalendars.naver && user?.naverAccessToken) {
+    // 네이버 캘린더 (백엔드가 DB에서 토큰 자동 확인/갱신)
+    if (enabledCalendars.naver && user?.id) {
       try {
         const response = await axios.post(
           `${apiUrl}/api/calendar/naver`,
           {
             user_id: user.id,
-            access_token: user.naverAccessToken,
             subject: `${schedule.location} - ${schedule.couple}`,
             location: schedule.location,
             start_datetime: formatLocalISO(startDate),

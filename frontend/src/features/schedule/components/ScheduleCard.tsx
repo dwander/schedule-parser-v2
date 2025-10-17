@@ -47,7 +47,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [importantMemoOpen, setImportantMemoOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
-  const [naverLoginPromptOpen, setNaverLoginPromptOpen] = useState(false)
   const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
   const [appleCredentialsPromptOpen, setAppleCredentialsPromptOpen] = useState(false)
 
@@ -87,12 +86,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarClick = () => {
-    // 네이버 캘린더 연동 확인
-    if (!user?.naverAccessToken) {
-      setNaverLoginPromptOpen(true)
-      return
-    }
-
     // 설정에서 확인 다이얼로그를 건너뛰도록 설정되어 있으면 바로 실행
     if (skipNaverCalendarConfirm) {
       handleNaverCalendarConfirm()
@@ -104,7 +97,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarConfirm = async () => {
-    if (!user?.naverAccessToken) return
+    if (!user?.id) return
 
     try {
       // 날짜/시간 파싱
@@ -125,13 +118,12 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         return `${y}-${m}-${d}T${h}:${min}:00`
       }
 
-      // 백엔드를 통해 네이버 캘린더 API 호출
+      // 백엔드를 통해 네이버 캘린더 API 호출 (백엔드가 DB에서 토큰 자동 갱신)
       const apiUrl = getApiUrl()
       const response = await axios.post(
         `${apiUrl}/api/calendar/naver`,
         {
           user_id: user.id,
-          access_token: user.naverAccessToken,
           subject: `${schedule.location} - ${schedule.couple}`,
           location: schedule.location,
           start_datetime: formatLocalISO(startDate),
@@ -732,14 +724,6 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         onConfirm={handleNaverCalendarConfirm}
         showDontAskAgain={true}
         onDontAskAgainChange={setSkipNaverCalendarConfirm}
-      />
-
-      {/* Naver Calendar Link Prompt Dialog */}
-      <AlertDialog
-        open={naverLoginPromptOpen}
-        onOpenChange={setNaverLoginPromptOpen}
-        title="네이버 캘린더 연동 필요"
-        description="네이버 캘린더에 일정을 추가하려면 설정 메뉴에서 네이버 캘린더를 연동해주세요."
       />
 
       {/* Apple Calendar Credentials Prompt Dialog */}
