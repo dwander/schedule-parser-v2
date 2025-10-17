@@ -1,5 +1,4 @@
 import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
-import { GoogleOAuthProvider } from '@react-oauth/google'
 import { queryClient } from './lib/api/queryClient'
 import { ScheduleTable } from './features/schedule/components/ScheduleTable'
 import { ParserModal } from './features/parser/components/ParserModal'
@@ -54,6 +53,47 @@ function AppContent() {
     // 로그인되어 있지 않고, skipLanding 플래그가 없으면 랜딩 페이지 표시
     return !user && !localStorage.getItem(APP_STORAGE_KEYS.SKIP_LANDING)
   })
+
+  // 구글 로그인 callback 처리
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      const path = window.location.pathname
+
+      if (path === '/auth/google/callback' && code) {
+        // 중복 실행 방지: 즉시 URL에서 code 제거
+        window.history.replaceState({}, '', '/')
+
+        try {
+          const apiUrl = getApiUrl()
+          const response = await axios.post(`${apiUrl}/auth/google`, {
+            code,
+            redirect_uri: `${window.location.origin}/auth/google/callback`
+          })
+
+          const user = {
+            id: response.data.id,
+            email: response.data.email,
+            name: response.data.name,
+            picture: response.data.picture,
+            isAdmin: response.data.is_admin || false,
+            hasSeenSampleData: response.data.has_seen_sample_data || false
+          }
+
+          login(user)
+          queryClient.invalidateQueries({ queryKey: ['schedules'] })
+          queryClient.invalidateQueries({ queryKey: ['tags'] })
+          toast.success(`환영합니다, ${user.name}님!`)
+        } catch (error) {
+          logger.error('구글 로그인 실패:', error)
+          toast.error('구글 로그인에 실패했습니다')
+        }
+      }
+    }
+
+    handleGoogleCallback()
+  }, [])
 
   // 네이버 로그인 callback 처리
   useEffect(() => {
@@ -476,7 +516,7 @@ function AppContent() {
 }
 
 function App() {
-  const { config, isLoaded, setConfig } = useConfigStore()
+  const { isLoaded, setConfig } = useConfigStore()
 
   // 앱 시작 시 Backend에서 설정 가져오기
   useEffect(() => {
@@ -491,7 +531,7 @@ function App() {
   }, [setConfig])
 
   // Config 로딩 중
-  if (!isLoaded || !config) {
+  if (!isLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -504,13 +544,11 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <GoogleOAuthProvider clientId={config.google_client_id}>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <AppContent />
-          </QueryClientProvider>
-        </ThemeProvider>
-      </GoogleOAuthProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }
