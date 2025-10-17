@@ -464,6 +464,37 @@ async def refresh_token(request: dict = Body(...)):
         raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
 
 
+@router.post("/auth/naver/check")
+async def check_naver_token(request: dict = Body(...), db: Session = Depends(get_database)):
+    """Check if user has valid Naver token (for multi-device conflict prevention)"""
+    try:
+        user_id = request.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+
+        # Get user from database
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.naver_refresh_token:
+            return {"has_valid_token": False}
+
+        # Check if token is still valid (with 5-minute buffer)
+        if user.naver_token_expires_at:
+            time_until_expiry = user.naver_token_expires_at - datetime.now(timezone.utc)
+            if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
+                print(f"✅ 기존 토큰 재사용 ({time_until_expiry.total_seconds():.0f}초 남음)")
+                return {
+                    "has_valid_token": True,
+                    "access_token": user.naver_access_token,
+                    "user_info": user.to_dict()
+                }
+
+        return {"has_valid_token": False}
+
+    except Exception as e:
+        print(f"❌ 토큰 체크 실패: {str(e)}")
+        return {"has_valid_token": False}
+
+
 @router.post("/auth/naver/refresh")
 async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(get_database)):
     """Refresh Naver OAuth token using database stored refresh token"""

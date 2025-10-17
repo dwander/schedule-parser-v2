@@ -67,9 +67,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setNaverLinkConfirmOpen(true)
   }
 
-  const handleConfirmNaverLink = () => {
+  const handleConfirmNaverLink = async () => {
     setNaverLinkConfirmOpen(false)
-    startNaverCalendarLink()
+    await startNaverCalendarLink()
   }
 
   const handleNaverCalendarUnlink = () => {
