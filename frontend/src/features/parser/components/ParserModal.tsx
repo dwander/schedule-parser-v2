@@ -170,6 +170,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     const apiUrl = getApiUrl()
     let successCount = 0
     let failCount = 0
+    let authError = false
 
     // 날짜/시간 파싱
     const [year, month, day] = schedule.date.split('.').map(Number)
@@ -214,7 +215,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         if (error && typeof error === 'object' && 'response' in error) {
           const axiosError = error as { response?: { status?: number } }
           if (axiosError.response?.status === 401) {
-            toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
+            authError = true
           }
         }
         failCount++
@@ -245,14 +246,14 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         if (error && typeof error === 'object' && 'response' in error) {
           const axiosError = error as { response?: { status?: number } }
           if (axiosError.response?.status === 401) {
-            toast.error('Apple ID 또는 앱 전용 비밀번호가 올바르지 않습니다.')
+            authError = true
           }
         }
         failCount++
       }
     }
 
-    return { successCount, failCount }
+    return { successCount, failCount, authError }
   }, [enabledCalendars, user, appleCredentials, calendarEventDuration])
 
   const handleSave = () => {
@@ -282,7 +283,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
 
           // 캘린더 동기화
           if (syncToCalendar) {
-            const { successCount, failCount } = await syncScheduleToCalendars({
+            const { successCount, failCount, authError } = await syncScheduleToCalendars({
               date: newSchedule.date,
               time: newSchedule.time,
               location: newSchedule.location,
@@ -290,11 +291,15 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
               memo: newSchedule.memo
             })
 
-            if (successCount > 0) {
-              toast.success(`${successCount}개의 캘린더에 동기화되었습니다`)
-            }
-            if (failCount > 0) {
-              toast.error(`${failCount}개의 캘린더 동기화에 실패했습니다`)
+            if (authError) {
+              toast.error('네이버 로그인이 만료되었습니다. 설정에서 다시 연동해주세요.')
+            } else {
+              if (successCount > 0) {
+                toast.success(`${successCount}개의 캘린더에 동기화되었습니다`)
+              }
+              if (failCount > 0) {
+                toast.error(`${failCount}개의 캘린더 동기화에 실패했습니다`)
+              }
             }
           }
 
@@ -329,24 +334,34 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
           if (syncToCalendar) {
             let totalSuccess = 0
             let totalFail = 0
+            let hasAuthError = false
 
             for (const schedule of schedulesToAdd) {
-              const { successCount, failCount } = await syncScheduleToCalendars({
-                date: schedule.date,
-                time: schedule.time,
-                location: schedule.location,
-                couple: schedule.couple,
-                memo: schedule.memo
-              })
-              totalSuccess += successCount
-              totalFail += failCount
+              try {
+                const { successCount, failCount, authError } = await syncScheduleToCalendars({
+                  date: schedule.date,
+                  time: schedule.time,
+                  location: schedule.location,
+                  couple: schedule.couple,
+                  memo: schedule.memo
+                })
+                totalSuccess += successCount
+                totalFail += failCount
+                if (authError) hasAuthError = true
+              } catch (error) {
+                totalFail++
+              }
             }
 
-            if (totalSuccess > 0) {
-              toast.success(`${totalSuccess}건의 캘린더 동기화가 완료되었습니다`)
-            }
-            if (totalFail > 0) {
-              toast.error(`${totalFail}건의 캘린더 동기화에 실패했습니다`)
+            if (hasAuthError) {
+              toast.error('네이버 로그인이 만료되었습니다. 설정에서 다시 연동해주세요.')
+            } else {
+              if (totalSuccess > 0) {
+                toast.success(`${totalSuccess}건의 캘린더 동기화가 완료되었습니다`)
+              }
+              if (totalFail > 0) {
+                toast.error(`${totalFail}건의 캘린더 동기화에 실패했습니다`)
+              }
             }
           }
 
