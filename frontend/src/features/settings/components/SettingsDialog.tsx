@@ -44,6 +44,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setSettingsSidebarCollapsed,
     folderNameFormat,
     setFolderNameFormat,
+    calendarEventDuration,
+    setCalendarEventDuration,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
@@ -300,6 +302,58 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* 캘린더 일정 시간 설정 */}
+              <div className="space-y-4 pt-6 border-t">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">캘린더 일정 시간 설정</h3>
+                  <p className="text-xs text-muted-foreground">
+                    캘린더에 일정을 추가할 때 적용되는 시간 범위입니다.
+                  </p>
+                </div>
+
+                {/* 시작 시간 오프셋 */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">시작 시간</label>
+                  <Select
+                    value={calendarEventDuration.startOffset.toString()}
+                    onValueChange={(value) => setCalendarEventDuration({ ...calendarEventDuration, startOffset: Number(value) })}
+                  >
+                    <SelectTrigger className="w-full focus:ring-1 focus:ring-ring/30 focus:outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="-2">예식 2시간 전</SelectItem>
+                      <SelectItem value="-1">예식 1시간 전</SelectItem>
+                      <SelectItem value="0">예식 시간</SelectItem>
+                      <SelectItem value="1">예식 1시간 후</SelectItem>
+                      <SelectItem value="2">예식 2시간 후</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 종료 시간 오프셋 */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">종료 시간</label>
+                  <Select
+                    value={calendarEventDuration.endOffset.toString()}
+                    onValueChange={(value) => setCalendarEventDuration({ ...calendarEventDuration, endOffset: Number(value) })}
+                  >
+                    <SelectTrigger className="w-full focus:ring-1 focus:ring-ring/30 focus:outline-none">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="-2">예식 2시간 전</SelectItem>
+                      <SelectItem value="-1">예식 1시간 전</SelectItem>
+                      <SelectItem value="0">예식 시간</SelectItem>
+                      <SelectItem value="1">예식 1시간 후</SelectItem>
+                      <SelectItem value="2">예식 2시간 후</SelectItem>
+                      <SelectItem value="3">예식 3시간 후</SelectItem>
+                      <SelectItem value="4">예식 4시간 후</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

@@ -113,6 +113,10 @@ interface SettingsState {
   skipNaverCalendarConfirm: boolean
   setSkipNaverCalendarConfirm: (skip: boolean) => void
 
+  // 캘린더 일정 시간 오프셋 (단위: 시간)
+  calendarEventDuration: { startOffset: number; endOffset: number }
+  setCalendarEventDuration: (duration: { startOffset: number; endOffset: number }) => void
+
   // 정렬 설정
   sortBy: 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc'
   setSortBy: (sort: 'date-desc' | 'date-asc' | 'location-asc' | 'location-desc' | 'cuts-desc' | 'cuts-asc') => void
@@ -206,6 +210,7 @@ export const useSettingsStore = create<SettingsState>()(
       enabledCalendars: { google: true, naver: true, apple: true },
       appleCredentials: { appleId: '', appPassword: '' },
       skipNaverCalendarConfirm: false,
+      calendarEventDuration: { startOffset: 0, endOffset: 1 }, // 기본값: 시작 = 예식 시간, 종료 = +1시간
       sortBy: 'date-desc',
       weekStartsOn: 1, // 기본값: 월요일
       settingsSidebarCollapsed: typeof window !== 'undefined' && window.innerWidth < 640, // 모바일에서는 접힘
@@ -243,6 +248,7 @@ export const useSettingsStore = create<SettingsState>()(
       setEnabledCalendars: (calendars) => set({ enabledCalendars: calendars }),
       setAppleCredentials: (credentials) => set({ appleCredentials: credentials }),
       setSkipNaverCalendarConfirm: (skip) => set({ skipNaverCalendarConfirm: skip }),
+      setCalendarEventDuration: (duration) => set({ calendarEventDuration: duration }),
       setSortBy: (sort) => set({ sortBy: sort }),
       setWeekStartsOn: (day) => set({ weekStartsOn: day }),
       setSettingsSidebarCollapsed: (collapsed) => set({ settingsSidebarCollapsed: collapsed }),

@@ -41,7 +41,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -56,13 +56,13 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     // 날짜: "2025.04.05" → "20250405"
     const dateStr = schedule.date.replace(/\./g, '')
 
-    // 시간: "14:00" → 시작: 13:00, 종료: 15:00
+    // 시간: 설정된 오프셋 적용
     const [hours, minutes] = schedule.time.split(':').map(Number)
-    const startHour = String(hours - 1).padStart(2, '0')
-    const endHour = String(hours + 1).padStart(2, '0')
+    const startHour = String(hours + calendarEventDuration.startOffset).padStart(2, '0')
+    const endHour = String(hours + calendarEventDuration.endOffset).padStart(2, '0')
     const minuteStr = String(minutes).padStart(2, '0')
 
-    // ISO 8601 형식: 20250405T130000/20250405T150000
+    // ISO 8601 형식: 20250405T140000/20250405T150000
     const startDateTime = `${dateStr}T${startHour}${minuteStr}00`
     const endDateTime = `${dateStr}T${endHour}${minuteStr}00`
 
@@ -111,10 +111,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const [year, month, day] = schedule.date.split('.').map(Number)
       const [hours, minutes] = schedule.time.split(':').map(Number)
 
-      // 시작 시간 (예식 1시간 전)
-      const startDate = new Date(year, month - 1, day, hours - 1, minutes)
-      // 종료 시간 (예식 1시간 후)
-      const endDate = new Date(year, month - 1, day, hours + 1, minutes)
+      // 시작/종료 시간 (설정된 오프셋 적용)
+      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
+      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
 
       // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
       const formatLocalISO = (date: Date) => {
@@ -171,10 +170,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const [year, month, day] = schedule.date.split('.').map(Number)
       const [hours, minutes] = schedule.time.split(':').map(Number)
 
-      // 시작 시간 (예식 1시간 전)
-      const startDate = new Date(year, month - 1, day, hours - 1, minutes)
-      // 종료 시간 (예식 1시간 후)
-      const endDate = new Date(year, month - 1, day, hours + 1, minutes)
+      // 시작/종료 시간 (설정된 오프셋 적용)
+      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
+      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
 
       // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
       const formatLocalISO = (date: Date) => {
