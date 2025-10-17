@@ -150,7 +150,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number } }
         if (axiosError.response?.status === 401) {
-          toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
+          toast.error('네이버 캘린더 연동이 필요합니다.\n설정에서 네이버 계정을 연동해주세요.')
           return
         }
       }

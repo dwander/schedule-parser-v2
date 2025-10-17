@@ -214,7 +214,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       } catch (error: unknown) {
         logger.error('네이버 캘린더 추가 실패:', error)
         if (error && typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response?: { status?: number } }
+          const axiosError = error as { response?: { status?: number; data?: { detail?: string } } }
           if (axiosError.response?.status === 401) {
             authError = true
           }
@@ -293,7 +293,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             })
 
             if (authError) {
-              toast.error('네이버 로그인이 만료되었습니다. 설정에서 다시 연동해주세요.')
+              toast.error('네이버 캘린더 연동이 필요합니다.\n설정에서 네이버 계정을 연동해주세요.')
             } else {
               if (successCount > 0) {
                 toast.success(`${successCount}개의 캘린더에 동기화되었습니다`)
@@ -355,7 +355,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             }
 
             if (hasAuthError) {
-              toast.error('네이버 로그인이 만료되었습니다. 설정에서 다시 연동해주세요.')
+              toast.error('네이버 캘린더 연동이 필요합니다.\n설정에서 네이버 계정을 연동해주세요.')
             } else {
               if (totalSuccess > 0) {
                 toast.success(`${totalSuccess}건의 캘린더 동기화가 완료되었습니다`)

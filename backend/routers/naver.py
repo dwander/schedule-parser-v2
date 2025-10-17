@@ -17,8 +17,14 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
     """Check and refresh Naver token if expired. Returns valid access token."""
     # Get user from database
     user = db.query(User).filter(User.id == user_id).first()
-    if not user or not user.naver_refresh_token:
-        raise HTTPException(status_code=404, detail="User not found or no refresh token available")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not user.naver_refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Naver calendar not linked. Please link your Naver account in settings."
+        )
 
     # Check if token is expired (with 5-minute buffer)
     if user.naver_token_expires_at:
