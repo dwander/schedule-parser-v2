@@ -57,7 +57,13 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
     token_json = token_response.json()
     new_access_token = token_json.get('access_token')
     new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)
-    expires_in = int(token_json.get('expires_in', 3600))  # 문자열→정수 변환
+
+    # expires_in을 안전하게 정수로 변환
+    try:
+        expires_in = int(token_json.get('expires_in', 3600))
+    except (ValueError, TypeError):
+        print(f"⚠️  expires_in 변환 실패, 기본값 3600초 사용")
+        expires_in = 3600
 
     if not new_access_token:
         raise HTTPException(status_code=401, detail="No access token received")

@@ -235,9 +235,9 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
             state_data = json.loads(base64.b64decode(auth_request.state))
             target_user_id = state_data.get('user_id')
             print(f"🎯 타겟 사용자 ID: {target_user_id}")
-        except:
+        except (ValueError, json.JSONDecodeError, Exception) as e:
             target_user_id = None
-            print(f"⚠️  state 파싱 실패, 새 사용자 생성 모드")
+            print(f"⚠️  state 파싱 실패, 새 사용자 생성 모드: {type(e).__name__}")
 
         # Step 1: Exchange authorization code for access token
         token_url = "https://nid.naver.com/oauth2.0/token"
@@ -259,7 +259,13 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         token_json = token_response.json()
         access_token = token_json.get('access_token')
         refresh_token = token_json.get('refresh_token')
-        expires_in = int(token_json.get('expires_in', 3600))  # 기본값 3600초 (1시간), 문자열→정수 변환
+
+        # expires_in을 안전하게 정수로 변환
+        try:
+            expires_in = int(token_json.get('expires_in', 3600))
+        except (ValueError, TypeError):
+            print(f"⚠️  expires_in 변환 실패, 기본값 3600초 사용")
+            expires_in = 3600
 
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
@@ -285,6 +291,10 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
 
         naver_user = user_data.get('response', {})
         naver_id = naver_user.get('id')
+
+        # naver_id가 없으면 에러 (API 응답 이상)
+        if not naver_id and not target_user_id:
+            raise HTTPException(status_code=400, detail="Naver user ID not found in response")
 
         # 캘린더 연동 모드: target_user_id가 있으면 그 사용자에게 토큰 추가
         if target_user_id:
@@ -593,7 +603,13 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
         token_json = token_response.json()
         new_access_token = token_json.get('access_token')
         new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)  # 새 refresh token이 없으면 기존 것 사용
-        expires_in = int(token_json.get('expires_in', 3600))  # 문자열→정수 변환
+
+        # expires_in을 안전하게 정수로 변환
+        try:
+            expires_in = int(token_json.get('expires_in', 3600))
+        except (ValueError, TypeError):
+            print(f"⚠️  expires_in 변환 실패, 기본값 3600초 사용")
+            expires_in = 3600
 
         if not new_access_token:
             raise HTTPException(status_code=400, detail="No access token received")
