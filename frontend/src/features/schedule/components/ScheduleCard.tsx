@@ -47,6 +47,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
   const [importantMemoOpen, setImportantMemoOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
+  const [naverDisabledPromptOpen, setNaverDisabledPromptOpen] = useState(false)
   const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
   const [appleCredentialsPromptOpen, setAppleCredentialsPromptOpen] = useState(false)
 
@@ -86,6 +87,12 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   }
 
   const handleNaverCalendarClick = () => {
+    // 네이버 캘린더 연동 여부 확인
+    if (!user?.naverAccessToken) {
+      setNaverDisabledPromptOpen(true)
+      return
+    }
+
     // 설정에서 확인 다이얼로그를 건너뛰도록 설정되어 있으면 바로 실행
     if (skipNaverCalendarConfirm) {
       handleNaverCalendarConfirm()
@@ -724,6 +731,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         onConfirm={handleNaverCalendarConfirm}
         showDontAskAgain={true}
         onDontAskAgainChange={setSkipNaverCalendarConfirm}
+      />
+
+      {/* Naver Calendar Disabled Prompt Dialog */}
+      <AlertDialog
+        open={naverDisabledPromptOpen}
+        onOpenChange={setNaverDisabledPromptOpen}
+        title="네이버 캘린더 연동 필요"
+        description="네이버 캘린더에 일정을 추가하려면 설정 메뉴에서 네이버 계정을 연동해주세요."
       />
 
       {/* Apple Calendar Credentials Prompt Dialog */}
