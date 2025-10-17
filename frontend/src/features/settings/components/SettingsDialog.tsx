@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ContentModal } from '@/components/common/ContentModal'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ type SettingSection = 'appearance' | 'integration' | 'others'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
+  const [naverLinkConfirmOpen, setNaverLinkConfirmOpen] = useState(false)
 
   const {
     theme,
@@ -60,6 +62,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }
 
   const handleNaverCalendarLink = () => {
+    setNaverLinkConfirmOpen(true)
+  }
+
+  const handleConfirmNaverLink = () => {
+    setNaverLinkConfirmOpen(false)
     startNaverCalendarLink()
   }
 
@@ -77,14 +84,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   ]
 
   return (
-    <ContentModal
-      open={open}
-      onOpenChange={onOpenChange}
-      size="fullscreen-mobile"
-      title="설정"
-      showFooter={false}
-      contentClassName="p-0 pb-0"
-    >
+    <>
+      <ContentModal
+        open={open}
+        onOpenChange={onOpenChange}
+        size="fullscreen-mobile"
+        title="설정"
+        showFooter={false}
+        contentClassName="p-0 pb-0"
+      >
       <div className="flex h-full sm:min-h-[500px]">
         {/* Sidebar */}
         <div className={`border-r border-border flex flex-col transition-all duration-300 ${settingsSidebarCollapsed ? 'w-16' : 'w-48'}`}>
@@ -379,6 +387,18 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           )}
         </div>
       </div>
-    </ContentModal>
+      </ContentModal>
+
+      {/* 네이버 캘린더 연동 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={naverLinkConfirmOpen}
+        onOpenChange={setNaverLinkConfirmOpen}
+        title="네이버 캘린더 연동"
+        description="네이버 로그인 페이지로 이동합니다. 연동 완료 후 페이지가 새로고침됩니다. 계속하시겠습니까?"
+        confirmText="계속"
+        cancelText="취소"
+        onConfirm={handleConfirmNaverLink}
+      />
+    </>
   )
 }
