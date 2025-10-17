@@ -43,14 +43,21 @@ export async function startNaverCalendarLink() {
 
   // 2. 토큰 없거나 만료 → 정상 OAuth 플로우
   const redirectUri = `${window.location.origin}/auth/naver/calendar/callback`
-  const state = Math.random().toString(36).substring(7)
+  const randomState = Math.random().toString(36).substring(7)
+
+  // state에 현재 사용자 ID 포함 (백엔드에서 어느 사용자에게 토큰 저장할지 알 수 있도록)
+  const stateData = {
+    random: randomState,
+    user_id: currentUser?.id || ''
+  }
+  const state = btoa(JSON.stringify(stateData)) // Base64 인코딩
 
   // state를 세션 스토리지에 저장 (CSRF 방지)
   sessionStorage.setItem('naver_calendar_state', state)
 
   const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
     redirectUri
-  )}&state=${state}`
+  )}&state=${encodeURIComponent(state)}`
 
   window.location.href = authUrl
 }

@@ -28,7 +28,12 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
 
     # Check if token is expired (with 5-minute buffer)
     if user.naver_token_expires_at:
-        time_until_expiry = user.naver_token_expires_at - datetime.now(timezone.utc)
+        # SQLite에서 읽은 datetime을 UTC timezone으로 변환
+        expires_at = user.naver_token_expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        time_until_expiry = expires_at - datetime.now(timezone.utc)
         if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
             print(f"✅ 토큰 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
             return user.naver_access_token
@@ -52,7 +57,7 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
     token_json = token_response.json()
     new_access_token = token_json.get('access_token')
     new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)
-    expires_in = token_json.get('expires_in', 3600)
+    expires_in = int(token_json.get('expires_in', 3600))  # 문자열→정수 변환
 
     if not new_access_token:
         raise HTTPException(status_code=401, detail="No access token received")
