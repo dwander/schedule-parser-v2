@@ -6,6 +6,7 @@ from typing import Optional
 import requests
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from datetime import datetime, timedelta, timezone
 
 from config import settings
 from database import get_database, User
@@ -247,9 +248,13 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         token_json = token_response.json()
         access_token = token_json.get('access_token')
         refresh_token = token_json.get('refresh_token')
+        expires_in = token_json.get('expires_in', 3600)  # 기본값 3600초 (1시간)
 
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
+
+        # Calculate token expiration time
+        token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
         # Step 2: Get user info using access token
         user_info_url = "https://openapi.naver.com/v1/nid/me"
@@ -276,23 +281,31 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         existing_user = db.query(User).filter(User.id == user_id).first()
 
         if existing_user:
-            # Update existing user
+            # Update existing user with new tokens
             existing_user.email = naver_user.get("email")
             existing_user.name = naver_user.get("name") or naver_user.get("nickname")
             existing_user.last_login = func.now()
+            existing_user.naver_access_token = access_token
+            existing_user.naver_refresh_token = refresh_token
+            existing_user.naver_token_expires_at = token_expires_at
             print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email})")
+            print(f"🔑 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
         else:
-            # Create new user
+            # Create new user with tokens
             new_user = User(
                 id=user_id,
                 auth_provider="naver",
                 is_anonymous=False,
                 email=naver_user.get("email"),
                 name=naver_user.get("name") or naver_user.get("nickname"),
-                is_admin=False
+                is_admin=False,
+                naver_access_token=access_token,
+                naver_refresh_token=refresh_token,
+                naver_token_expires_at=token_expires_at
             )
             db.add(new_user)
             print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email})")
+            print(f"🔑 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
 
         db.commit()
 
@@ -448,4 +461,80 @@ async def refresh_token(request: dict = Body(...)):
         }
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
+
+
+@router.post("/auth/naver/refresh")
+async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(get_database)):
+    """Refresh Naver OAuth token using database stored refresh token"""
+    try:
+        user_id = request.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+
+        # Get user from database
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.naver_refresh_token:
+            raise HTTPException(status_code=404, detail="User not found or no refresh token available")
+
+        # Check if token is expired (with 5-minute buffer)
+        if user.naver_token_expires_at:
+            time_until_expiry = user.naver_token_expires_at - datetime.now(timezone.utc)
+            if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
+                print(f"✅ 토큰 아직 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
+                return {
+                    "access_token": user.naver_access_token,
+                    "refresh_token": user.naver_refresh_token,
+                    "expires_at": user.naver_token_expires_at.isoformat(),
+                    "success": True,
+                    "refreshed": False
+                }
+
+        # Exchange refresh token for new access token
+        print(f"🔄 네이버 토큰 갱신 시작 (user_id: {user_id})")
+        token_response = requests.post(
+            'https://nid.naver.com/oauth2.0/token',
+            params={
+                'grant_type': 'refresh_token',
+                'client_id': NAVER_CLIENT_ID,
+                'client_secret': NAVER_CLIENT_SECRET,
+                'refresh_token': user.naver_refresh_token
+            }
+        )
+
+        if not token_response.ok:
+            print(f"❌ 토큰 갱신 실패: {token_response.text}")
+            raise HTTPException(status_code=400, detail=f"Token refresh failed: {token_response.text}")
+
+        token_json = token_response.json()
+        new_access_token = token_json.get('access_token')
+        new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)  # 새 refresh token이 없으면 기존 것 사용
+        expires_in = token_json.get('expires_in', 3600)
+
+        if not new_access_token:
+            raise HTTPException(status_code=400, detail="No access token received")
+
+        # Calculate new expiration time
+        new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+        # Update user tokens in database
+        user.naver_access_token = new_access_token
+        user.naver_refresh_token = new_refresh_token
+        user.naver_token_expires_at = new_expires_at
+        db.commit()
+
+        print(f"✅ 토큰 갱신 완료 (만료: {new_expires_at.isoformat()})")
+
+        return {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
+            "expires_at": new_expires_at.isoformat(),
+            "success": True,
+            "refreshed": True
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ 토큰 갱신 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")

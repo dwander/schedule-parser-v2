@@ -130,6 +130,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const response = await axios.post(
         `${apiUrl}/api/calendar/naver`,
         {
+          user_id: user.id,
           access_token: user.naverAccessToken,
           subject: `${schedule.location} - ${schedule.couple}`,
           location: schedule.location,

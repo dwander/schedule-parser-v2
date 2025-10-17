@@ -37,6 +37,11 @@ class User(Base):
     # Sample data flag
     has_seen_sample_data = Column(Boolean, nullable=False, default=False)
 
+    # Naver OAuth tokens
+    naver_access_token = Column(String(500), nullable=True)
+    naver_refresh_token = Column(String(500), nullable=True)
+    naver_token_expires_at = Column(DateTime(timezone=True), nullable=True)
+
     # Voice recognition training data
     voice_training_data = Column(JSON, nullable=True)
 
@@ -57,6 +62,9 @@ class User(Base):
             'name': self.name,
             'is_admin': self.is_admin,
             'has_seen_sample_data': self.has_seen_sample_data,
+            'naver_access_token': self.naver_access_token,
+            'naver_refresh_token': self.naver_refresh_token,
+            'naver_token_expires_at': self.naver_token_expires_at.isoformat() if self.naver_token_expires_at else None,
             'voice_training_data': self.voice_training_data,
             'ui_settings': self.ui_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -509,6 +517,21 @@ def run_migrations():
                 'name': 'shoot_time_duration column in trash_schedules',
                 'check_query': 'SELECT shoot_time_duration FROM trash_schedules LIMIT 1',
                 'alter_query': 'ALTER TABLE trash_schedules ADD COLUMN shoot_time_duration INTEGER DEFAULT 60 NOT NULL'
+            },
+            {
+                'name': 'naver_access_token column in users',
+                'check_query': 'SELECT naver_access_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN naver_access_token VARCHAR(500)'
+            },
+            {
+                'name': 'naver_refresh_token column in users',
+                'check_query': 'SELECT naver_refresh_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN naver_refresh_token VARCHAR(500)'
+            },
+            {
+                'name': 'naver_token_expires_at column in users',
+                'check_query': 'SELECT naver_token_expires_at FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN naver_token_expires_at TIMESTAMP WITH TIME ZONE'
             }
         ]
 

@@ -1,25 +1,78 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 import requests
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import urllib.parse
 
 from constants import NAVER_DEFAULT_CALENDAR_ID
 from schemas.naver import NaverCalendarRequest
+from database import get_database, User
+from config import settings
 
 router = APIRouter()
+
+
+async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
+    """Check and refresh Naver token if expired. Returns valid access token."""
+    # Get user from database
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.naver_refresh_token:
+        raise HTTPException(status_code=404, detail="User not found or no refresh token available")
+
+    # Check if token is expired (with 5-minute buffer)
+    if user.naver_token_expires_at:
+        time_until_expiry = user.naver_token_expires_at - datetime.now(timezone.utc)
+        if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
+            print(f"✅ 토큰 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
+            return user.naver_access_token
+
+    # Token expired or about to expire, refresh it
+    print(f"🔄 토큰 갱신 필요 (user_id: {user_id})")
+    token_response = requests.post(
+        'https://nid.naver.com/oauth2.0/token',
+        params={
+            'grant_type': 'refresh_token',
+            'client_id': settings.NAVER_CLIENT_ID,
+            'client_secret': settings.NAVER_CLIENT_SECRET,
+            'refresh_token': user.naver_refresh_token
+        }
+    )
+
+    if not token_response.ok:
+        print(f"❌ 토큰 갱신 실패: {token_response.text}")
+        raise HTTPException(status_code=401, detail=f"Token refresh failed: {token_response.text}")
+
+    token_json = token_response.json()
+    new_access_token = token_json.get('access_token')
+    new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)
+    expires_in = token_json.get('expires_in', 3600)
+
+    if not new_access_token:
+        raise HTTPException(status_code=401, detail="No access token received")
+
+    # Update tokens in database
+    user.naver_access_token = new_access_token
+    user.naver_refresh_token = new_refresh_token
+    user.naver_token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+    db.commit()
+
+    print(f"✅ 토큰 갱신 완료 (만료: {user.naver_token_expires_at.isoformat()})")
+    return new_access_token
 
 
 # --- API Endpoints ---
 
 @router.post("/api/calendar/naver")
-async def add_naver_calendar(request: NaverCalendarRequest):
-    """Add schedule to Naver Calendar via API (iCalendar format)."""
+async def add_naver_calendar(request: NaverCalendarRequest, db: Session = Depends(get_database)):
+    """Add schedule to Naver Calendar via API (iCalendar format) with automatic token refresh."""
     try:
+        # Auto-refresh token if needed
+        valid_access_token = await refresh_naver_token_if_needed(request.user_id, db)
         calendar_url = "https://openapi.naver.com/calendar/createSchedule.json"
 
         headers = {
-            'Authorization': f'Bearer {request.access_token}',
+            'Authorization': f'Bearer {valid_access_token}',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
 
