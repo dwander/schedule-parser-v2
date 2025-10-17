@@ -1,11 +1,18 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { ContentModal } from '@/components/common/ContentModal'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react'
 import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { toast } from 'sonner'
+import axios from 'axios'
+import { getApiUrl } from '@/lib/constants/api'
+import { logger } from '@/lib/utils/logger'
 import type { NewSchedule, Schedule } from '@/features/schedule/types/schedule'
 import { DEBOUNCE } from '@/lib/constants/timing'
 import { convertParsedDataToSchedules } from '../utils/convertParsedData'
@@ -25,9 +32,15 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [isDragging, setIsDragging] = useState(false)
   const [activeTab, setActiveTab] = useState('text')
   const [engine, setEngine] = useState<ParserEngine>('classic')
+  const [syncToCalendar, setSyncToCalendar] = useState(false)
+  const [calendarConfirmOpen, setCalendarConfirmOpen] = useState(false)
+  const [skipCalendarConfirm, setSkipCalendarConfirm] = useState(false)
+  const [calendarWarningOpen, setCalendarWarningOpen] = useState(false)
+  const [calendarWarningMessage, setCalendarWarningMessage] = useState('')
   const batchAddSchedules = useBatchAddSchedules()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
   const { user } = useAuthStore()
+  const { enabledCalendars, appleCredentials, calendarEventDuration } = useSettingsStore()
   const isAdmin = user?.isAdmin || false
 
   // 파서 엔진 훅
@@ -96,6 +109,152 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     await parseFromFile(file, engine)
   }, [engine, parseFromFile])
 
+  // 캘린더 동기화 체크박스 변경 핸들러
+  const handleSyncToCalendarChange = useCallback((checked: boolean) => {
+    if (!checked) {
+      setSyncToCalendar(false)
+      return
+    }
+
+    // 유효성 검사 (구글 제외)
+    const enabledCalendarList = []
+    if (enabledCalendars.naver && user?.naverAccessToken) enabledCalendarList.push('네이버')
+    if (enabledCalendars.apple && appleCredentials.appleId && appleCredentials.appPassword) enabledCalendarList.push('애플')
+
+    // 선택된 캘린더가 없는 경우
+    if (enabledCalendarList.length === 0) {
+      let warningMsg = '캘린더 동기화를 하려면 먼저 설정이 필요합니다.\n\n'
+
+      if (!enabledCalendars.naver && !enabledCalendars.apple) {
+        warningMsg += '설정 → 동기화에서 네이버 또는 애플 캘린더를 선택해주세요.\n(구글 캘린더는 자동 동기화가 지원되지 않습니다)'
+      } else {
+        const issues = []
+        if (enabledCalendars.naver && !user?.naverAccessToken) {
+          issues.push('• 네이버: 계정 연동이 필요합니다')
+        }
+        if (enabledCalendars.apple && (!appleCredentials.appleId || !appleCredentials.appPassword)) {
+          issues.push('• 애플: iCloud 계정 설정이 필요합니다')
+        }
+        warningMsg += issues.join('\n')
+      }
+
+      setCalendarWarningMessage(warningMsg)
+      setCalendarWarningOpen(true)
+      return
+    }
+
+    // 확인 다이얼로그 표시 (다시 묻지 않기 설정 확인)
+    const storedSkip = localStorage.getItem('skipParserCalendarConfirm')
+    if (storedSkip === 'true') {
+      setSyncToCalendar(true)
+    } else {
+      const calendarNames = enabledCalendarList.join(', ')
+      setCalendarWarningMessage(`${calendarNames} 캘린더에 동기화하시겠습니까?`)
+      setCalendarConfirmOpen(true)
+    }
+  }, [enabledCalendars, user, appleCredentials])
+
+  // 캘린더 동기화 확인 핸들러
+  const handleConfirmCalendarSync = useCallback(() => {
+    setSyncToCalendar(true)
+    setCalendarConfirmOpen(false)
+
+    // "다시 묻지 않기" 설정 저장
+    if (skipCalendarConfirm) {
+      localStorage.setItem('skipParserCalendarConfirm', 'true')
+    }
+  }, [skipCalendarConfirm])
+
+  // 단일 스케줄에 대한 캘린더 동기화 실행 (구글 제외)
+  const syncScheduleToCalendars = useCallback(async (schedule: { date: string; time: string; location: string; couple: string; memo?: string }) => {
+    const apiUrl = getApiUrl()
+    let successCount = 0
+    let failCount = 0
+
+    // 날짜/시간 파싱
+    const [year, month, day] = schedule.date.split('.').map(Number)
+    const [hours, minutes] = schedule.time.split(':').map(Number)
+
+    // 시작/종료 시간 (설정된 오프셋 적용)
+    const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
+    const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
+
+    // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
+    const formatLocalISO = (date: Date) => {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      const h = String(date.getHours()).padStart(2, '0')
+      const min = String(date.getMinutes()).padStart(2, '0')
+      return `${y}-${m}-${d}T${h}:${min}:00`
+    }
+
+    // 네이버 캘린더
+    if (enabledCalendars.naver && user?.naverAccessToken) {
+      try {
+        const response = await axios.post(
+          `${apiUrl}/api/calendar/naver`,
+          {
+            access_token: user.naverAccessToken,
+            subject: `${schedule.location} - ${schedule.couple}`,
+            location: schedule.location,
+            start_datetime: formatLocalISO(startDate),
+            end_datetime: formatLocalISO(endDate),
+            description: schedule.memo || ''
+          }
+        )
+
+        if (response.data.result === 'success') {
+          successCount++
+        } else {
+          failCount++
+        }
+      } catch (error: unknown) {
+        logger.error('네이버 캘린더 추가 실패:', error)
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } }
+          if (axiosError.response?.status === 401) {
+            toast.error('네이버 로그인이 만료되었습니다. 다시 로그인해주세요.')
+          }
+        }
+        failCount++
+      }
+    }
+
+    // 애플 캘린더
+    if (enabledCalendars.apple && appleCredentials.appleId && appleCredentials.appPassword) {
+      try {
+        const response = await axios.post(
+          `${apiUrl}/api/calendar/apple`,
+          {
+            apple_id: appleCredentials.appleId,
+            app_password: appleCredentials.appPassword,
+            subject: `${schedule.location} - ${schedule.couple}`,
+            location: schedule.location,
+            start_datetime: formatLocalISO(startDate),
+            end_datetime: formatLocalISO(endDate),
+            description: schedule.memo || ''
+          }
+        )
+
+        if (response.data.success) {
+          successCount++
+        }
+      } catch (error: unknown) {
+        logger.error('Apple Calendar 추가 실패:', error)
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } }
+          if (axiosError.response?.status === 401) {
+            toast.error('Apple ID 또는 앱 전용 비밀번호가 올바르지 않습니다.')
+          }
+        }
+        failCount++
+      }
+    }
+
+    return { successCount, failCount }
+  }, [enabledCalendars, user, appleCredentials, calendarEventDuration])
+
   const handleSave = () => {
     if (activeTab === 'manual') {
       // 직접 입력 모드
@@ -118,8 +277,27 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       } as NewSchedule
 
       batchAddSchedules.mutate([newSchedule], {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast.success('스케줄이 추가되었습니다')
+
+          // 캘린더 동기화
+          if (syncToCalendar) {
+            const { successCount, failCount } = await syncScheduleToCalendars({
+              date: newSchedule.date,
+              time: newSchedule.time,
+              location: newSchedule.location,
+              couple: newSchedule.couple,
+              memo: newSchedule.memo
+            })
+
+            if (successCount > 0) {
+              toast.success(`${successCount}개의 캘린더에 동기화되었습니다`)
+            }
+            if (failCount > 0) {
+              toast.error(`${failCount}개의 캘린더 동기화에 실패했습니다`)
+            }
+          }
+
           onOpenChange(false)
           // 리셋
           setManualForm({
@@ -144,8 +322,34 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
       const schedulesToAdd = convertParsedDataToSchedules(parsedData)
 
       batchAddSchedules.mutate(schedulesToAdd, {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast.success(`${parsedData.length}개의 스케줄이 추가되었습니다`)
+
+          // 캘린더 동기화
+          if (syncToCalendar) {
+            let totalSuccess = 0
+            let totalFail = 0
+
+            for (const schedule of schedulesToAdd) {
+              const { successCount, failCount } = await syncScheduleToCalendars({
+                date: schedule.date,
+                time: schedule.time,
+                location: schedule.location,
+                couple: schedule.couple,
+                memo: schedule.memo
+              })
+              totalSuccess += successCount
+              totalFail += failCount
+            }
+
+            if (totalSuccess > 0) {
+              toast.success(`${totalSuccess}건의 캘린더 동기화가 완료되었습니다`)
+            }
+            if (totalFail > 0) {
+              toast.error(`${totalFail}건의 캘린더 동기화에 실패했습니다`)
+            }
+          }
+
           onOpenChange(false)
           // 리셋
           setText('')
@@ -177,6 +381,23 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     })
     onOpenChange(false)
   }, [onOpenChange, reset])
+
+  // 캘린더 동기화 체크박스 렌더링 함수
+  const renderCalendarCheckbox = (id: string) => (
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id={id}
+        checked={syncToCalendar}
+        onCheckedChange={handleSyncToCalendarChange}
+      />
+      <label
+        htmlFor={id}
+        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+      >
+        일정을 캘린더에 동기화
+      </label>
+    </div>
+  )
 
   return (
     <ContentModal
@@ -318,6 +539,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
           <ManualScheduleForm formData={manualForm} onChange={setManualForm} />
         </TabsContent>
 
+        {/* 캘린더 동기화 체크박스 */}
+        {renderCalendarCheckbox('sync-to-calendar')}
+
         {/* 결과 영역 */}
         {error && (
           <div className="flex items-start gap-2 p-3 bg-destructive/10 text-destructive rounded-md">
@@ -340,6 +564,27 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
           </div>
         )}
       </Tabs>
+
+      {/* 캘린더 동기화 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={calendarConfirmOpen}
+        onOpenChange={setCalendarConfirmOpen}
+        title="캘린더 동기화"
+        description={calendarWarningMessage}
+        confirmText="동기화"
+        cancelText="취소"
+        onConfirm={handleConfirmCalendarSync}
+        showDontAskAgain={true}
+        onDontAskAgainChange={setSkipCalendarConfirm}
+      />
+
+      {/* 캘린더 설정 필요 경고 다이얼로그 */}
+      <AlertDialog
+        open={calendarWarningOpen}
+        onOpenChange={setCalendarWarningOpen}
+        title="설정 필요"
+        description={calendarWarningMessage}
+      />
     </ContentModal>
   )
 }

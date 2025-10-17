@@ -207,7 +207,7 @@ export const useSettingsStore = create<SettingsState>()(
         folderName: '폴더',
       },
       dateRangeFilter: { preset: null, from: null, to: null },
-      enabledCalendars: { google: true, naver: true, apple: true },
+      enabledCalendars: { google: false, naver: true, apple: true },
       appleCredentials: { appleId: '', appPassword: '' },
       skipNaverCalendarConfirm: false,
       calendarEventDuration: { startOffset: 0, endOffset: 1 }, // 기본값: 시작 = 예식 시간, 종료 = +1시간
