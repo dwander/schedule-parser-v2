@@ -331,7 +331,7 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         if existing_user:
             # Update existing user with new tokens
             existing_user.email = naver_user.get("email")
-            existing_user.name = naver_user.get("name") or naver_user.get("nickname")
+            existing_user.name = naver_user.get("name") or naver_user.get("nickname") or "네이버 사용자"
             existing_user.last_login = func.now()
             existing_user.naver_access_token = access_token
             existing_user.naver_refresh_token = refresh_token
@@ -345,7 +345,7 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
                 auth_provider="naver",
                 is_anonymous=False,
                 email=naver_user.get("email"),
-                name=naver_user.get("name") or naver_user.get("nickname"),
+                name=naver_user.get("name") or naver_user.get("nickname") or "네이버 사용자",
                 is_admin=False,
                 naver_access_token=access_token,
                 naver_refresh_token=refresh_token,
