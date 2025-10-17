@@ -234,10 +234,10 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         try:
             state_data = json.loads(base64.b64decode(auth_request.state))
             target_user_id = state_data.get('user_id')
-            print(f"🎯 타겟 사용자 ID: {target_user_id}")
-        except (ValueError, json.JSONDecodeError, Exception) as e:
+            print(f"🔗 캘린더 연동 모드: 타겟 사용자 ID = {target_user_id}")
+        except (ValueError, json.JSONDecodeError, Exception):
             target_user_id = None
-            print(f"⚠️  state 파싱 실패, 새 사용자 생성 모드: {type(e).__name__}")
+            print(f"👤 일반 로그인 모드 (네이버 계정으로 직접 로그인)")
 
         # Step 1: Exchange authorization code for access token
         token_url = "https://nid.naver.com/oauth2.0/token"
