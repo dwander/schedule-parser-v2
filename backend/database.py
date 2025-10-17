@@ -42,6 +42,11 @@ class User(Base):
     naver_refresh_token = Column(String(500), nullable=True)
     naver_token_expires_at = Column(DateTime(timezone=True), nullable=True)
 
+    # Google OAuth tokens (encrypted)
+    google_access_token = Column(String(1000), nullable=True)
+    google_refresh_token = Column(String(1000), nullable=True)
+    google_token_expires_at = Column(DateTime(timezone=True), nullable=True)
+
     # Voice recognition training data
     voice_training_data = Column(JSON, nullable=True)
 
@@ -65,6 +70,9 @@ class User(Base):
             'naver_access_token': self.naver_access_token,
             'naver_refresh_token': self.naver_refresh_token,
             'naver_token_expires_at': self.naver_token_expires_at.isoformat() if self.naver_token_expires_at else None,
+            'google_access_token': self.google_access_token,
+            'google_refresh_token': self.google_refresh_token,
+            'google_token_expires_at': self.google_token_expires_at.isoformat() if self.google_token_expires_at else None,
             'voice_training_data': self.voice_training_data,
             'ui_settings': self.ui_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
@@ -532,6 +540,21 @@ def run_migrations():
                 'name': 'naver_token_expires_at column in users',
                 'check_query': 'SELECT naver_token_expires_at FROM users LIMIT 1',
                 'alter_query': 'ALTER TABLE users ADD COLUMN naver_token_expires_at TIMESTAMP WITH TIME ZONE'
+            },
+            {
+                'name': 'google_access_token column in users',
+                'check_query': 'SELECT google_access_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN google_access_token VARCHAR(1000)'
+            },
+            {
+                'name': 'google_refresh_token column in users',
+                'check_query': 'SELECT google_refresh_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN google_refresh_token VARCHAR(1000)'
+            },
+            {
+                'name': 'google_token_expires_at column in users',
+                'check_query': 'SELECT google_token_expires_at FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN google_token_expires_at TIMESTAMP WITH TIME ZONE'
             }
         ]
 

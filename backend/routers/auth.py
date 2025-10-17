@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from config import settings
 from database import get_database, User
 from schemas.auth import GoogleAuthRequest, GoogleTokenRequest, NaverAuthRequest, KakaoAuthRequest
+from lib.crypto import encrypt_token, decrypt_token
 
 router = APIRouter()
 
@@ -81,6 +82,14 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         access_token = token_json.get('access_token')
         refresh_token = token_json.get('refresh_token')
 
+        # Calculate token expiration time (Google tokens typically expire in 3600 seconds)
+        try:
+            expires_in = int(token_json.get('expires_in', 3600))
+        except (ValueError, TypeError):
+            print(f"⚠️  expires_in 변환 실패, 기본값 3600초 사용")
+            expires_in = 3600
+        token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
 
@@ -99,13 +108,22 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
 
         existing_user = db.query(User).filter(User.id == user_id).first()
 
+        # Encrypt tokens before storing
+        encrypted_access_token = encrypt_token(access_token) if access_token else None
+        encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
         if existing_user:
             # Update existing user (is_admin 값은 유지)
             existing_user.email = user_data.get("email")
             existing_user.name = user_data.get("name")
             existing_user.last_login = func.now()
+            # Store encrypted tokens
+            existing_user.google_access_token = encrypted_access_token
+            existing_user.google_refresh_token = encrypted_refresh_token
+            existing_user.google_token_expires_at = token_expires_at
             admin_badge = "🔑 [관리자]" if existing_user.is_admin else ""
             print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email}) {admin_badge}")
+            print(f"🔐 구글 토큰 암호화 저장 완료 (만료: {token_expires_at.isoformat()})")
         else:
             # Create new user (신규 사용자만 DEV_ADMIN_ID 체크)
             is_admin = (google_id == DEV_ADMIN_ID) if DEV_ADMIN_ID else False
@@ -115,11 +133,15 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
                 is_anonymous=False,
                 email=user_data.get("email"),
                 name=user_data.get("name"),
-                is_admin=is_admin
+                is_admin=is_admin,
+                google_access_token=encrypted_access_token,
+                google_refresh_token=encrypted_refresh_token,
+                google_token_expires_at=token_expires_at
             )
             db.add(new_user)
             admin_badge = "🔑 [관리자]" if is_admin else ""
             print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email}) {admin_badge}")
+            print(f"🔐 구글 토큰 암호화 저장 완료 (만료: {token_expires_at.isoformat()})")
 
         db.commit()
 
@@ -480,7 +502,7 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
 
 @router.post("/auth/refresh")
 async def refresh_token(request: dict = Body(...)):
-    """Refresh Google OAuth token"""
+    """Refresh Google OAuth token (legacy endpoint - use /auth/google/refresh for database-backed refresh)"""
     try:
         refresh_token = request.get('refresh_token')
         if not refresh_token:
@@ -514,6 +536,138 @@ async def refresh_token(request: dict = Body(...)):
         }
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
+
+
+@router.post("/auth/google/check")
+async def check_google_token(request: dict = Body(...), db: Session = Depends(get_database)):
+    """Check if user has valid Google token (for multi-device support)"""
+    try:
+        user_id = request.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+
+        # Get user from database
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.google_refresh_token:
+            return {"has_valid_token": False}
+
+        # Decrypt tokens
+        access_token = decrypt_token(user.google_access_token) if user.google_access_token else None
+
+        # Check if token is still valid (with 5-minute buffer)
+        if user.google_token_expires_at and access_token:
+            # SQLite에서 읽은 datetime을 UTC timezone으로 변환
+            expires_at = user.google_token_expires_at
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            time_until_expiry = expires_at - datetime.now(timezone.utc)
+            if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
+                print(f"✅ 구글 토큰 재사용 ({time_until_expiry.total_seconds():.0f}초 남음)")
+                return {
+                    "has_valid_token": True,
+                    "access_token": access_token,
+                    "user_info": user.to_dict()
+                }
+
+        return {"has_valid_token": False}
+
+    except Exception as e:
+        print(f"❌ 구글 토큰 체크 실패: {str(e)}")
+        return {"has_valid_token": False}
+
+
+@router.post("/auth/google/refresh")
+async def refresh_google_token(request: dict = Body(...), db: Session = Depends(get_database)):
+    """Refresh Google OAuth token using database stored refresh token"""
+    try:
+        user_id = request.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+
+        # Get user from database
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.google_refresh_token:
+            raise HTTPException(status_code=404, detail="User not found or no refresh token available")
+
+        # Decrypt refresh token
+        refresh_token = decrypt_token(user.google_refresh_token)
+        if not refresh_token:
+            raise HTTPException(status_code=400, detail="Failed to decrypt refresh token")
+
+        # Check if token is expired (with 5-minute buffer)
+        if user.google_token_expires_at:
+            # SQLite에서 읽은 datetime을 UTC timezone으로 변환
+            expires_at = user.google_token_expires_at
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            time_until_expiry = expires_at - datetime.now(timezone.utc)
+            if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
+                print(f"✅ 구글 토큰 아직 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
+                decrypted_access_token = decrypt_token(user.google_access_token)
+                return {
+                    "access_token": decrypted_access_token,
+                    "refresh_token": refresh_token,
+                    "expires_at": expires_at.isoformat(),
+                    "success": True,
+                    "refreshed": False
+                }
+
+        # Exchange refresh token for new access token
+        print(f"🔄 구글 토큰 갱신 시작 (user_id: {user_id})")
+        token_response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'refresh_token': refresh_token,
+                'grant_type': 'refresh_token'
+            }
+        )
+
+        if not token_response.ok:
+            print(f"❌ 구글 토큰 갱신 실패: {token_response.text}")
+            raise HTTPException(status_code=400, detail=f"Token refresh failed: {token_response.text}")
+
+        token_json = token_response.json()
+        new_access_token = token_json.get('access_token')
+        new_refresh_token = token_json.get('refresh_token', refresh_token)  # 새 refresh token이 없으면 기존 것 사용
+
+        # expires_in을 안전하게 정수로 변환
+        try:
+            expires_in = int(token_json.get('expires_in', 3600))
+        except (ValueError, TypeError):
+            print(f"⚠️  expires_in 변환 실패, 기본값 3600초 사용")
+            expires_in = 3600
+
+        if not new_access_token:
+            raise HTTPException(status_code=400, detail="No access token received")
+
+        # Calculate new expiration time
+        new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+        # Encrypt and update user tokens in database
+        user.google_access_token = encrypt_token(new_access_token)
+        user.google_refresh_token = encrypt_token(new_refresh_token)
+        user.google_token_expires_at = new_expires_at
+        db.commit()
+
+        print(f"✅ 구글 토큰 갱신 완료 (만료: {new_expires_at.isoformat()})")
+
+        return {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
+            "expires_at": new_expires_at.isoformat(),
+            "success": True,
+            "refreshed": True
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ 구글 토큰 갱신 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
 
 
