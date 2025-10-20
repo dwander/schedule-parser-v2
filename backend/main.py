@@ -223,7 +223,7 @@ app.include_router(pages.router, tags=["Pages"])
 
 # === TEMPORARY MIGRATION ENDPOINT ===
 # TODO: Remove this after running once
-@app.get("/admin/migrate-tokens")
+@app.get("/api/admin/migrate-tokens")
 async def migrate_token_columns(db: Session = Depends(get_database)):
     """
     One-time migration: Add kakao token columns and resize naver token columns
