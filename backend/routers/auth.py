@@ -325,14 +325,17 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
             if not target_user:
                 raise HTTPException(status_code=404, detail=f"Target user {target_user_id} not found")
 
-            # 타겟 사용자에게 네이버 토큰 저장
-            target_user.naver_access_token = access_token
-            target_user.naver_refresh_token = refresh_token
+            # 타겟 사용자에게 네이버 토큰 저장 (암호화)
+            encrypted_access_token = encrypt_token(access_token) if access_token else None
+            encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
+            target_user.naver_access_token = encrypted_access_token
+            target_user.naver_refresh_token = encrypted_refresh_token
             target_user.naver_token_expires_at = token_expires_at
             db.commit()
 
             print(f"✅ 네이버 캘린더 연동 완료: {target_user.name} ({target_user.email})")
-            print(f"🔑 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
+            print(f"🔑 암호화된 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
 
             # 타겟 사용자 정보 반환 (프론트엔드와 일관된 필드명 사용)
             return {
@@ -351,17 +354,23 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
         existing_user = db.query(User).filter(User.id == user_id).first()
 
         if existing_user:
-            # Update existing user with new tokens
+            # Update existing user with new tokens (암호화)
+            encrypted_access_token = encrypt_token(access_token) if access_token else None
+            encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
             existing_user.email = naver_user.get("email")
             existing_user.name = naver_user.get("name") or naver_user.get("nickname") or "네이버 사용자"
             existing_user.last_login = func.now()
-            existing_user.naver_access_token = access_token
-            existing_user.naver_refresh_token = refresh_token
+            existing_user.naver_access_token = encrypted_access_token
+            existing_user.naver_refresh_token = encrypted_refresh_token
             existing_user.naver_token_expires_at = token_expires_at
             print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email})")
-            print(f"🔑 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
+            print(f"🔑 암호화된 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
         else:
-            # Create new user with tokens
+            # Create new user with tokens (암호화)
+            encrypted_access_token = encrypt_token(access_token) if access_token else None
+            encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
             new_user = User(
                 id=user_id,
                 auth_provider="naver",
@@ -369,13 +378,13 @@ async def naver_auth(auth_request: NaverAuthRequest, db: Session = Depends(get_d
                 email=naver_user.get("email"),
                 name=naver_user.get("name") or naver_user.get("nickname") or "네이버 사용자",
                 is_admin=False,
-                naver_access_token=access_token,
-                naver_refresh_token=refresh_token,
+                naver_access_token=encrypted_access_token,
+                naver_refresh_token=encrypted_refresh_token,
                 naver_token_expires_at=token_expires_at
             )
             db.add(new_user)
             print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email})")
-            print(f"🔑 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
+            print(f"🔑 암호화된 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
 
         db.commit()
 
@@ -436,6 +445,14 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
         access_token = token_json.get('access_token')
         refresh_token = token_json.get('refresh_token')
 
+        # Calculate token expiration time (Kakao tokens typically expire in 21600 seconds = 6 hours)
+        try:
+            expires_in = int(token_json.get('expires_in', 21600))
+        except (ValueError, TypeError):
+            print(f"⚠️  expires_in 변환 실패, 기본값 21600초 사용")
+            expires_in = 21600
+        token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
 
@@ -460,40 +477,50 @@ async def kakao_auth(auth_request: KakaoAuthRequest, db: Session = Depends(get_d
 
         existing_user = db.query(User).filter(User.id == user_id).first()
 
+        # 토큰 암호화
+        encrypted_access_token = encrypt_token(access_token) if access_token else None
+        encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
         if existing_user:
-            # Update existing user
+            # Update existing user with new tokens (암호화)
             existing_user.email = kakao_account.get("email")
             existing_user.name = profile.get("nickname")
             existing_user.last_login = func.now()
+            existing_user.kakao_access_token = encrypted_access_token
+            existing_user.kakao_refresh_token = encrypted_refresh_token
+            existing_user.kakao_token_expires_at = token_expires_at
             print(f"✅ 기존 사용자 로그인: {existing_user.name} ({existing_user.email})")
+            print(f"🔑 암호화된 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
         else:
-            # Create new user
+            # Create new user with tokens (암호화)
             new_user = User(
                 id=user_id,
                 auth_provider="kakao",
                 is_anonymous=False,
                 email=kakao_account.get("email"),
                 name=profile.get("nickname"),
-                is_admin=False
+                is_admin=False,
+                kakao_access_token=encrypted_access_token,
+                kakao_refresh_token=encrypted_refresh_token,
+                kakao_token_expires_at=token_expires_at
             )
             db.add(new_user)
             print(f"🆕 신규 사용자 생성: {new_user.name} ({new_user.email})")
+            print(f"🔑 암호화된 토큰 저장 완료 (만료: {token_expires_at.isoformat()})")
 
         db.commit()
 
         # Get the final user object to return current is_admin value
         final_user = db.query(User).filter(User.id == user_id).first()
 
-        # Return user information
+        # Return user information (토큰은 DB에 암호화 저장됨, 응답에서 제외)
         return {
             "id": user_id,  # kakao_{kakao_id} 형식
             "name": profile.get("nickname"),
             "email": kakao_account.get("email"),
             "picture": profile.get("profile_image_url"),
             "is_admin": final_user.is_admin if final_user else False,
-            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False,
-            "access_token": access_token,
-            "refresh_token": refresh_token
+            "has_seen_sample_data": final_user.has_seen_sample_data if final_user else False
         }
 
     except Exception as e:
@@ -684,6 +711,12 @@ async def check_naver_token(request: dict = Body(...), db: Session = Depends(get
         if not user or not user.naver_refresh_token:
             return {"has_valid_token": False}
 
+        # Decrypt token from database
+        decrypted_access_token = decrypt_token(user.naver_access_token) if user.naver_access_token else None
+
+        if not decrypted_access_token:
+            return {"has_valid_token": False}
+
         # Check if token is still valid (with 5-minute buffer)
         if user.naver_token_expires_at:
             # SQLite에서 읽은 datetime을 UTC timezone으로 변환
@@ -696,7 +729,7 @@ async def check_naver_token(request: dict = Body(...), db: Session = Depends(get
                 print(f"✅ 기존 토큰 재사용 ({time_until_expiry.total_seconds():.0f}초 남음)")
                 return {
                     "has_valid_token": True,
-                    "access_token": user.naver_access_token,
+                    "access_token": decrypted_access_token,
                     "user_info": user.to_dict()
                 }
 
@@ -720,6 +753,13 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
         if not user or not user.naver_refresh_token:
             raise HTTPException(status_code=404, detail="User not found or no refresh token available")
 
+        # Decrypt tokens from database
+        decrypted_access_token = decrypt_token(user.naver_access_token) if user.naver_access_token else None
+        decrypted_refresh_token = decrypt_token(user.naver_refresh_token) if user.naver_refresh_token else None
+
+        if not decrypted_refresh_token:
+            raise HTTPException(status_code=401, detail="Failed to decrypt Naver refresh token")
+
         # Check if token is expired (with 5-minute buffer)
         if user.naver_token_expires_at:
             # SQLite에서 읽은 datetime을 UTC timezone으로 변환
@@ -731,8 +771,8 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
             if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
                 print(f"✅ 토큰 아직 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
                 return {
-                    "access_token": user.naver_access_token,
-                    "refresh_token": user.naver_refresh_token,
+                    "access_token": decrypted_access_token,
+                    "refresh_token": decrypted_refresh_token,
                     "expires_at": expires_at.isoformat(),
                     "success": True,
                     "refreshed": False
@@ -746,7 +786,7 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
                 'grant_type': 'refresh_token',
                 'client_id': NAVER_CLIENT_ID,
                 'client_secret': NAVER_CLIENT_SECRET,
-                'refresh_token': user.naver_refresh_token
+                'refresh_token': decrypted_refresh_token
             }
         )
 
@@ -756,7 +796,7 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
 
         token_json = token_response.json()
         new_access_token = token_json.get('access_token')
-        new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)  # 새 refresh token이 없으면 기존 것 사용
+        new_refresh_token = token_json.get('refresh_token', decrypted_refresh_token)  # 새 refresh token이 없으면 기존 것 사용
 
         # expires_in을 안전하게 정수로 변환
         try:
@@ -771,9 +811,13 @@ async def refresh_naver_token(request: dict = Body(...), db: Session = Depends(g
         # Calculate new expiration time
         new_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
+        # Encrypt tokens before storing in database
+        encrypted_access_token = encrypt_token(new_access_token) if new_access_token else None
+        encrypted_refresh_token = encrypt_token(new_refresh_token) if new_refresh_token else None
+
         # Update user tokens in database
-        user.naver_access_token = new_access_token
-        user.naver_refresh_token = new_refresh_token
+        user.naver_access_token = encrypted_access_token
+        user.naver_refresh_token = encrypted_refresh_token
         user.naver_token_expires_at = new_expires_at
         db.commit()
 

@@ -9,6 +9,7 @@ from constants import NAVER_DEFAULT_CALENDAR_ID
 from schemas.naver import NaverCalendarRequest
 from database import get_database, User
 from config import settings
+from lib.crypto import encrypt_token, decrypt_token
 
 router = APIRouter()
 
@@ -26,6 +27,16 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
             detail="Naver calendar not linked. Please link your Naver account in settings."
         )
 
+    # Decrypt tokens from database
+    decrypted_access_token = decrypt_token(user.naver_access_token) if user.naver_access_token else None
+    decrypted_refresh_token = decrypt_token(user.naver_refresh_token) if user.naver_refresh_token else None
+
+    if not decrypted_refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Failed to decrypt Naver refresh token. Please re-link your Naver account."
+        )
+
     # Check if token is expired (with 5-minute buffer)
     if user.naver_token_expires_at:
         # SQLite에서 읽은 datetime을 UTC timezone으로 변환
@@ -36,7 +47,7 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
         time_until_expiry = expires_at - datetime.now(timezone.utc)
         if time_until_expiry.total_seconds() > 300:  # More than 5 minutes left
             print(f"✅ 토큰 유효함 ({time_until_expiry.total_seconds():.0f}초 남음)")
-            return user.naver_access_token
+            return decrypted_access_token
 
     # Token expired or about to expire, refresh it
     print(f"🔄 토큰 갱신 필요 (user_id: {user_id})")
@@ -46,7 +57,7 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
             'grant_type': 'refresh_token',
             'client_id': settings.NAVER_CLIENT_ID,
             'client_secret': settings.NAVER_CLIENT_SECRET,
-            'refresh_token': user.naver_refresh_token
+            'refresh_token': decrypted_refresh_token
         }
     )
 
@@ -56,7 +67,7 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
 
     token_json = token_response.json()
     new_access_token = token_json.get('access_token')
-    new_refresh_token = token_json.get('refresh_token', user.naver_refresh_token)
+    new_refresh_token = token_json.get('refresh_token', decrypted_refresh_token)  # 새 refresh token이 없으면 기존 것 사용
 
     # expires_in을 안전하게 정수로 변환
     try:
@@ -68,9 +79,13 @@ async def refresh_naver_token_if_needed(user_id: str, db: Session) -> str:
     if not new_access_token:
         raise HTTPException(status_code=401, detail="No access token received")
 
+    # Encrypt tokens before storing in database
+    encrypted_access_token = encrypt_token(new_access_token) if new_access_token else None
+    encrypted_refresh_token = encrypt_token(new_refresh_token) if new_refresh_token else None
+
     # Update tokens in database
-    user.naver_access_token = new_access_token
-    user.naver_refresh_token = new_refresh_token
+    user.naver_access_token = encrypted_access_token
+    user.naver_refresh_token = encrypted_refresh_token
     user.naver_token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
     db.commit()
 

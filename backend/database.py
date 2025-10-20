@@ -37,15 +37,20 @@ class User(Base):
     # Sample data flag
     has_seen_sample_data = Column(Boolean, nullable=False, default=False)
 
-    # Naver OAuth tokens
-    naver_access_token = Column(String(500), nullable=True)
-    naver_refresh_token = Column(String(500), nullable=True)
+    # Naver OAuth tokens (encrypted)
+    naver_access_token = Column(String(1000), nullable=True)
+    naver_refresh_token = Column(String(1000), nullable=True)
     naver_token_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     # Google OAuth tokens (encrypted)
     google_access_token = Column(String(1000), nullable=True)
     google_refresh_token = Column(String(1000), nullable=True)
     google_token_expires_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Kakao OAuth tokens (encrypted)
+    kakao_access_token = Column(String(1000), nullable=True)
+    kakao_refresh_token = Column(String(1000), nullable=True)
+    kakao_token_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     # Voice recognition training data
     voice_training_data = Column(JSON, nullable=True)
@@ -58,7 +63,7 @@ class User(Base):
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert User model to dictionary"""
+        """Convert User model to dictionary (excludes encrypted tokens for security)"""
         return {
             'id': self.id,
             'auth_provider': self.auth_provider,
@@ -67,12 +72,8 @@ class User(Base):
             'name': self.name,
             'is_admin': self.is_admin,
             'has_seen_sample_data': self.has_seen_sample_data,
-            'naver_access_token': self.naver_access_token,
-            'naver_refresh_token': self.naver_refresh_token,
-            'naver_token_expires_at': self.naver_token_expires_at.isoformat() if self.naver_token_expires_at else None,
-            'google_access_token': self.google_access_token,
-            'google_refresh_token': self.google_refresh_token,
-            'google_token_expires_at': self.google_token_expires_at.isoformat() if self.google_token_expires_at else None,
+            # OAuth tokens are encrypted and stored in DB but NOT exposed in API responses
+            # Use dedicated endpoints like /auth/{provider}/check or /auth/{provider}/refresh
             'voice_training_data': self.voice_training_data,
             'ui_settings': self.ui_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
