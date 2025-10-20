@@ -219,3 +219,50 @@ app.include_router(backup.router, tags=["Backup"])
 
 # Static pages routes
 app.include_router(pages.router, tags=["Pages"])
+
+
+# === TEMPORARY MIGRATION ENDPOINT ===
+# TODO: Remove this after running once
+@app.get("/admin/migrate-tokens")
+async def migrate_token_columns(db: Session = Depends(get_database)):
+    """
+    One-time migration: Add kakao token columns and resize naver token columns
+    WARNING: This endpoint will be removed after use
+    """
+    try:
+        from sqlalchemy import text
+
+        migrations = [
+            ("Add kakao_access_token",
+             "ALTER TABLE users ADD COLUMN IF NOT EXISTS kakao_access_token VARCHAR(1000);"),
+            ("Add kakao_refresh_token",
+             "ALTER TABLE users ADD COLUMN IF NOT EXISTS kakao_refresh_token VARCHAR(1000);"),
+            ("Add kakao_token_expires_at",
+             "ALTER TABLE users ADD COLUMN IF NOT EXISTS kakao_token_expires_at TIMESTAMP WITH TIME ZONE;"),
+            ("Resize naver_access_token",
+             "ALTER TABLE users ALTER COLUMN naver_access_token TYPE VARCHAR(1000);"),
+            ("Resize naver_refresh_token",
+             "ALTER TABLE users ALTER COLUMN naver_refresh_token TYPE VARCHAR(1000);"),
+        ]
+
+        results = []
+        for description, sql in migrations:
+            try:
+                db.execute(text(sql))
+                db.commit()
+                results.append({"migration": description, "status": "SUCCESS"})
+            except Exception as e:
+                db.rollback()
+                results.append({"migration": description, "status": "FAILED", "error": str(e)})
+
+        return {
+            "success": True,
+            "message": "Migration completed",
+            "results": results
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
