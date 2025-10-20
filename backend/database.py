@@ -556,6 +556,31 @@ def run_migrations():
                 'name': 'google_token_expires_at column in users',
                 'check_query': 'SELECT google_token_expires_at FROM users LIMIT 1',
                 'alter_query': 'ALTER TABLE users ADD COLUMN google_token_expires_at TIMESTAMP WITH TIME ZONE'
+            },
+            {
+                'name': 'kakao_access_token column in users',
+                'check_query': 'SELECT kakao_access_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN kakao_access_token VARCHAR(1000)'
+            },
+            {
+                'name': 'kakao_refresh_token column in users',
+                'check_query': 'SELECT kakao_refresh_token FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN kakao_refresh_token VARCHAR(1000)'
+            },
+            {
+                'name': 'kakao_token_expires_at column in users',
+                'check_query': 'SELECT kakao_token_expires_at FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN kakao_token_expires_at TIMESTAMP WITH TIME ZONE'
+            },
+            {
+                'name': 'resize naver_access_token to VARCHAR(1000)',
+                'check_query': 'SELECT 1',  # Always run, ALTER will be idempotent
+                'alter_query': 'ALTER TABLE users ALTER COLUMN naver_access_token TYPE VARCHAR(1000)'
+            },
+            {
+                'name': 'resize naver_refresh_token to VARCHAR(1000)',
+                'check_query': 'SELECT 1',  # Always run, ALTER will be idempotent
+                'alter_query': 'ALTER TABLE users ALTER COLUMN naver_refresh_token TYPE VARCHAR(1000)'
             }
         ]
 
