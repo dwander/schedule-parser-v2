@@ -105,6 +105,7 @@ export function useRestoreSchedule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
       queryClient.invalidateQueries({ queryKey: ['trash'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'], exact: false, refetchType: 'all' })
     },
   })
 }
@@ -139,6 +140,7 @@ export function useRestoreAllTrash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] })
       queryClient.invalidateQueries({ queryKey: ['trash'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'], exact: false, refetchType: 'all' })
     },
   })
 }
