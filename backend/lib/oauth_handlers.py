@@ -201,6 +201,10 @@ class OAuthHandler(ABC):
         if not refresh_token:
             raise ValueError(f"No {provider_name} refresh token available")
 
+        # Timezone 처리 (SQLite에서 읽은 datetime은 naive일 수 있음)
+        if expires_at and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
         # 토큰 유효성 확인
         if self.is_token_valid(expires_at):
             time_left = (expires_at - datetime.now(timezone.utc)).total_seconds()
