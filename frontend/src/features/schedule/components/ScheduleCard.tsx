@@ -41,7 +41,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration, brandShortcuts, locationShortcuts } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -219,8 +219,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
   // 폴더명 생성 및 클립보드 복사
   const handleFolderCopy = async () => {
-    // 설정된 포맷으로 폴더명 생성
-    const folderName = generateFolderName(schedule, folderNameFormat)
+    // 설정된 포맷으로 폴더명 생성 (단축어 적용)
+    const folderName = generateFolderName(schedule, folderNameFormat, brandShortcuts, locationShortcuts)
 
     // 클립보드 복사
     try {

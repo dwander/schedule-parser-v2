@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose, Plus, X } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
@@ -28,6 +28,14 @@ type SettingSection = 'appearance' | 'calendar-sync' | 'folder-sync' | 'others'
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
   const [naverLinkConfirmOpen, setNaverLinkConfirmOpen] = useState(false)
+
+  // 브랜드 단축어 입력 상태
+  const [newBrandOriginal, setNewBrandOriginal] = useState('')
+  const [newBrandShortcut, setNewBrandShortcut] = useState('')
+
+  // 장소 단축어 입력 상태
+  const [newLocationOriginal, setNewLocationOriginal] = useState('')
+  const [newLocationShortcut, setNewLocationShortcut] = useState('')
 
   const {
     theme,
@@ -46,6 +54,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setFolderNameFormat,
     calendarEventDuration,
     setCalendarEventDuration,
+    brandShortcuts,
+    addBrandShortcut,
+    removeBrandShortcut,
+    locationShortcuts,
+    addLocationShortcut,
+    removeLocationShortcut,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
@@ -77,12 +91,46 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     toast.success('네이버 캘린더 연동이 해제되었습니다')
   }
 
+  const handleAddBrandShortcut = () => {
+    if (!newBrandOriginal.trim()) {
+      toast.error('원본 브랜드명을 입력해주세요')
+      return
+    }
+    const shortcut = newBrandShortcut.trim()
+    addBrandShortcut(newBrandOriginal.trim(), shortcut)
+    setNewBrandOriginal('')
+    setNewBrandShortcut('')
+
+    if (shortcut === '') {
+      toast.success('브랜드가 폴더명에서 제외되도록 설정되었습니다')
+    } else {
+      toast.success('브랜드 단축어가 추가되었습니다')
+    }
+  }
+
+  const handleAddLocationShortcut = () => {
+    if (!newLocationOriginal.trim()) {
+      toast.error('원본 장소명을 입력해주세요')
+      return
+    }
+    const shortcut = newLocationShortcut.trim()
+    addLocationShortcut(newLocationOriginal.trim(), shortcut)
+    setNewLocationOriginal('')
+    setNewLocationShortcut('')
+
+    if (shortcut === '') {
+      toast.success('장소가 폴더명에서 제외되도록 설정되었습니다')
+    } else {
+      toast.success('장소 단축어가 추가되었습니다')
+    }
+  }
+
   const isNaverCalendarLinked = !!user?.naverAccessToken
 
   const sections = [
     { id: 'appearance' as SettingSection, label: '외관', icon: Palette },
-    { id: 'calendar-sync' as SettingSection, label: '캘린더 동기화', icon: CalendarCheck },
-    { id: 'folder-sync' as SettingSection, label: '폴더 동기화', icon: FolderCheck },
+    { id: 'calendar-sync' as SettingSection, label: '캘린더 연동', icon: CalendarCheck },
+    { id: 'folder-sync' as SettingSection, label: '폴더명 복사', icon: FolderCheck },
     { id: 'others' as SettingSection, label: '기타', icon: Settings },
   ]
 
@@ -180,10 +228,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           )}
 
-          {/* 캘린더 동기화 Section */}
+          {/* 캘린더 연동 Section */}
           {activeSection === 'calendar-sync' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-foreground">캘린더 동기화</h2>
+              <h2 className="text-lg font-semibold text-foreground">캘린더 연동</h2>
 
               {/* 캘린더 연동 */}
               <div className="space-y-4">
@@ -360,10 +408,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           )}
 
-          {/* 폴더 동기화 Section */}
+          {/* 폴더명 복사 Section */}
           {activeSection === 'folder-sync' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-foreground">폴더 동기화</h2>
+              <h2 className="text-lg font-semibold text-foreground">폴더명 복사</h2>
 
               {/* 폴더명 포맷 */}
               <div className="space-y-4">
@@ -413,6 +461,132 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   <p className="text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">예시:</span> 브랜드A 2025.10.11 14시 예식장명(신랑 신부)
                   </p>
+                </div>
+              </div>
+
+              {/* 브랜드 단축어 */}
+              <div className="space-y-4 pt-6 border-t">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">브랜드 단축어</h3>
+                  <p className="text-xs text-muted-foreground">
+                    브랜드명을 짧은 단어로 변환합니다. [BRAND] 키워드에 적용됩니다.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">팁:</span> 단축어를 입력하지 않으면 폴더명에서 해당 브랜드를 제외합니다.
+                  </p>
+                </div>
+
+                {/* 기존 단축어 목록 */}
+                {Object.keys(brandShortcuts).length > 0 && (
+                  <div className="space-y-2">
+                    {Object.entries(brandShortcuts).map(([original, shortcut]) => (
+                      <div key={original} className="flex items-center gap-2 p-2 rounded border border-border/50 bg-muted/30">
+                        <span className="text-sm flex-1">{original}</span>
+                        <span className="text-sm text-muted-foreground">→</span>
+                        <span className="text-sm font-medium">{shortcut || '(제외)'}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 flex-shrink-0"
+                          onClick={() => {
+                            removeBrandShortcut(original)
+                            toast.success('브랜드 단축어가 삭제되었습니다')
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 새 단축어 추가 */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="원본 브랜드명 (예: 로맨틱스튜디오)"
+                    value={newBrandOriginal}
+                    onChange={(e) => setNewBrandOriginal(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddBrandShortcut()}
+                    className="text-sm"
+                  />
+                  <Input
+                    placeholder="단축어 (선택사항, 예: 로맨)"
+                    value={newBrandShortcut}
+                    onChange={(e) => setNewBrandShortcut(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddBrandShortcut()}
+                    className="text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleAddBrandShortcut}
+                    className="flex-shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* 장소 단축어 */}
+              <div className="space-y-4 pt-6 border-t">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">장소 단축어</h3>
+                  <p className="text-xs text-muted-foreground">
+                    장소명을 짧은 단어로 변환합니다. [LOCATION] 키워드에 적용됩니다.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">팁:</span> 단축어를 입력하지 않으면 폴더명에서 해당 장소를 제외합니다.
+                  </p>
+                </div>
+
+                {/* 기존 단축어 목록 */}
+                {Object.keys(locationShortcuts).length > 0 && (
+                  <div className="space-y-2">
+                    {Object.entries(locationShortcuts).map(([original, shortcut]) => (
+                      <div key={original} className="flex items-center gap-2 p-2 rounded border border-border/50 bg-muted/30">
+                        <span className="text-sm flex-1">{original}</span>
+                        <span className="text-sm text-muted-foreground">→</span>
+                        <span className="text-sm font-medium">{shortcut || '(제외)'}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 flex-shrink-0"
+                          onClick={() => {
+                            removeLocationShortcut(original)
+                            toast.success('장소 단축어가 삭제되었습니다')
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 새 단축어 추가 */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="원본 장소명 (예: 대명아트홀웨딩컨벤션)"
+                    value={newLocationOriginal}
+                    onChange={(e) => setNewLocationOriginal(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddLocationShortcut()}
+                    className="text-sm"
+                  />
+                  <Input
+                    placeholder="단축어 (선택사항, 예: 대명)"
+                    value={newLocationShortcut}
+                    onChange={(e) => setNewLocationShortcut(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddLocationShortcut()}
+                    className="text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleAddLocationShortcut}
+                    className="flex-shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>

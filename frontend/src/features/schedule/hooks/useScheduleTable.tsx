@@ -66,6 +66,8 @@ export function useScheduleTable(
 
   // 폴더명 포맷 설정
   const folderNameFormat = useSettingsStore((state) => state.folderNameFormat)
+  const brandShortcuts = useSettingsStore((state) => state.brandShortcuts)
+  const locationShortcuts = useSettingsStore((state) => state.locationShortcuts)
 
   // 컬럼 라벨 변경 핸들러 (로컬 store + DB 저장)
   const handleSetColumnLabel = useCallback((columnId: keyof typeof columnLabels, label: string) => {
@@ -451,7 +453,7 @@ export function useScheduleTable(
           const schedule = info.row.original
 
           const handleFolderCopy = async () => {
-            const folderName = generateFolderName(schedule, folderNameFormat)
+            const folderName = generateFolderName(schedule, folderNameFormat, brandShortcuts, locationShortcuts)
 
             // 클립보드 복사
             try {
