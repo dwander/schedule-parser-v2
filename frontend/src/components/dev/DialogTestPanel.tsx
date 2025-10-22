@@ -12,11 +12,11 @@ import { ErrorMessage } from '@/components/common/ErrorMessage'
 import { EmptyState } from '@/components/common/EmptyState'
 import { FolderSyncModal } from '@/features/sync/components/FolderSyncModal'
 import { PricingRuleDialog } from '@/features/pricing/components/PricingRuleDialog'
-import { useSettingsStore } from '@/stores/useSettingsStore'
 import { Moon, Sun, Power, PowerOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { UI_TIMERS } from '@/lib/constants/timing'
 import { logger } from '@/lib/utils/logger'
+import { useTheme } from 'next-themes'
 
 export function DialogTestPanel() {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -32,7 +32,7 @@ export function DialogTestPanel() {
   const [contentModalToggle, setContentModalToggle] = useState(false)
   const [name, setName] = useState('')
   const [swEnabled, setSwEnabled] = useState(false)
-  const { theme, setTheme } = useSettingsStore()
+  const { theme, setTheme } = useTheme()
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'

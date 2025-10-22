@@ -1,38 +1,14 @@
 import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes'
-import { ReactNode, useEffect, useRef } from 'react'
-import { useSettingsStore } from '@/stores/useSettingsStore'
+import { ReactNode, useEffect } from 'react'
 
 interface ThemeProviderProps {
   children: ReactNode
 }
 
-// useSettingsStore <-> next-themes 양방향 동기화
-function ThemeSynchronizer() {
-  const { theme: nextTheme, setTheme: setNextTheme, resolvedTheme } = useTheme()
-  const { theme: storeTheme, setTheme: setStoreTheme } = useSettingsStore()
-  const isSyncingRef = useRef(false)
+// 테마 변경 시 OS 상태바 색상 업데이트
+function ThemeColorSync() {
+  const { resolvedTheme } = useTheme()
 
-  // Settings 모달에서 변경 -> next-themes 반영
-  useEffect(() => {
-    if (isSyncingRef.current) return
-    if (storeTheme && nextTheme && storeTheme !== nextTheme) {
-      isSyncingRef.current = true
-      setNextTheme(storeTheme)
-      setTimeout(() => { isSyncingRef.current = false }, 0)
-    }
-  }, [storeTheme, nextTheme, setNextTheme])
-
-  // ScheduleTable 드롭다운에서 변경 -> useSettingsStore 반영
-  useEffect(() => {
-    if (isSyncingRef.current) return
-    if (nextTheme && storeTheme && nextTheme !== storeTheme) {
-      isSyncingRef.current = true
-      setStoreTheme(nextTheme as 'light' | 'dark' | 'system')
-      setTimeout(() => { isSyncingRef.current = false }, 0)
-    }
-  }, [nextTheme, storeTheme, setStoreTheme])
-
-  // 테마 변경 시 OS 상태바 색상 업데이트
   useEffect(() => {
     if (!resolvedTheme) return
 
@@ -48,16 +24,14 @@ function ThemeSynchronizer() {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const theme = useSettingsStore((state) => state.theme)
-
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme={theme}
+      defaultTheme="system"
       enableSystem
       storageKey="app-theme"
     >
-      <ThemeSynchronizer />
+      <ThemeColorSync />
       {children}
     </NextThemesProvider>
   )

@@ -17,6 +17,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
 import { toast } from 'sonner'
+import { useTheme } from 'next-themes'
 
 interface SettingsDialogProps {
   open: boolean
@@ -30,8 +31,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [naverLinkConfirmOpen, setNaverLinkConfirmOpen] = useState(false)
 
   const {
-    theme,
-    setTheme,
     fontSize,
     setFontSize,
     weekStartsOn,
@@ -47,6 +46,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     calendarEventDuration,
     setCalendarEventDuration,
   } = useSettingsStore()
+  const { theme, setTheme } = useTheme()
   const { user, removeNaverToken } = useAuthStore()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 

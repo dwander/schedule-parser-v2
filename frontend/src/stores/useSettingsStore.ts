@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type Theme = 'light' | 'dark' | 'system'
-
 export type DateRangePreset =
   | 'today'
   | 'thisWeek'
@@ -54,9 +52,7 @@ export interface ColumnLabels {
 }
 
 interface SettingsState {
-  // 테마
-  theme: Theme
-  setTheme: (theme: Theme) => void
+  // 테마는 next-themes에서 관리하므로 제거됨
 
   // 글꼴 크기 (12px ~ 24px, 기본 16px) - html root font-size
   fontSize: number
@@ -147,7 +143,6 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       // 기본값
-      theme: 'system',
       fontSize: 16,
       priceMode: 'total',
       priceExpanded: false,
@@ -218,7 +213,6 @@ export const useSettingsStore = create<SettingsState>()(
       dateRangePresetsOpen: false, // 기본값: 닫힌 상태
 
       // Actions
-      setTheme: (theme) => set({ theme }),
       setFontSize: (size) => set({ fontSize: size }),
       setPriceMode: (mode) => set({ priceMode: mode }),
       setPriceExpanded: (expanded) => set({ priceExpanded: expanded }),
