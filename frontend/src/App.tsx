@@ -13,6 +13,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules, useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useUiSettings } from '@/features/auth/hooks/useUsers'
+import { useSettingsSync } from '@/features/settings/hooks/useUserSettings'
 import { useState, useMemo, useEffect } from 'react'
 import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedules'
 import { markSampleDataSeen } from '@/lib/api/sampleData'
@@ -40,6 +41,10 @@ function AppContent() {
       enableStrictDateParsing()
     }
   }, [])
+
+  // 사용자 설정 동기화 (DB ↔ Zustand)
+  useSettingsSync()
+
   const [parserOpen, setParserOpen] = useState(false)
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
