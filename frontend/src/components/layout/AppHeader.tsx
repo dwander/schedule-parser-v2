@@ -92,7 +92,7 @@ export function AppHeader({ onAddClick, onFolderSyncClick, onBackupRestoreClick,
               value={localFilter}
               onChange={(e) => setLocalFilter(e.target.value)}
               placeholder="스케줄 검색..."
-              className="w-full h-9 pl-9 pr-4 rounded-full border border-input bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full h-9 pl-9 pr-4 rounded-full border border-input bg-background shadow-sm hover:bg-accent/5 hover:border-primary/30 hover:shadow-lg transition-all text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background"
             />
           </div>
         </div>
