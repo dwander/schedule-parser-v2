@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Palette, RefreshCw, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
@@ -23,7 +23,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-type SettingSection = 'appearance' | 'integration' | 'others'
+type SettingSection = 'appearance' | 'calendar-sync' | 'folder-sync' | 'others'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
@@ -81,7 +81,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   const sections = [
     { id: 'appearance' as SettingSection, label: '외관', icon: Palette },
-    { id: 'integration' as SettingSection, label: '동기화', icon: RefreshCw },
+    { id: 'calendar-sync' as SettingSection, label: '캘린더 동기화', icon: CalendarCheck },
+    { id: 'folder-sync' as SettingSection, label: '폴더 동기화', icon: FolderCheck },
     { id: 'others' as SettingSection, label: '기타', icon: Settings },
   ]
 
@@ -179,10 +180,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           )}
 
-          {/* 동기화 Section */}
-          {activeSection === 'integration' && (
+          {/* 캘린더 동기화 Section */}
+          {activeSection === 'calendar-sync' && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-foreground">동기화</h2>
+              <h2 className="text-lg font-semibold text-foreground">캘린더 동기화</h2>
 
               {/* 캘린더 연동 */}
               <div className="space-y-4">
@@ -356,9 +357,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Select>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 폴더 동기화 Section */}
+          {activeSection === 'folder-sync' && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-foreground">폴더 동기화</h2>
 
               {/* 폴더명 포맷 */}
-              <div className="space-y-4 pt-6 border-t">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-foreground">폴더명 포맷</h3>
                   <p className="text-xs text-muted-foreground">
