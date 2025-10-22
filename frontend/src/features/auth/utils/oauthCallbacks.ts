@@ -113,8 +113,14 @@ export async function handleOAuthCallback(
     const payload: Record<string, string> = { code }
 
     if (provider === 'google') {
-      // Google은 redirect_uri 필요
-      payload.redirect_uri = `${window.location.origin}/auth/google/callback`
+      // Google은 redirect_uri 필요 (모드에 따라 다른 경로)
+      const redirectPath = mode === 'calendar' ? '/auth/google/calendar/callback' : '/auth/google/callback'
+      payload.redirect_uri = `${window.location.origin}${redirectPath}`
+
+      // 캘린더 모드일 때 state 포함
+      if (mode === 'calendar' && state) {
+        payload.state = state
+      }
     } else if (provider === 'naver' && state) {
       // Naver는 state 필요
       payload.state = state
@@ -162,6 +168,7 @@ export const OAUTH_CALLBACK_ROUTES: Record<
   { provider: OAuthProvider; mode: OAuthCallbackMode }
 > = {
   '/auth/google/callback': { provider: 'google', mode: 'login' },
+  '/auth/google/calendar/callback': { provider: 'google', mode: 'calendar' },
   '/auth/naver/callback': { provider: 'naver', mode: 'login' },
   '/auth/kakao/callback': { provider: 'kakao', mode: 'login' },
   '/auth/naver/calendar/callback': { provider: 'naver', mode: 'calendar' },

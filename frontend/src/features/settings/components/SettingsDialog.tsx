@@ -16,6 +16,7 @@ import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftO
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
+import { startGoogleCalendarLink } from '@/features/calendar/utils/googleCalendarAuth'
 import { useUpdateUserSettings } from '@/features/settings/hooks/useUserSettings'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
@@ -60,7 +61,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setLocationShortcuts,
   } = useSettingsStore()
   const { theme, setTheme } = useTheme()
-  const { user, removeNaverToken } = useAuthStore()
+  const { user, removeNaverToken, removeGoogleToken } = useAuthStore()
   const updateSettingsMutation = useUpdateUserSettings()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 
@@ -89,6 +90,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const handleNaverCalendarUnlink = () => {
     removeNaverToken()
     toast.success('네이버 캘린더 연동이 해제되었습니다')
+  }
+
+  const handleGoogleCalendarLink = async () => {
+    await startGoogleCalendarLink()
+  }
+
+  const handleGoogleCalendarUnlink = () => {
+    removeGoogleToken()
+    toast.success('구글 캘린더 연동이 해제되었습니다')
   }
 
   const handleAddBrandShortcut = () => {
@@ -202,6 +212,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }
 
   const isNaverCalendarLinked = !!user?.naverAccessToken
+  const isGoogleCalendarLinked = !!user?.googleAccessToken
 
   const sections = [
     { id: 'appearance' as SettingSection, label: '외관', icon: Palette },
@@ -316,7 +327,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-3">
                     <Checkbox
                       id="google-calendar"
                       checked={enabledCalendars.google}
@@ -330,6 +341,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     >
                       구글 캘린더
                     </label>
+                    {isGoogleCalendarLinked ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGoogleCalendarUnlink}
+                      >
+                        <Unlink className="mr-2 h-4 w-4" />
+                        연동 해제
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGoogleCalendarLink}
+                      >
+                        <Link className="mr-2 h-4 w-4" />
+                        연동
+                      </Button>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <Checkbox

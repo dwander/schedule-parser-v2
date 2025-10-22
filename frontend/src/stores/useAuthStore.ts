@@ -11,6 +11,8 @@ export interface User {
   hasSeenSampleData?: boolean
   naverAccessToken?: string
   naverRefreshToken?: string
+  googleAccessToken?: string
+  googleRefreshToken?: string
 }
 
 interface AuthState {
@@ -22,6 +24,8 @@ interface AuthState {
   logout: () => void
   updateNaverToken: (accessToken: string, refreshToken: string) => void
   removeNaverToken: () => void
+  updateGoogleToken: (accessToken: string, refreshToken: string) => void
+  removeGoogleToken: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -59,6 +63,18 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user
             ? { ...state.user, naverAccessToken: undefined, naverRefreshToken: undefined }
+            : null,
+        })),
+      updateGoogleToken: (accessToken, refreshToken) =>
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, googleAccessToken: accessToken, googleRefreshToken: refreshToken }
+            : null,
+        })),
+      removeGoogleToken: () =>
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, googleAccessToken: undefined, googleRefreshToken: undefined }
             : null,
         })),
     }),

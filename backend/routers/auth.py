@@ -64,6 +64,21 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         print(f"🔑 받은 인증 코드: {auth_request.code[:20]}...")
         print(f"🔗 사용할 redirect_uri: {redirect_uri}")
 
+        # Parse state to extract user_id (for calendar linking)
+        import base64
+        import json
+        target_user_id = None
+        if auth_request.state:
+            try:
+                state_data = json.loads(base64.b64decode(auth_request.state))
+                target_user_id = state_data.get('user_id')
+                print(f"🔗 캘린더 연동 모드: 타겟 사용자 ID = {target_user_id}")
+            except (ValueError, json.JSONDecodeError, Exception):
+                target_user_id = None
+                print(f"👤 일반 로그인 모드")
+        else:
+            print(f"👤 일반 로그인 모드 (state 없음)")
+
         # Step 1: Exchange authorization code for access token
         token_url = "https://oauth2.googleapis.com/token"
         token_data = {
@@ -107,15 +122,40 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
 
         user_data = user_response.json()
 
+        # Encrypt tokens before storing
+        encrypted_access_token = encrypt_token(access_token) if access_token else None
+        encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
+
+        # 캘린더 연동 모드: target_user_id가 있으면 그 사용자에게 토큰 추가
+        if target_user_id:
+            print(f"📎 캘린더 연동 모드: {target_user_id}에 구글 캘린더 토큰 추가")
+            target_user = db.query(User).filter(User.id == target_user_id).first()
+            if not target_user:
+                raise HTTPException(status_code=404, detail=f"Target user not found: {target_user_id}")
+
+            # 토큰만 업데이트 (사용자 정보는 변경하지 않음)
+            target_user.google_access_token = encrypted_access_token
+            target_user.google_refresh_token = encrypted_refresh_token
+            target_user.google_token_expires_at = token_expires_at
+            db.commit()
+
+            print(f"✅ 구글 캘린더 연동 완료: {target_user.name} ({target_user.email})")
+            print(f"🔐 구글 토큰 암호화 저장 완료 (만료: {token_expires_at.isoformat()})")
+
+            return {
+                "id": target_user.id,
+                "name": target_user.name,
+                "email": target_user.email,
+                "access_token": access_token,
+                "refresh_token": refresh_token
+            }
+
+        # 일반 로그인 모드: 기존 로직
         # Save or update user in database
         user_id = f"google_{user_data.get('id')}"
         google_id = user_data.get('id')
 
         existing_user = db.query(User).filter(User.id == user_id).first()
-
-        # Encrypt tokens before storing
-        encrypted_access_token = encrypt_token(access_token) if access_token else None
-        encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
 
         if existing_user:
             # Update existing user (is_admin 값은 유지)
@@ -840,3 +880,67 @@ async def add_naver_calendar(request: NaverCalendarRequest, db: Session = Depend
     except Exception as e:
         print(f"❌ 네이버 캘린더 추가 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to add to Naver Calendar: {str(e)}")
+
+
+# --- Google Calendar Integration ---
+
+@router.post("/api/calendar/google")
+async def add_google_calendar(request: dict = Body(...), db: Session = Depends(get_database)):
+    """Add schedule to Google Calendar via API with automatic token refresh."""
+    try:
+        # Parse request
+        from schemas.google import GoogleCalendarRequest
+        calendar_request = GoogleCalendarRequest(**request)
+
+        # 핸들러 사용하여 자동 토큰 갱신
+        handler = GoogleOAuthHandler(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+        valid_access_token, _ = handler.refresh_token_if_needed(calendar_request.user_id, db)
+
+        # Google Calendar API v3 endpoint
+        calendar_url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+
+        headers = {
+            'Authorization': f'Bearer {valid_access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        # Create event body (Google Calendar API format)
+        event_body = {
+            "summary": calendar_request.subject,
+            "location": calendar_request.location,
+            "description": calendar_request.description or "",
+            "start": {
+                "dateTime": calendar_request.start_datetime,
+                "timeZone": "Asia/Seoul"
+            },
+            "end": {
+                "dateTime": calendar_request.end_datetime,
+                "timeZone": "Asia/Seoul"
+            }
+        }
+
+        print(f"📅 구글 캘린더 이벤트 생성: {event_body['summary']}")
+        print(f"📅 시작: {event_body['start']['dateTime']}, 종료: {event_body['end']['dateTime']}")
+
+        response = requests.post(calendar_url, headers=headers, json=event_body)
+
+        print(f"📅 구글 캘린더 API 응답: {response.status_code}")
+        if not response.ok:
+            print(f"📅 응답 내용: {response.text}")
+
+        if not response.ok:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Google Calendar API error: {response.text}"
+            )
+
+        result = response.json()
+        return result
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"❌ 구글 캘린더 추가 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to add to Google Calendar: {str(e)}")

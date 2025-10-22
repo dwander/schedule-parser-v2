@@ -48,42 +48,73 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [importantMemoOpen, setImportantMemoOpen] = useState(false)
   const [naverCalendarConfirmOpen, setNaverCalendarConfirmOpen] = useState(false)
   const [naverDisabledPromptOpen, setNaverDisabledPromptOpen] = useState(false)
+  const [googleDisabledPromptOpen, setGoogleDisabledPromptOpen] = useState(false)
   const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
   const [appleCredentialsPromptOpen, setAppleCredentialsPromptOpen] = useState(false)
 
-  // 구글 캘린더 URL 생성 함수
-  const generateGoogleCalendarUrl = () => {
-    // 날짜: "2025.04.05" → "20250405"
-    const dateStr = schedule.date.replace(/\./g, '')
-
-    // 시간: 설정된 오프셋 적용
-    const [hours, minutes] = schedule.time.split(':').map(Number)
-    const startHour = String(hours + calendarEventDuration.startOffset).padStart(2, '0')
-    const endHour = String(hours + calendarEventDuration.endOffset).padStart(2, '0')
-    const minuteStr = String(minutes).padStart(2, '0')
-
-    // ISO 8601 형식: 20250405T140000/20250405T150000
-    const startDateTime = `${dateStr}T${startHour}${minuteStr}00`
-    const endDateTime = `${dateStr}T${endHour}${minuteStr}00`
-
-    // URL 파라미터 생성
-    const params = new URLSearchParams({
-      action: 'TEMPLATE',
-      text: `${schedule.location} - ${schedule.couple}`,
-      dates: `${startDateTime}/${endDateTime}`,
-      location: schedule.location,
-    })
-
-    if (schedule.memo) {
-      params.append('details', schedule.memo)
+  const handleGoogleCalendarClick = () => {
+    // 구글 캘린더 연동 여부 확인
+    if (!user?.googleAccessToken) {
+      setGoogleDisabledPromptOpen(true)
+      return
     }
 
-    return `https://calendar.google.com/calendar/render?${params.toString()}`
+    // 바로 실행 (네이버와 달리 확인 다이얼로그 없이 바로 실행)
+    handleGoogleCalendarConfirm()
   }
 
-  const handleGoogleCalendar = () => {
-    const url = generateGoogleCalendarUrl()
-    window.open(url, '_blank')
+  const handleGoogleCalendarConfirm = async () => {
+    if (!user?.id) return
+
+    try {
+      // 날짜/시간 파싱
+      const [year, month, day] = schedule.date.split('.').map(Number)
+      const [hours, minutes] = schedule.time.split(':').map(Number)
+
+      // 시작/종료 시간 (설정된 오프셋 적용)
+      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
+      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
+
+      // ISO 8601 형식 with timezone (+09:00)
+      const formatISO = (date: Date) => {
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const d = String(date.getDate()).padStart(2, '0')
+        const h = String(date.getHours()).padStart(2, '0')
+        const min = String(date.getMinutes()).padStart(2, '0')
+        return `${y}-${m}-${d}T${h}:${min}:00+09:00`
+      }
+
+      // 백엔드를 통해 구글 캘린더 API 호출 (백엔드가 DB에서 토큰 자동 갱신)
+      const apiUrl = getApiUrl()
+      await axios.post(
+        `${apiUrl}/api/calendar/google`,
+        {
+          user_id: user.id,
+          subject: `${schedule.location} - ${schedule.couple}`,
+          location: schedule.location,
+          start_datetime: formatISO(startDate),
+          end_datetime: formatISO(endDate),
+          description: schedule.memo || ''
+        }
+      )
+
+      toast.success('구글 캘린더에 일정이 추가되었습니다')
+    } catch (error: unknown) {
+      logger.error('구글 캘린더 추가 실패:', error)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { detail?: string }, status?: number } }
+        if (axiosError.response?.status === 401) {
+          toast.error('구글 캘린더 연동이 필요합니다. 설정에서 연동해주세요.')
+        } else if (axiosError.response?.status === 403) {
+          toast.error('API 할당량이 초과되었습니다. 잠시 후 다시 시도해주세요.')
+        } else {
+          toast.error(axiosError.response?.data?.detail || '구글 캘린더 추가에 실패했습니다')
+        }
+      } else {
+        toast.error('구글 캘린더 추가에 실패했습니다')
+      }
+    }
   }
 
   const handleNaverCalendarClick = () => {
@@ -511,7 +542,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       variant="outline"
                       size="icon"
                       className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                      onClick={handleGoogleCalendar}
+                      onClick={handleGoogleCalendarClick}
                       title="구글 캘린더"
                     >
                       <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
@@ -566,7 +597,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                         size="icon"
                         className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
                         style={{ transitionDelay: '0ms' }}
-                        onClick={handleGoogleCalendar}
+                        onClick={handleGoogleCalendarClick}
                         title="구글 캘린더"
                       >
                         <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
@@ -731,6 +762,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         onOpenChange={setNaverDisabledPromptOpen}
         title="네이버 캘린더 연동 필요"
         description="네이버 캘린더에 일정을 추가하려면 설정 메뉴에서 네이버 계정을 연동해주세요."
+      />
+
+      {/* Google Calendar Disabled Prompt Dialog */}
+      <AlertDialog
+        open={googleDisabledPromptOpen}
+        onOpenChange={setGoogleDisabledPromptOpen}
+        title="구글 캘린더 연동 필요"
+        description="구글 캘린더에 일정을 추가하려면 설정 메뉴에서 구글 계정을 연동해주세요."
       />
 
       {/* Apple Calendar Credentials Prompt Dialog */}
