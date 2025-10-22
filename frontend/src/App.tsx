@@ -13,18 +13,24 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules, useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useUiSettings } from '@/features/auth/hooks/useUsers'
+import { useSettingsSync } from '@/features/settings/hooks/useUserSettings'
 import { useState, useMemo, useEffect } from 'react'
 import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedules'
 import { markSampleDataSeen } from '@/lib/api/sampleData'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
-import { getApiUrl } from '@/lib/constants/api'
 import { ScrollButtons } from '@/components/common/ScrollButtons'
 import { APP_STORAGE_KEYS } from '@/lib/constants/storage'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { fetchConfig } from '@/lib/api/config'
-import axios from 'axios'
 import { toast } from 'sonner'
+import {
+  getCallbackRoute,
+  handleOAuthCallback,
+  extractCallbackParams,
+  OAuthCallbackError,
+} from '@/features/auth/utils/oauthCallbacks'
+import { getProviderName } from '@/features/auth/utils/oauthProviders'
 import { enableStrictDateParsing } from '@/lib/utils/safariDatePolyfill'
 import { calculateDateRangeFromPreset } from '@/lib/utils/datePresets'
 import { logger } from '@/lib/utils/logger'
@@ -36,6 +42,10 @@ function AppContent() {
       enableStrictDateParsing()
     }
   }, [])
+
+  // 사용자 설정 동기화 (DB ↔ Zustand)
+  useSettingsSync()
+
   const [parserOpen, setParserOpen] = useState(false)
   const [folderSyncOpen, setFolderSyncOpen] = useState(false)
   const [backupRestoreOpen, setBackupRestoreOpen] = useState(false)
@@ -55,179 +65,74 @@ function AppContent() {
     return !user && !localStorage.getItem(APP_STORAGE_KEYS.SKIP_LANDING)
   })
 
-  // 구글 로그인 callback 처리
+  // 통합 OAuth 콜백 처리 (Google, Naver, Kakao)
   useEffect(() => {
-    const handleGoogleCallback = async () => {
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      const path = window.location.pathname
+    const handleOAuthCallbacks = async () => {
+      const pathname = window.location.pathname
+      const searchParams = new URLSearchParams(window.location.search)
+      const { code, state } = extractCallbackParams(searchParams)
 
-      if (path === '/auth/google/callback' && code) {
-        // 중복 실행 방지: 즉시 URL에서 code 제거
-        window.history.replaceState({}, '', '/')
+      // OAuth 콜백 경로인지 확인
+      const callbackRoute = getCallbackRoute(pathname)
+      if (!callbackRoute || !code) return
 
-        try {
-          const apiUrl = getApiUrl()
-          const response = await axios.post(`${apiUrl}/auth/google`, {
-            code,
-            redirect_uri: `${window.location.origin}/auth/google/callback`
-          })
+      const { provider, mode } = callbackRoute
 
-          const user = {
-            id: response.data.id,
-            email: response.data.email,
-            name: response.data.name,
-            picture: response.data.picture,
-            isAdmin: response.data.is_admin || false,
-            hasSeenSampleData: response.data.has_seen_sample_data || false
-          }
+      // 중복 실행 방지: 즉시 URL에서 code/state 제거
+      window.history.replaceState({}, '', '/')
 
-          login(user)
-          queryClient.invalidateQueries({ queryKey: ['schedules'] })
-          queryClient.invalidateQueries({ queryKey: ['tags'] })
-          toast.success(`환영합니다, ${user.name}님!`)
-        } catch (error) {
-          logger.error('구글 로그인 실패:', error)
-          toast.error('구글 로그인에 실패했습니다')
-        }
-      }
-    }
+      try {
+        // 통합 콜백 처리
+        const data = await handleOAuthCallback({
+          provider,
+          mode,
+          code,
+          state: state || undefined,
+        })
 
-    handleGoogleCallback()
-  }, [])
-
-  // 네이버 로그인 callback 처리
-  useEffect(() => {
-    const handleNaverCallback = async () => {
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      const state = params.get('state')
-      const path = window.location.pathname
-
-      if (path === '/auth/naver/callback' && code && state) {
-        const savedState = sessionStorage.getItem('naver_state')
-
-        if (state !== savedState) {
-          toast.error('인증 오류: state가 일치하지 않습니다')
-          window.history.replaceState({}, '', '/')
-          return
-        }
-
-        // 중복 실행 방지: 즉시 URL에서 code/state 제거
-        window.history.replaceState({}, '', '/')
-        sessionStorage.removeItem('naver_state')
-
-        try {
-          const apiUrl = getApiUrl()
-          const response = await axios.post(`${apiUrl}/auth/naver`, {
-            code,
-            state
-          })
-
-          const user = {
-            id: response.data.id,
-            email: response.data.email,
-            name: response.data.name,
-            picture: response.data.picture,
-            isAdmin: response.data.is_admin || false,
-            hasSeenSampleData: response.data.has_seen_sample_data || false,
-            naverAccessToken: response.data.access_token,
-            naverRefreshToken: response.data.refresh_token
-          }
-
-          login(user)
-          queryClient.invalidateQueries({ queryKey: ['schedules'] })
-          queryClient.invalidateQueries({ queryKey: ['tags'] })
-          toast.success(`환영합니다, ${user.name}님!`)
-        } catch (error) {
-          logger.error('네이버 로그인 실패:', error)
-          toast.error('네이버 로그인에 실패했습니다')
-        }
-      }
-    }
-
-    handleNaverCallback()
-  }, [])
-
-  // 카카오 로그인 callback 처리
-  useEffect(() => {
-    const handleKakaoCallback = async () => {
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      const path = window.location.pathname
-
-      if (path === '/auth/kakao/callback' && code) {
-        // 중복 실행 방지: 즉시 URL에서 code 제거
-        window.history.replaceState({}, '', '/')
-
-        try {
-          const apiUrl = getApiUrl()
-          const response = await axios.post(`${apiUrl}/auth/kakao`, {
-            code
-          })
-
-          const user = {
-            id: response.data.id,
-            email: response.data.email,
-            name: response.data.name,
-            picture: response.data.picture,
-            isAdmin: response.data.is_admin || false,
-            hasSeenSampleData: response.data.has_seen_sample_data || false
-          }
-
-          login(user)
-          queryClient.invalidateQueries({ queryKey: ['schedules'] })
-          queryClient.invalidateQueries({ queryKey: ['tags'] })
-          toast.success(`환영합니다, ${user.name}님!`)
-        } catch (error) {
-          logger.error('카카오 로그인 실패:', error)
-          toast.error('카카오 로그인에 실패했습니다')
-        }
-      }
-    }
-
-    handleKakaoCallback()
-  }, [])
-
-  // 네이버 캘린더 연동 callback 처리
-  useEffect(() => {
-    const handleNaverCalendarCallback = async () => {
-      const params = new URLSearchParams(window.location.search)
-      const code = params.get('code')
-      const state = params.get('state')
-      const path = window.location.pathname
-
-      if (path === '/auth/naver/calendar/callback' && code && state) {
-        const savedState = sessionStorage.getItem('naver_calendar_state')
-
-        if (state !== savedState) {
-          toast.error('인증 오류: state가 일치하지 않습니다')
-          window.history.replaceState({}, '', '/')
-          return
-        }
-
-        // 중복 실행 방지: 즉시 URL에서 code/state 제거
-        window.history.replaceState({}, '', '/')
-        sessionStorage.removeItem('naver_calendar_state')
-
-        try {
-          const apiUrl = getApiUrl()
-          const response = await axios.post(`${apiUrl}/auth/naver`, {
-            code,
-            state
-          })
-
-          // 로그인이 아닌 토큰만 저장
-          updateNaverToken(response.data.access_token, response.data.refresh_token)
+        if (mode === 'calendar') {
+          // 캘린더 연동 모드: 토큰만 저장
+          updateNaverToken(data.access_token!, data.refresh_token!)
           toast.success('네이버 캘린더 연동이 완료되었습니다')
-        } catch (error) {
-          logger.error('네이버 캘린더 연동 실패:', error)
-          toast.error('네이버 캘린더 연동에 실패했습니다')
+        } else {
+          // 로그인 모드: 사용자 정보 저장
+          const user = {
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            picture: data.picture,
+            isAdmin: data.is_admin || false,
+            hasSeenSampleData: data.has_seen_sample_data || false,
+            // 네이버 로그인 시에만 토큰 포함
+            ...(provider === 'naver' && {
+              naverAccessToken: data.access_token,
+              naverRefreshToken: data.refresh_token,
+            }),
+          }
+
+          login(user)
+
+          // localStorage 업데이트가 완료된 후 쿼리 무효화
+          // setTimeout을 사용하여 다음 틱에서 실행
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['schedules'] })
+            queryClient.invalidateQueries({ queryKey: ['tags'] })
+          }, 0)
+
+          toast.success(`환영합니다, ${user.name}님!`)
+        }
+      } catch (error) {
+        if (error instanceof OAuthCallbackError) {
+          toast.error(error.message)
+        } else {
+          const providerName = getProviderName(provider)
+          const action = mode === 'calendar' ? '캘린더 연동' : '로그인'
+          toast.error(`${providerName} ${action}에 실패했습니다`)
         }
       }
     }
 
-    handleNaverCalendarCallback()
+    handleOAuthCallbacks()
   }, [])
 
   // 로그인 시 랜딩 페이지 숨기기

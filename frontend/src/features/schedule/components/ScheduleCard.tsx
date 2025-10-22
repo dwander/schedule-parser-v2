@@ -41,7 +41,7 @@ interface ScheduleCardProps {
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions } = useTagOptions()
-  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration } = useSettingsStore()
+  const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration, brandShortcuts, locationShortcuts } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
   const [photoSequenceOpen, setPhotoSequenceOpen] = useState(false)
@@ -219,8 +219,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
   // 폴더명 생성 및 클립보드 복사
   const handleFolderCopy = async () => {
-    // 설정된 포맷으로 폴더명 생성
-    const folderName = generateFolderName(schedule, folderNameFormat)
+    // 설정된 포맷으로 폴더명 생성 (단축어 적용)
+    const folderName = generateFolderName(schedule, folderNameFormat, brandShortcuts, locationShortcuts)
 
     // 클립보드 복사
     try {
@@ -497,22 +497,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
             )}
           </div>
 
-          {/* Right: FAB Buttons - 가로형 3그룹 레이아웃 */}
-          <div className="flex flex-row gap-2 flex-shrink-0">
-            {/* 1. 중요 메모 그룹 */}
-            <div className="relative group">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
-                onClick={() => setImportantMemoOpen(true)}
-                title={hasImportantMemo ? "중요 메모 (작성됨)" : "중요 메모"}
-              >
-                <Check className="h-[1.1rem] w-[1.1rem]" />
-              </Button>
-            </div>
-
-            {/* 2. 캘린더 동기화 그룹 */}
+          {/* Right: FAB Buttons - 가로형 2그룹 레이아웃 */}
+          <div className="flex flex-row gap-2 flex-shrink-0 items-start">
+            {/* 1. 캘린더 동기화 그룹 */}
             {(enabledCalendars.google || enabledCalendars.naver || enabledCalendars.apple) && (() => {
               const enabledCount = [enabledCalendars.google, enabledCalendars.naver, enabledCalendars.apple].filter(Boolean).length
 
@@ -562,7 +549,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
               // 여러 개 활성화된 경우: 캘린더 아이콘, 호버 시 펼침
               return (
-                <div className="flex flex-col gap-2 group">
+                <div className="relative group">
                   <Button
                     variant="outline"
                     size="icon"
@@ -571,13 +558,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   >
                     <Calendar className="h-[1.1rem] w-[1.1rem]" />
                   </Button>
-                  {/* 호버 시 펼쳐지는 서비스 버튼들 */}
-                  <div className="flex flex-col gap-2 max-h-0 overflow-hidden opacity-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-200">
+                  {/* 호버 시 펼쳐지는 서비스 버튼들 - Absolute positioned */}
+                  <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
                     {enabledCalendars.google && (
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                        style={{ transitionDelay: '0ms' }}
                         onClick={handleGoogleCalendar}
                         title="구글 캘린더"
                       >
@@ -588,7 +576,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                        style={{ transitionDelay: enabledCalendars.google ? '50ms' : '0ms' }}
                         onClick={handleNaverCalendarClick}
                         title="네이버 캘린더"
                       >
@@ -599,7 +588,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                        style={{ transitionDelay: [enabledCalendars.google, enabledCalendars.naver].filter(Boolean).length * 50 + 'ms' }}
                         onClick={handleAppleCalendar}
                         disabled={appleCalendarLoading}
                         title="Apple 캘린더"
@@ -612,8 +602,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               )
             })()}
 
-            {/* 3. 기타기능 그룹 */}
-            <div className="flex flex-col gap-2 group">
+            {/* 2. 기타기능 그룹 */}
+            <div className="relative group">
               <div className="relative">
                 {/* 데이터 있을 때 배지 표시 */}
                 {hasPhotoNoteData && (
@@ -628,9 +618,9 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   <MoreHorizontal className="h-[1.1rem] w-[1.1rem]" />
                 </Button>
               </div>
-              {/* 호버 시 펼쳐지는 기능 버튼들 */}
-              <div className="flex flex-col gap-2 max-h-0 overflow-hidden opacity-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-200">
-                <div className="relative">
+              {/* 호버 시 펼쳐지는 기능 버튼들 - Absolute positioned */}
+              <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
+                <div className="relative opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200" style={{ transitionDelay: '0ms' }}>
                   {/* 데이터 있을 때 배지 표시 */}
                   {hasPhotoNoteData && (
                     <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background z-10" />
@@ -638,7 +628,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 rounded-full transition-all relative shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                    className="h-10 w-10 rounded-full relative shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
                     onClick={() => setPhotoNoteOpen(true)}
                     title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
                   >
@@ -648,7 +638,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                  className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                  style={{ transitionDelay: '50ms' }}
                   onClick={() => setPhotoSequenceOpen(true)}
                   title="원판순서"
                 >
@@ -657,7 +648,8 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10 rounded-full transition-all shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                  className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
+                  style={{ transitionDelay: '100ms' }}
                   onClick={handleFolderCopy}
                   title="폴더명 복사"
                 >

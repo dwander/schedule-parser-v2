@@ -182,18 +182,15 @@ print(f"  - Users data: {USERS_DATA_DIR}")
 # --- API Endpoints ---
 
 # --- Include Routers ---
-from routers import auth, users, schedules, trash, parser, storage, backup, tags, pricing, naver, apple, pages
+from routers import auth, users, schedules, trash, parser, storage, backup, tags, pricing, apple, pages
 
-# Authentication routes
+# Authentication routes (includes Naver calendar endpoints)
 app.include_router(auth.router, tags=["Authentication"])
-
-# Naver calendar routes
-app.include_router(naver.router, tags=["Naver"])
 
 # Apple calendar routes
 app.include_router(apple.router, tags=["Apple"])
 
-# User management routes  
+# User management routes
 app.include_router(users.router, tags=["Users"])
 
 # Parser routes

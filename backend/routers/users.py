@@ -219,3 +219,69 @@ async def update_ui_settings(user_id: str, request: Request, db: Session = Depen
     except Exception as e:
         logger.error(f"❌ Update UI settings error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/users/{user_id}/data-settings")
+async def get_data_settings(user_id: str, db: Session = Depends(get_database)):
+    """데이터 설정 조회 (브랜드/장소 단축어, 폴더 포맷 등)"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {
+            "success": True,
+            "user_id": user.id,
+            "settings": user.data_settings or {},
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.last_login.isoformat() if user.last_login else None
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Get data settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/api/users/{user_id}/data-settings")
+async def update_data_settings(user_id: str, request: Request, db: Session = Depends(get_database)):
+    """데이터 설정 업데이트 (부분 업데이트 지원)"""
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        data = await request.json()
+        settings = data.get("settings")
+
+        if settings is None:
+            raise HTTPException(status_code=400, detail="settings is required")
+
+        # 부분 업데이트 지원 (기존 설정과 병합)
+        if user.data_settings and isinstance(user.data_settings, dict) and isinstance(settings, dict):
+            # 기존 설정에 새 설정을 병합
+            merged_settings = {**user.data_settings, **settings}
+            user.data_settings = merged_settings
+        else:
+            # 기존 설정이 없거나 dict가 아니면 새 설정으로 교체
+            user.data_settings = settings
+
+        db.commit()
+
+        logger.info(f"✅ Updated data settings for user: {user_id}")
+        return {
+            "success": True,
+            "user_id": user.id,
+            "settings": user.data_settings,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.last_login.isoformat() if user.last_login else None
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Update data settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

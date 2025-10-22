@@ -81,6 +81,14 @@ interface SettingsState {
   }
   setFolderNameFormat: (format: { normal: string; noCuts: string }) => void
 
+  // 브랜드 단축어 (예: "세컨플로우" → "세컨") - DB에서 관리
+  brandShortcuts: Record<string, string>
+  setBrandShortcuts: (shortcuts: Record<string, string>) => void
+
+  // 장소 단축어 (예: "대명아트홀웨딩컨벤션" → "대명") - DB에서 관리
+  locationShortcuts: Record<string, string>
+  setLocationShortcuts: (shortcuts: Record<string, string>) => void
+
   // 리스트뷰 컬럼 가시성
   listColumnVisibility: ColumnVisibility
   setListColumnVisibility: (visibility: Partial<ColumnVisibility> | ColumnVisibility) => void
@@ -152,6 +160,8 @@ export const useSettingsStore = create<SettingsState>()(
         normal: '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE]) - [PHOTOGRAPHER]([CUTS])',
         noCuts: '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE])',
       },
+      brandShortcuts: {},
+      locationShortcuts: {},
       // 리스트뷰 컬럼 가시성
       listColumnVisibility: {
         select: false,
@@ -219,6 +229,8 @@ export const useSettingsStore = create<SettingsState>()(
       setTestPanelVisible: (visible) => set({ testPanelVisible: visible }),
       setViewMode: (mode) => set({ viewMode: mode }),
       setFolderNameFormat: (format) => set({ folderNameFormat: format }),
+      setBrandShortcuts: (shortcuts) => set({ brandShortcuts: shortcuts }),
+      setLocationShortcuts: (shortcuts) => set({ locationShortcuts: shortcuts }),
       setListColumnVisibility: (visibility) =>
         set((state) => ({
           listColumnVisibility: { ...state.listColumnVisibility, ...visibility } as ColumnVisibility
@@ -251,6 +263,12 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'app-settings', // localStorage key
+      partialize: (state) => {
+        // DB로 관리하는 항목은 localStorage에서 제외
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { brandShortcuts, locationShortcuts, ...rest } = state
+        return rest
+      },
     }
   )
 )

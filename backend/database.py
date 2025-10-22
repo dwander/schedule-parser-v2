@@ -58,6 +58,9 @@ class User(Base):
     # UI settings (column labels, view preferences, etc.)
     ui_settings = Column(JSON, nullable=True)
 
+    # Data settings (brand/location shortcuts, folder format, calendar settings, etc.)
+    data_settings = Column(JSON, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -76,6 +79,7 @@ class User(Base):
             # Use dedicated endpoints like /auth/{provider}/check or /auth/{provider}/refresh
             'voice_training_data': self.voice_training_data,
             'ui_settings': self.ui_settings,
+            'data_settings': self.data_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
         }
@@ -581,6 +585,11 @@ def run_migrations():
                 'name': 'resize naver_refresh_token to VARCHAR(1000)',
                 'check_query': 'SELECT 1',  # Always run, ALTER will be idempotent
                 'alter_query': 'ALTER TABLE users ALTER COLUMN naver_refresh_token TYPE VARCHAR(1000)'
+            },
+            {
+                'name': 'data_settings column in users',
+                'check_query': 'SELECT data_settings FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN data_settings JSON'
             }
         ]
 

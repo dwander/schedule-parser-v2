@@ -6,15 +6,25 @@ import { PHOTO_CONSTANTS } from '@/lib/constants/schedule'
  * 폴더명 포맷에서 키워드를 실제 값으로 치환
  * @param format - 폴더명 포맷 ([BRAND], [DATE] 등의 키워드 포함)
  * @param schedule - 스케줄 정보
+ * @param brandShortcuts - 브랜드 단축어 맵
+ * @param locationShortcuts - 장소 단축어 맵
  * @returns 키워드가 치환된 폴더명
  */
-function replaceKeywords(format: string, schedule: Schedule): string {
-  // 브랜드 매핑
-  const brandPrefix = BRAND_FOLDER_PREFIX_MAP[schedule.brand] || ''
+function replaceKeywords(
+  format: string,
+  schedule: Schedule,
+  brandShortcuts?: Record<string, string>,
+  locationShortcuts?: Record<string, string>
+): string {
+  // 브랜드 매핑 (우선순위: 사용자 설정 단축어 > 레거시 매핑)
+  const brandPrefix = brandShortcuts?.[schedule.brand] || BRAND_FOLDER_PREFIX_MAP[schedule.brand] || schedule.brand
 
   // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
   const [hours, minutes] = schedule.time.split(':')
   const timeStr = minutes === '00' ? `${hours}시` : `${hours}시${minutes}분`
+
+  // 장소 매핑 (사용자 설정 단축어 우선)
+  const locationText = locationShortcuts?.[schedule.location] || schedule.location
 
   // 컷수 계산
   const totalCuts = schedule.cuts ? schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER : 0
@@ -24,7 +34,7 @@ function replaceKeywords(format: string, schedule: Schedule): string {
     .replace(/\[BRAND\]/g, brandPrefix)
     .replace(/\[DATE\]/g, schedule.date)
     .replace(/\[TIME\]/g, timeStr)
-    .replace(/\[LOCATION\]/g, schedule.location)
+    .replace(/\[LOCATION\]/g, locationText)
     .replace(/\[COUPLE\]/g, schedule.couple)
     .replace(/\[PHOTOGRAPHER\]/g, schedule.photographer || '')
     .replace(/\[CUTS\]/g, totalCuts.toString())
@@ -49,11 +59,15 @@ function replaceKeywords(format: string, schedule: Schedule): string {
  * 스케줄 정보를 기반으로 폴더명 생성 (설정된 포맷 사용)
  * @param schedule - 스케줄 정보
  * @param format - 폴더명 포맷 (기본값: 레거시 포맷)
+ * @param brandShortcuts - 브랜드 단축어 맵
+ * @param locationShortcuts - 장소 단축어 맵
  * @returns 생성된 폴더명
  */
 export function generateFolderName(
   schedule: Schedule,
-  format?: { normal: string; noCuts: string }
+  format?: { normal: string; noCuts: string },
+  brandShortcuts?: Record<string, string>,
+  locationShortcuts?: Record<string, string>
 ): string {
   // 컷수 유무에 따라 포맷 선택
   const hasCuts = schedule.cuts && schedule.cuts > 0
@@ -67,5 +81,5 @@ export function generateFolderName(
     ? '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE]) - [PHOTOGRAPHER]([CUTS])'
     : '[BRAND] [DATE] [TIME] [LOCATION]([COUPLE])'
 
-  return replaceKeywords(selectedFormat, schedule)
+  return replaceKeywords(selectedFormat, schedule, brandShortcuts, locationShortcuts)
 }

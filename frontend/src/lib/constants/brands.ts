@@ -12,9 +12,6 @@ export const BRAND_COLORS: Record<Brand, string> = {
 
 /**
  * 브랜드명을 폴더 접두사로 변환하는 매핑
+ * @deprecated 이제 설정 > 폴더 설정 > 브랜드 단축어에서 관리합니다
  */
-export const BRAND_FOLDER_PREFIX_MAP: Record<string, string> = {
-  '세컨플로루': '세컨',
-  '더그라피': '더그',
-  'A 세븐스프리미엄': '세프',
-} as const
+export const BRAND_FOLDER_PREFIX_MAP: Record<string, string> = {} as const
