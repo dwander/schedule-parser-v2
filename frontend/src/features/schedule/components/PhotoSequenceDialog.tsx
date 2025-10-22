@@ -991,44 +991,6 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
                 )}
               </div>
             </div>
-
-            {/* 중요 메모 - 하단 중앙 플로팅 버튼/카드 */}
-            {schedule.photoNote?.importantMemo && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
-                {/* 항상 렌더링하되 조건부 스타일 적용 */}
-                <div className={`relative bg-background border shadow-xl rounded-full transition-all duration-300 ease-out ${
-                  modalStates.showImportantMemo
-                    ? 'py-4 pl-4 pr-2 w-[300px] max-w-[90vw] opacity-100 scale-100'
-                    : 'p-3 w-auto opacity-100 scale-100 cursor-pointer hover:scale-110'
-                }`}
-                onClick={() => !modalStates.showImportantMemo && setModalStates(prev => ({ ...prev, showImportantMemo: true }))}
-                >
-                  {modalStates.showImportantMemo ? (
-                    <>
-                      {/* 닫기 버튼 - 오른쪽 상단 모서리 바깥쪽 */}
-                      <button
-                        onClick={() => setModalStates(prev => ({ ...prev, showImportantMemo: false }))}
-                        className="absolute -top-2 -right-2 bg-background rounded-full p-1.5 shadow-md border transition-all duration-300 hover:scale-110 z-10"
-                        title="닫기"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-
-                      {/* 내용 - 체크 아이콘 + 텍스트 */}
-                      <div className="flex items-start gap-2.5">
-                        <Check className="h-[1.1rem] w-[1.1rem] text-yellow-400 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm whitespace-pre-wrap break-words leading-relaxed flex-1">
-                          {schedule.photoNote.importantMemo}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    // 닫힌 상태: 아이콘만
-                    <Check className="h-5 w-5 text-yellow-400" />
-                  )}
-                </div>
-              </div>
-            )}
             </>
           ) : (
           // 일반 모드: 단일 컬럼 레이아웃
@@ -1079,6 +1041,44 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
               </div>
             )}
           </>
+        )}
+
+        {/* 중요 메모 - 하단 중앙 플로팅 버튼/카드 (락 모드와 관계없이 항상 표시) */}
+        {schedule.photoNote?.importantMemo && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-40">
+            {/* 항상 렌더링하되 조건부 스타일 적용 */}
+            <div className={`relative bg-background border shadow-xl rounded-full transition-all duration-300 ease-out ${
+              modalStates.showImportantMemo
+                ? 'py-4 pl-4 pr-2 w-[300px] max-w-[90vw] opacity-100 scale-100'
+                : 'p-3 w-auto opacity-100 scale-100 cursor-pointer hover:scale-110'
+            }`}
+            onClick={() => !modalStates.showImportantMemo && setModalStates(prev => ({ ...prev, showImportantMemo: true }))}
+            >
+              {modalStates.showImportantMemo ? (
+                <>
+                  {/* 닫기 버튼 - 오른쪽 상단 모서리 바깥쪽 */}
+                  <button
+                    onClick={() => setModalStates(prev => ({ ...prev, showImportantMemo: false }))}
+                    className="absolute -top-2 -right-2 bg-background rounded-full p-1.5 shadow-md border transition-all duration-300 hover:scale-110 z-10"
+                    title="닫기"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
+                  {/* 내용 - 체크 아이콘 + 텍스트 */}
+                  <div className="flex items-start gap-2.5">
+                    <Check className="h-[1.1rem] w-[1.1rem] text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm whitespace-pre-wrap break-words leading-relaxed flex-1">
+                      {schedule.photoNote.importantMemo}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // 닫힌 상태: 아이콘만
+                <Check className="h-5 w-5 text-yellow-400" />
+              )}
+            </div>
+          </div>
         )}
         </div>
     </ContentModal>
