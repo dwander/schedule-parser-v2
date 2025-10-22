@@ -6,8 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { useConfigStore } from '@/stores/useConfigStore'
+import { useOAuthLogin } from '../hooks/useOAuthLogin'
 
 interface LoginDialogProps {
   open: boolean
@@ -15,51 +14,7 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const { config } = useConfigStore()
-
-  const handleGoogleLogin = () => {
-    if (!config?.google_client_id) {
-      toast.error('구글 클라이언트 ID가 설정되지 않았습니다')
-      return
-    }
-
-    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/google/callback`)
-
-    // OAuth 2.0 Authorization Code Flow
-    // scope에 email, profile, openid 포함 (기본 로그인용)
-    const googleLoginUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config.google_client_id}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=select_account`
-    window.location.href = googleLoginUrl
-  }
-
-  const handleNaverLogin = () => {
-    if (!config?.naver_client_id) {
-      toast.error('네이버 클라이언트 ID가 설정되지 않았습니다')
-      return
-    }
-
-    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/naver/callback`)
-    const STATE = Math.random().toString(36).substring(2, 15) // Random state
-
-    // Store state in sessionStorage for verification
-    sessionStorage.setItem('naver_state', STATE)
-
-    // Redirect to Naver login (with calendar scope)
-    const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${config.naver_client_id}&redirect_uri=${REDIRECT_URI}&state=${STATE}&scope=calendar`
-    window.location.href = naverLoginUrl
-  }
-
-  const handleKakaoLogin = () => {
-    if (!config?.kakao_rest_api_key) {
-      toast.error('카카오 REST API 키가 설정되지 않았습니다')
-      return
-    }
-
-    const REDIRECT_URI = encodeURIComponent(`${window.location.origin}/auth/kakao/callback`)
-
-    // Redirect to Kakao login
-    const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${config.kakao_rest_api_key}&redirect_uri=${REDIRECT_URI}&response_type=code`
-    window.location.href = kakaoLoginUrl
-  }
+  const { loginWith } = useOAuthLogin()
 
   return (
     <>
@@ -78,7 +33,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               <Button
                 variant="outline"
                 className="w-full max-w-[348px] h-11 text-sm bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
-                onClick={handleGoogleLogin}
+                onClick={() => loginWith('google')}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -95,7 +50,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               <Button
                 variant="outline"
                 className="w-full max-w-[348px] h-11 text-sm bg-naver hover:brightness-90 text-white border-naver"
-                onClick={handleNaverLogin}
+                onClick={() => loginWith('naver')}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z" />
@@ -109,7 +64,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               <Button
                 variant="outline"
                 className="w-full max-w-[348px] h-11 text-sm bg-kakao hover:brightness-95 text-kakao-foreground border-kakao"
-                onClick={handleKakaoLogin}
+                onClick={() => loginWith('kakao')}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 3C6.477 3 2 6.477 2 10.75c0 2.568 1.547 4.844 3.926 6.238-.136.49-.889 3.14-.914 3.286-.036.212.079.21.166.153.064-.042 2.619-1.738 3.036-2.021 4.061.548 8.786-1.099 8.786-7.656C22 6.477 17.523 3 12 3z" />
