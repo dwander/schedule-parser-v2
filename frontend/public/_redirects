@@ -1,6 +1,0 @@
-# Legal document routes (clean URLs without .html)
-/privacy  /privacy/index.html  200
-/terms    /terms/index.html    200
-
-# All other routes should fallback to index.html for SPA routing
-/*        /index.html          200
