@@ -6,6 +6,8 @@ from typing import Optional
 import requests
 import uuid
 import urllib.parse
+import base64
+import json
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from datetime import datetime, timedelta, timezone
@@ -65,8 +67,6 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         print(f"🔗 사용할 redirect_uri: {redirect_uri}")
 
         # Parse state to extract user_id (for calendar linking)
-        import base64
-        import json
         target_user_id = None
         if auth_request.state:
             try:
@@ -113,20 +113,11 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         if not access_token:
             raise HTTPException(status_code=400, detail="No access token received")
 
-        # Step 2: Get user info using access token
-        user_info_url = f"https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}"
-        user_response = requests.get(user_info_url)
-
-        if not user_response.ok:
-            raise HTTPException(status_code=400, detail=f"User info fetch failed: {user_response.text}")
-
-        user_data = user_response.json()
-
         # Encrypt tokens before storing
         encrypted_access_token = encrypt_token(access_token) if access_token else None
         encrypted_refresh_token = encrypt_token(refresh_token) if refresh_token else None
 
-        # 캘린더 연동 모드: target_user_id가 있으면 그 사용자에게 토큰 추가
+        # 캘린더 연동 모드: target_user_id가 있으면 그 사용자에게 토큰 추가 (사용자 정보 fetch 건너뜀)
         if target_user_id:
             print(f"📎 캘린더 연동 모드: {target_user_id}에 구글 캘린더 토큰 추가")
             target_user = db.query(User).filter(User.id == target_user_id).first()
@@ -150,7 +141,18 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
                 "refresh_token": refresh_token
             }
 
-        # 일반 로그인 모드: 기존 로직
+        # 일반 로그인 모드: 사용자 정보 fetch 필요
+        # Step 2: Get user info using access token
+        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+        user_response = requests.get(user_info_url, headers={
+            'Authorization': f'Bearer {access_token}'
+        })
+
+        if not user_response.ok:
+            raise HTTPException(status_code=400, detail=f"User info fetch failed: {user_response.text}")
+
+        user_data = user_response.json()
+
         # Save or update user in database
         user_id = f"google_{user_data.get('id')}"
         google_id = user_data.get('id')
@@ -206,6 +208,9 @@ async def google_auth(auth_request: GoogleAuthRequest, db: Session = Depends(get
         }
 
     except Exception as e:
+        print(f"❌ 구글 인증 에러: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
 
 
@@ -916,6 +921,10 @@ async def add_google_calendar(request: dict = Body(...), db: Session = Depends(g
             "end": {
                 "dateTime": calendar_request.end_datetime,
                 "timeZone": "Asia/Seoul"
+            },
+            "reminders": {
+                "useDefault": False,
+                "overrides": []
             }
         }
 

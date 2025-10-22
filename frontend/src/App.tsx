@@ -57,7 +57,7 @@ function AppContent() {
   const { data: tags = [] } = useTags()
   const syncTags = useSyncTags()
   const batchAddSchedules = useBatchAddSchedules()
-  const { user, login, updateNaverToken } = useAuthStore()
+  const { user, login, updateNaverToken, updateGoogleToken } = useAuthStore()
   const queryClient = useQueryClient()
   const { data: uiSettings } = useUiSettings(user?.id)
   const [showLanding, setShowLanding] = useState(() => {
@@ -92,8 +92,13 @@ function AppContent() {
 
         if (mode === 'calendar') {
           // 캘린더 연동 모드: 토큰만 저장
-          updateNaverToken(data.access_token!, data.refresh_token!)
-          toast.success('네이버 캘린더 연동이 완료되었습니다')
+          if (provider === 'naver') {
+            updateNaverToken(data.access_token!, data.refresh_token!)
+            toast.success('네이버 캘린더 연동이 완료되었습니다')
+          } else if (provider === 'google') {
+            updateGoogleToken(data.access_token!, data.refresh_token!)
+            toast.success('구글 캘린더 연동이 완료되었습니다')
+          }
         } else {
           // 로그인 모드: 사용자 정보 저장
           const user = {
@@ -103,10 +108,15 @@ function AppContent() {
             picture: data.picture,
             isAdmin: data.is_admin || false,
             hasSeenSampleData: data.has_seen_sample_data || false,
-            // 네이버 로그인 시에만 토큰 포함
+            // 네이버 로그인 시 토큰 포함
             ...(provider === 'naver' && {
               naverAccessToken: data.access_token,
               naverRefreshToken: data.refresh_token,
+            }),
+            // 구글 로그인 시 토큰 포함
+            ...(provider === 'google' && {
+              googleAccessToken: data.access_token,
+              googleRefreshToken: data.refresh_token,
             }),
           }
 
