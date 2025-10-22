@@ -16,6 +16,7 @@ import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftO
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
+import { useUpdateUserSettings } from '@/features/settings/hooks/useUserSettings'
 import { toast } from 'sonner'
 
 interface SettingsDialogProps {
@@ -55,13 +56,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     calendarEventDuration,
     setCalendarEventDuration,
     brandShortcuts,
-    addBrandShortcut,
-    removeBrandShortcut,
+    setBrandShortcuts,
     locationShortcuts,
-    addLocationShortcut,
-    removeLocationShortcut,
+    setLocationShortcuts,
   } = useSettingsStore()
   const { user, removeNaverToken } = useAuthStore()
+  const updateSettingsMutation = useUpdateUserSettings()
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 
   const getThemeLabel = () => {
@@ -96,16 +96,34 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       toast.error('원본 브랜드명을 입력해주세요')
       return
     }
-    const shortcut = newBrandShortcut.trim()
-    addBrandShortcut(newBrandOriginal.trim(), shortcut)
-    setNewBrandOriginal('')
-    setNewBrandShortcut('')
 
-    if (shortcut === '') {
-      toast.success('브랜드가 폴더명에서 제외되도록 설정되었습니다')
-    } else {
-      toast.success('브랜드 단축어가 추가되었습니다')
-    }
+    const original = newBrandOriginal.trim()
+    const shortcut = newBrandShortcut.trim()
+
+    // 새로운 단축어 객체 생성
+    const updatedShortcuts = { ...brandShortcuts, [original]: shortcut }
+
+    // DB에 즉시 저장
+    updateSettingsMutation.mutate(
+      { brandShortcuts: updatedShortcuts },
+      {
+        onSuccess: () => {
+          // 성공 시 Zustand store 업데이트
+          setBrandShortcuts(updatedShortcuts)
+          setNewBrandOriginal('')
+          setNewBrandShortcut('')
+
+          if (shortcut === '') {
+            toast.success('브랜드가 폴더명에서 제외되도록 설정되었습니다')
+          } else {
+            toast.success('브랜드 단축어가 추가되었습니다')
+          }
+        },
+        onError: () => {
+          toast.error('설정 저장에 실패했습니다')
+        }
+      }
+    )
   }
 
   const handleAddLocationShortcut = () => {
@@ -113,16 +131,74 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       toast.error('원본 장소명을 입력해주세요')
       return
     }
-    const shortcut = newLocationShortcut.trim()
-    addLocationShortcut(newLocationOriginal.trim(), shortcut)
-    setNewLocationOriginal('')
-    setNewLocationShortcut('')
 
-    if (shortcut === '') {
-      toast.success('장소가 폴더명에서 제외되도록 설정되었습니다')
-    } else {
-      toast.success('장소 단축어가 추가되었습니다')
-    }
+    const original = newLocationOriginal.trim()
+    const shortcut = newLocationShortcut.trim()
+
+    // 새로운 단축어 객체 생성
+    const updatedShortcuts = { ...locationShortcuts, [original]: shortcut }
+
+    // DB에 즉시 저장
+    updateSettingsMutation.mutate(
+      { locationShortcuts: updatedShortcuts },
+      {
+        onSuccess: () => {
+          // 성공 시 Zustand store 업데이트
+          setLocationShortcuts(updatedShortcuts)
+          setNewLocationOriginal('')
+          setNewLocationShortcut('')
+
+          if (shortcut === '') {
+            toast.success('장소가 폴더명에서 제외되도록 설정되었습니다')
+          } else {
+            toast.success('장소 단축어가 추가되었습니다')
+          }
+        },
+        onError: () => {
+          toast.error('설정 저장에 실패했습니다')
+        }
+      }
+    )
+  }
+
+  const handleRemoveBrandShortcut = (original: string) => {
+    // 단축어 삭제
+    const { [original]: _, ...updatedShortcuts } = brandShortcuts
+
+    // DB에 즉시 저장
+    updateSettingsMutation.mutate(
+      { brandShortcuts: updatedShortcuts },
+      {
+        onSuccess: () => {
+          // 성공 시 Zustand store 업데이트
+          setBrandShortcuts(updatedShortcuts)
+          toast.success('브랜드 단축어가 삭제되었습니다')
+        },
+        onError: () => {
+          toast.error('설정 저장에 실패했습니다')
+        }
+      }
+    )
+  }
+
+  const handleRemoveLocationShortcut = (original: string) => {
+    // 단축어 삭제
+    const { [original]: _, ...updatedShortcuts } = locationShortcuts
+
+    // DB에 즉시 저장
+    updateSettingsMutation.mutate(
+      { locationShortcuts: updatedShortcuts },
+      {
+        onSuccess: () => {
+          // 성공 시 Zustand store 업데이트
+          setLocationShortcuts(updatedShortcuts)
+          toast.success('장소 단축어가 삭제되었습니다')
+        },
+        onError: () => {
+          toast.error('설정 저장에 실패했습니다')
+        }
+      }
+    )
   }
 
   const isNaverCalendarLinked = !!user?.naverAccessToken
@@ -488,10 +564,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 flex-shrink-0"
-                          onClick={() => {
-                            removeBrandShortcut(original)
-                            toast.success('브랜드 단축어가 삭제되었습니다')
-                          }}
+                          onClick={() => handleRemoveBrandShortcut(original)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -551,10 +624,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 flex-shrink-0"
-                          onClick={() => {
-                            removeLocationShortcut(original)
-                            toast.success('장소 단축어가 삭제되었습니다')
-                          }}
+                          onClick={() => handleRemoveLocationShortcut(original)}
                         >
                           <X className="h-3 w-3" />
                         </Button>

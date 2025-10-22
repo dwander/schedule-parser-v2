@@ -42,24 +42,20 @@ export function useUpdateUserSettings() {
 }
 
 /**
- * 설정 동기화 훅
+ * 설정 초기화 훅
  *
- * - 앱 시작 시 DB에서 설정 로드
- * - 설정 변경 시 자동으로 DB에 저장 (debounce 적용)
+ * - 앱 시작 시 DB에서 설정을 불러와 Zustand store에 로드
+ * - 이후 변경은 각 컴포넌트에서 직접 API 호출
  */
 export function useSettingsSync() {
-  const { user } = useAuthStore()
   const { data: dbSettings } = useUserSettings()
-  const updateMutation = useUpdateUserSettings()
   const initialized = useRef(false)
 
   // 브랜드/장소 단축어만 동기화 (점진적 마이그레이션)
-  const brandShortcuts = useSettingsStore((state) => state.brandShortcuts)
-  const locationShortcuts = useSettingsStore((state) => state.locationShortcuts)
   const setBrandShortcuts = useSettingsStore((state) => state.setBrandShortcuts)
   const setLocationShortcuts = useSettingsStore((state) => state.setLocationShortcuts)
 
-  // DB → Zustand (초기 로드)
+  // DB → Zustand (초기 로드만)
   useEffect(() => {
     if (!dbSettings || initialized.current) return
 
@@ -83,31 +79,4 @@ export function useSettingsSync() {
 
     initialized.current = true
   }, [dbSettings, setBrandShortcuts, setLocationShortcuts])
-
-  // Zustand → DB (설정 변경 감지)
-  const previousBrandShortcuts = useRef(brandShortcuts)
-  const previousLocationShortcuts = useRef(locationShortcuts)
-
-  useEffect(() => {
-    if (!user?.id || !initialized.current) return
-
-    // 변경 감지
-    const brandChanged = JSON.stringify(brandShortcuts) !== JSON.stringify(previousBrandShortcuts.current)
-    const locationChanged = JSON.stringify(locationShortcuts) !== JSON.stringify(previousLocationShortcuts.current)
-
-    if (brandChanged || locationChanged) {
-      // Debounce: 설정 변경 후 500ms 후 저장
-      const timer = setTimeout(() => {
-        updateMutation.mutate({
-          brandShortcuts,
-          locationShortcuts,
-        })
-
-        previousBrandShortcuts.current = brandShortcuts
-        previousLocationShortcuts.current = locationShortcuts
-      }, 500)
-
-      return () => clearTimeout(timer)
-    }
-  }, [brandShortcuts, locationShortcuts, user?.id, updateMutation])
 }

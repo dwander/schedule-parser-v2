@@ -58,6 +58,9 @@ class User(Base):
     # UI settings (column labels, view preferences, etc.)
     ui_settings = Column(JSON, nullable=True)
 
+    # Data settings (brand/location shortcuts, folder format, calendar settings, etc.)
+    data_settings = Column(JSON, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -76,36 +79,9 @@ class User(Base):
             # Use dedicated endpoints like /auth/{provider}/check or /auth/{provider}/refresh
             'voice_training_data': self.voice_training_data,
             'ui_settings': self.ui_settings,
+            'data_settings': self.data_settings,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
-        }
-
-class UserSettings(Base):
-    """
-    범용 사용자 설정 테이블
-    브랜드/장소 단축어, 폴더명 포맷 등 데이터 처리 관련 설정 저장
-    (UI 설정은 User.ui_settings에 저장)
-    """
-    __tablename__ = "user_settings"
-
-    # Primary Key
-    user_id = Column(String(255), primary_key=True, index=True)
-
-    # 설정 데이터 (JSON)
-    # 예: { "brandShortcuts": {...}, "locationShortcuts": {...}, "folderNameFormat": {...} }
-    settings = Column(JSON, nullable=False, default={})
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert UserSettings model to dictionary"""
-        return {
-            'user_id': self.user_id,
-            'settings': self.settings or {},
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
 
 class Tag(Base):
@@ -611,16 +587,9 @@ def run_migrations():
                 'alter_query': 'ALTER TABLE users ALTER COLUMN naver_refresh_token TYPE VARCHAR(1000)'
             },
             {
-                'name': 'user_settings table',
-                'check_query': 'SELECT user_id FROM user_settings LIMIT 1',
-                'alter_query': '''
-                    CREATE TABLE user_settings (
-                        user_id VARCHAR(255) PRIMARY KEY,
-                        settings JSON NOT NULL DEFAULT '{}',
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                    )
-                '''
+                'name': 'data_settings column in users',
+                'check_query': 'SELECT data_settings FROM users LIMIT 1',
+                'alter_query': 'ALTER TABLE users ADD COLUMN data_settings JSON'
             }
         ]
 

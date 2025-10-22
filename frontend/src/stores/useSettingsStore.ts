@@ -85,17 +85,13 @@ interface SettingsState {
   }
   setFolderNameFormat: (format: { normal: string; noCuts: string }) => void
 
-  // 브랜드 단축어 (예: "세컨플로우" → "세컨")
+  // 브랜드 단축어 (예: "세컨플로우" → "세컨") - DB에서 관리
   brandShortcuts: Record<string, string>
   setBrandShortcuts: (shortcuts: Record<string, string>) => void
-  addBrandShortcut: (original: string, shortcut: string) => void
-  removeBrandShortcut: (original: string) => void
 
-  // 장소 단축어 (예: "대명아트홀웨딩컨벤션" → "대명")
+  // 장소 단축어 (예: "대명아트홀웨딩컨벤션" → "대명") - DB에서 관리
   locationShortcuts: Record<string, string>
   setLocationShortcuts: (shortcuts: Record<string, string>) => void
-  addLocationShortcut: (original: string, shortcut: string) => void
-  removeLocationShortcut: (original: string) => void
 
   // 리스트뷰 컬럼 가시성
   listColumnVisibility: ColumnVisibility
@@ -240,25 +236,7 @@ export const useSettingsStore = create<SettingsState>()(
       setViewMode: (mode) => set({ viewMode: mode }),
       setFolderNameFormat: (format) => set({ folderNameFormat: format }),
       setBrandShortcuts: (shortcuts) => set({ brandShortcuts: shortcuts }),
-      addBrandShortcut: (original, shortcut) =>
-        set((state) => ({
-          brandShortcuts: { ...state.brandShortcuts, [original]: shortcut }
-        })),
-      removeBrandShortcut: (original) =>
-        set((state) => {
-          const { [original]: _, ...rest } = state.brandShortcuts
-          return { brandShortcuts: rest }
-        }),
       setLocationShortcuts: (shortcuts) => set({ locationShortcuts: shortcuts }),
-      addLocationShortcut: (original, shortcut) =>
-        set((state) => ({
-          locationShortcuts: { ...state.locationShortcuts, [original]: shortcut }
-        })),
-      removeLocationShortcut: (original) =>
-        set((state) => {
-          const { [original]: _, ...rest } = state.locationShortcuts
-          return { locationShortcuts: rest }
-        }),
       setListColumnVisibility: (visibility) =>
         set((state) => ({
           listColumnVisibility: { ...state.listColumnVisibility, ...visibility } as ColumnVisibility
@@ -291,6 +269,12 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'app-settings', // localStorage key
+      partialize: (state) => {
+        // DB로 관리하는 항목은 localStorage에서 제외
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { brandShortcuts, locationShortcuts, ...rest } = state
+        return rest
+      },
     }
   )
 )

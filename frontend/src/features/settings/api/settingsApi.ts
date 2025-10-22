@@ -18,7 +18,7 @@ export interface UserSettingsResponse {
  */
 export async function getUserSettings(userId: string): Promise<UserSettingsResponse> {
   const response = await apiClient.get<UserSettingsResponse>(
-    `/api/users/${userId}/settings`
+    `/api/users/${userId}/data-settings`
   )
   return response.data
 }
@@ -33,7 +33,7 @@ export async function updateUserSettings(
   settings: Record<string, unknown>
 ): Promise<UserSettingsResponse> {
   const response = await apiClient.patch<UserSettingsResponse>(
-    `/api/users/${userId}/settings`,
+    `/api/users/${userId}/data-settings`,
     { settings }
   )
   return response.data
@@ -47,7 +47,7 @@ export async function replaceUserSettings(
   settings: Record<string, unknown>
 ): Promise<UserSettingsResponse> {
   const response = await apiClient.put<UserSettingsResponse>(
-    `/api/users/${userId}/settings`,
+    `/api/users/${userId}/data-settings`,
     { settings }
   )
   return response.data
