@@ -106,8 +106,14 @@ function AppContent() {
           }
 
           login(user)
-          queryClient.invalidateQueries({ queryKey: ['schedules'] })
-          queryClient.invalidateQueries({ queryKey: ['tags'] })
+
+          // localStorage 업데이트가 완료된 후 쿼리 무효화
+          // setTimeout을 사용하여 다음 틱에서 실행
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['schedules'] })
+            queryClient.invalidateQueries({ queryKey: ['tags'] })
+          }, 0)
+
           toast.success(`환영합니다, ${user.name}님!`)
         }
       } catch (error) {
