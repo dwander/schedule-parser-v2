@@ -38,13 +38,18 @@ export interface OAuthCallbackContext {
  * OAuth 콜백 에러
  */
 export class OAuthCallbackError extends Error {
+  provider: OAuthProvider
+  originalError?: unknown
+
   constructor(
     message: string,
-    public provider: OAuthProvider,
-    public originalError?: unknown
+    provider: OAuthProvider,
+    originalError?: unknown
   ) {
     super(message)
     this.name = 'OAuthCallbackError'
+    this.provider = provider
+    this.originalError = originalError
   }
 }
 
