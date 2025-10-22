@@ -18,6 +18,7 @@ import { EXAMPLE_SCHEDULES } from '@/features/schedule/constants/exampleSchedule
 import { markSampleDataSeen } from '@/lib/api/sampleData'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { getApiUrl } from '@/lib/constants/api'
+import { ScrollButtons } from '@/components/common/ScrollButtons'
 import { APP_STORAGE_KEYS } from '@/lib/constants/storage'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useConfigStore } from '@/stores/useConfigStore'
@@ -511,6 +512,9 @@ function AppContent() {
 
       <Toaster position="top-center" />
       {testPanelVisible && <DialogTestPanel />}
+
+      {/* 스크롤 버튼 */}
+      <ScrollButtons />
     </>
   )
 }
