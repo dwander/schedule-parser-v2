@@ -22,6 +22,7 @@ interface ConfirmDialogProps {
   variant?: 'default' | 'destructive'
   showDontAskAgain?: boolean
   onDontAskAgainChange?: (checked: boolean) => void
+  loading?: boolean
 }
 
 export function ConfirmDialog({
@@ -35,6 +36,7 @@ export function ConfirmDialog({
   variant = 'default',
   showDontAskAgain = false,
   onDontAskAgainChange,
+  loading = false,
 }: ConfirmDialogProps) {
   const [dontAskAgain, setDontAskAgain] = useState(false)
 
@@ -72,12 +74,13 @@ export function ConfirmDialog({
           </div>
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
+            disabled={loading}
             className={variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
           >
-            {confirmText}
+            {loading ? '처리 중...' : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
