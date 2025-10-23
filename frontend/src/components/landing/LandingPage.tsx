@@ -108,7 +108,26 @@ export function LandingPage({ onContinueAnonymous }: LandingPageProps) {
         </div>
 
         {/* 푸터 */}
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-muted-foreground space-y-2">
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="https://sched.4to.app/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              개인정보처리방침
+            </a>
+            <span>•</span>
+            <a
+              href="https://sched.4to.app/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              서비스 약관
+            </a>
+          </div>
           <p>© 2025 본식스냅러. All rights reserved.</p>
         </div>
       </div>
