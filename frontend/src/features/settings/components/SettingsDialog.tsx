@@ -480,11 +480,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="-2">예식 2시간 전</SelectItem>
-                      <SelectItem value="-1">예식 1시간 전</SelectItem>
-                      <SelectItem value="0">예식 시간</SelectItem>
-                      <SelectItem value="1">예식 1시간 후</SelectItem>
-                      <SelectItem value="2">예식 2시간 후</SelectItem>
+                      <SelectItem value="-120">-2시간</SelectItem>
+                      <SelectItem value="-90">-1시간 30분</SelectItem>
+                      <SelectItem value="-60">-1시간</SelectItem>
+                      <SelectItem value="-30">-30분</SelectItem>
+                      <SelectItem value="0">정시</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -500,13 +500,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="-2">예식 2시간 전</SelectItem>
-                      <SelectItem value="-1">예식 1시간 전</SelectItem>
-                      <SelectItem value="0">예식 시간</SelectItem>
-                      <SelectItem value="1">예식 1시간 후</SelectItem>
-                      <SelectItem value="2">예식 2시간 후</SelectItem>
-                      <SelectItem value="3">예식 3시간 후</SelectItem>
-                      <SelectItem value="4">예식 4시간 후</SelectItem>
+                      <SelectItem value="0">정시</SelectItem>
+                      <SelectItem value="30">+30분</SelectItem>
+                      <SelectItem value="60">+1시간</SelectItem>
+                      <SelectItem value="90">+1시간 30분</SelectItem>
+                      <SelectItem value="120">+2시간</SelectItem>
+                      <SelectItem value="150">+2시간 30분</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

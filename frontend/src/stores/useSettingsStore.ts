@@ -117,7 +117,7 @@ interface SettingsState {
   skipNaverCalendarConfirm: boolean
   setSkipNaverCalendarConfirm: (skip: boolean) => void
 
-  // 캘린더 일정 시간 오프셋 (단위: 시간)
+  // 캘린더 일정 시간 오프셋 (단위: 분)
   calendarEventDuration: { startOffset: number; endOffset: number }
   setCalendarEventDuration: (duration: { startOffset: number; endOffset: number }) => void
 
@@ -215,7 +215,7 @@ export const useSettingsStore = create<SettingsState>()(
       enabledCalendars: { google: false, naver: true, apple: true },
       appleCredentials: { appleId: '', appPassword: '' },
       skipNaverCalendarConfirm: false,
-      calendarEventDuration: { startOffset: 0, endOffset: 1 }, // 기본값: 시작 = 예식 시간, 종료 = +1시간
+      calendarEventDuration: { startOffset: 0, endOffset: 60 }, // 기본값: 시작 = 예식 시간, 종료 = +60분(1시간)
       sortBy: 'date-desc',
       weekStartsOn: 1, // 기본값: 월요일
       settingsSidebarCollapsed: typeof window !== 'undefined' && window.innerWidth < 640, // 모바일에서는 접힘

@@ -71,9 +71,10 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const [year, month, day] = schedule.date.split('.').map(Number)
       const [hours, minutes] = schedule.time.split(':').map(Number)
 
-      // 시작/종료 시간 (설정된 오프셋 적용)
-      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
-      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
+      // 시작/종료 시간 (설정된 오프셋(분) 적용)
+      // Date 생성자는 분이 60을 초과하거나 음수여도 자동으로 시간/날짜를 조정
+      const startDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.startOffset)
+      const endDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.endOffset)
 
       // ISO 8601 형식 with timezone (+09:00)
       const formatISO = (date: Date) => {
@@ -142,9 +143,10 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const [year, month, day] = schedule.date.split('.').map(Number)
       const [hours, minutes] = schedule.time.split(':').map(Number)
 
-      // 시작/종료 시간 (설정된 오프셋 적용)
-      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
-      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
+      // 시작/종료 시간 (설정된 오프셋(분) 적용)
+      // Date 생성자는 분이 60을 초과하거나 음수여도 자동으로 시간/날짜를 조정
+      const startDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.startOffset)
+      const endDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.endOffset)
 
       // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
       const formatLocalISO = (date: Date) => {
@@ -201,9 +203,10 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       const [year, month, day] = schedule.date.split('.').map(Number)
       const [hours, minutes] = schedule.time.split(':').map(Number)
 
-      // 시작/종료 시간 (설정된 오프셋 적용)
-      const startDate = new Date(year, month - 1, day, hours + calendarEventDuration.startOffset, minutes)
-      const endDate = new Date(year, month - 1, day, hours + calendarEventDuration.endOffset, minutes)
+      // 시작/종료 시간 (설정된 오프셋(분) 적용)
+      // Date 생성자는 분이 60을 초과하거나 음수여도 자동으로 시간/날짜를 조정
+      const startDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.startOffset)
+      const endDate = new Date(year, month - 1, day, hours, minutes + calendarEventDuration.endOffset)
 
       // 로컬 시간을 ISO 형식으로 변환 (UTC 변환 없이)
       const formatLocalISO = (date: Date) => {
