@@ -127,7 +127,6 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">이름</th>
-                    <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">이메일</th>
                     <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">SNS</th>
                     <th className="text-left py-3 px-4 font-medium text-foreground whitespace-nowrap">관리자</th>
                     <th className="text-right py-3 px-4 font-medium text-foreground whitespace-nowrap">스케줄</th>
@@ -143,7 +142,6 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
                       className="border-b border-border hover:bg-accent/50 transition-colors"
                     >
                       <td className="py-3 px-4 text-foreground whitespace-nowrap">{userItem.name || '-'}</td>
-                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{userItem.email || '-'}</td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <Badge variant="outline" className="text-xs">
                           {userItem.auth_provider || 'unknown'}
