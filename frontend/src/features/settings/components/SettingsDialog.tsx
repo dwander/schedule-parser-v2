@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose, Plus, X } from 'lucide-react'
+import { Palette, CalendarCheck, FolderCheck, Link, Unlink, Settings, PanelLeftOpen, PanelLeftClose, Plus, X, Download } from 'lucide-react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { startNaverCalendarLink } from '@/features/calendar/utils/naverCalendarAuth'
@@ -20,13 +20,14 @@ import { startGoogleCalendarLink } from '@/features/calendar/utils/googleCalenda
 import { useUpdateUserSettings } from '@/features/settings/hooks/useUserSettings'
 import { toast } from 'sonner'
 import { useTheme } from 'next-themes'
+import { PWAInstallSection } from '@/components/pwa/PWAInstallSection'
 
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-type SettingSection = 'appearance' | 'calendar-sync' | 'folder-sync' | 'others'
+type SettingSection = 'appearance' | 'calendar-sync' | 'folder-sync' | 'pwa-install' | 'others'
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [activeSection, setActiveSection] = useState<SettingSection>('appearance')
@@ -218,6 +219,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     { id: 'appearance' as SettingSection, label: '외관', icon: Palette },
     { id: 'calendar-sync' as SettingSection, label: '캘린더 연동', icon: CalendarCheck },
     { id: 'folder-sync' as SettingSection, label: '폴더명 복사', icon: FolderCheck },
+    { id: 'pwa-install' as SettingSection, label: '앱으로 설치', icon: Download },
     { id: 'others' as SettingSection, label: '기타', icon: Settings },
   ]
 
@@ -688,6 +690,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 앱으로 설치 Section */}
+          {activeSection === 'pwa-install' && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-foreground">앱으로 설치</h2>
+              <PWAInstallSection />
             </div>
           )}
 
