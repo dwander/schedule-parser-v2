@@ -82,3 +82,32 @@ export async function updateUiSettings(
   })
   return response.data.ui_settings
 }
+
+/**
+ * Delete user response type
+ */
+export interface DeleteUserResponse {
+  success: boolean
+  message: string
+  deleted_data: {
+    schedules: number
+    tags: number
+    pricing_rules: number
+    trash: number
+  }
+}
+
+/**
+ * Delete a user and all associated data (admin only)
+ */
+export async function deleteUser(
+  userId: string,
+  requesterUserId: string
+): Promise<DeleteUserResponse> {
+  const response = await apiClient.delete(`/api/users/${userId}`, {
+    data: {
+      requester_user_id: requesterUserId
+    }
+  })
+  return response.data
+}

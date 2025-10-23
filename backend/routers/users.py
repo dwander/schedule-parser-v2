@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 import logging
 
-from database import get_database, User, Schedule
+from database import get_database, User, Schedule, Tag, PricingRule, TrashSchedule
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -284,4 +284,88 @@ async def update_data_settings(user_id: str, request: Request, db: Session = Dep
         raise
     except Exception as e:
         logger.error(f"❌ Update data settings error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/api/users/{user_id}")
+async def delete_user(user_id: str, request: Request, db: Session = Depends(get_database)):
+    """사용자 삭제 (관리자 전용)
+
+    사용자와 연결된 모든 데이터를 삭제합니다:
+    - 스케줄 (Schedule)
+    - 태그 (Tag)
+    - 가격 규칙 (PricingRule)
+    - 휴지통 스케줄 (TrashSchedule)
+    - 사용자 정보 (User)
+    """
+    try:
+        # 요청자의 user_id 확인 (헤더 또는 요청 본문에서)
+        data = await request.json()
+        requester_user_id = data.get("requester_user_id")
+
+        if not requester_user_id:
+            raise HTTPException(status_code=400, detail="requester_user_id is required")
+
+        # 요청자가 관리자인지 확인
+        requester = db.query(User).filter(User.id == requester_user_id).first()
+        if not requester or not requester.is_admin:
+            raise HTTPException(status_code=403, detail="Only administrators can delete users")
+
+        # 자기 자신을 삭제하려는지 확인
+        if requester_user_id == user_id:
+            raise HTTPException(status_code=400, detail="Cannot delete your own account")
+
+        # 삭제할 사용자 확인
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # 삭제할 데이터 개수 조회
+        schedule_count = db.query(Schedule).filter(Schedule.user_id == user_id).count()
+        tag_count = db.query(Tag).filter(Tag.user_id == user_id).count()
+        pricing_rule_count = db.query(PricingRule).filter(PricingRule.user_id == user_id).count()
+        trash_count = db.query(TrashSchedule).filter(TrashSchedule.user_id == user_id).count()
+
+        # 트랜잭션으로 모든 데이터 삭제
+        try:
+            # 1. 스케줄 삭제
+            db.query(Schedule).filter(Schedule.user_id == user_id).delete()
+
+            # 2. 태그 삭제
+            db.query(Tag).filter(Tag.user_id == user_id).delete()
+
+            # 3. 가격 규칙 삭제
+            db.query(PricingRule).filter(PricingRule.user_id == user_id).delete()
+
+            # 4. 휴지통 스케줄 삭제
+            db.query(TrashSchedule).filter(TrashSchedule.user_id == user_id).delete()
+
+            # 5. 사용자 삭제
+            db.delete(user)
+
+            # 커밋
+            db.commit()
+
+            logger.info(f"✅ User deleted: {user_id} (schedules: {schedule_count}, tags: {tag_count}, pricing_rules: {pricing_rule_count}, trash: {trash_count})")
+
+            return {
+                "success": True,
+                "message": "사용자가 성공적으로 삭제되었습니다.",
+                "deleted_data": {
+                    "schedules": schedule_count,
+                    "tags": tag_count,
+                    "pricing_rules": pricing_rule_count,
+                    "trash": trash_count
+                }
+            }
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"❌ Failed to delete user data: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to delete user data: {str(e)}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Delete user error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

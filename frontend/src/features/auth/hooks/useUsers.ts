@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchUsers, fetchVoiceTrainingData, updateVoiceTrainingData, fetchUiSettings, updateUiSettings } from '../api/userApi'
+import { fetchUsers, fetchVoiceTrainingData, updateVoiceTrainingData, fetchUiSettings, updateUiSettings, deleteUser } from '../api/userApi'
 import { QUERY_CONFIG } from '@/lib/constants/query'
 import type { VoiceTrainingData } from '@/features/schedule/types/voiceRecognition'
 import type { UiSettings } from '../api/userApi'
@@ -72,6 +72,22 @@ export function useUpdateUiSettings() {
       updateUiSettings(userId, settings),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ui-settings', variables.userId] })
+    },
+  })
+}
+
+/**
+ * Delete a user and all associated data (admin only)
+ */
+export function useDeleteUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userId, requesterUserId }: { userId: string; requesterUserId: string }) =>
+      deleteUser(userId, requesterUserId),
+    onSuccess: () => {
+      // 사용자 목록 다시 불러오기
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
   })
 }

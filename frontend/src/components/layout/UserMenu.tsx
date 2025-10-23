@@ -165,7 +165,7 @@ export function UserMenu({ onFolderSyncClick, onBackupRestoreClick }: UserMenuPr
       items: [
         {
           id: 'user-management',
-          label: '회원 관리',
+          label: '사용자 관리',
           icon: Users,
           action: handleUsersManagement
         },

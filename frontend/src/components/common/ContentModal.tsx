@@ -256,7 +256,7 @@ export function ContentModal({
 
                   {/* 두 번째 줄: 서브타이틀 + 액션버튼 */}
                   {(subtitle || headerAction) && (
-                    <div className="flex items-center gap-3 pl-11">
+                    <div className="flex items-center gap-3 pl-9">
                       {/* 서브타이틀 */}
                       {subtitle && (
                         <div className="flex-1 min-w-0">
