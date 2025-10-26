@@ -17,14 +17,20 @@ function replaceKeywords(
   locationShortcuts?: Record<string, string>
 ): string {
   // 브랜드 매핑 (우선순위: 사용자 설정 단축어 > 레거시 매핑)
-  const brandPrefix = brandShortcuts?.[schedule.brand] || BRAND_FOLDER_PREFIX_MAP[schedule.brand] || schedule.brand
+  // 단축어가 빈 문자열("")인 경우에도 적용되도록 키 존재 여부를 명시적으로 확인
+  const brandPrefix = brandShortcuts && schedule.brand in brandShortcuts
+    ? brandShortcuts[schedule.brand]
+    : BRAND_FOLDER_PREFIX_MAP[schedule.brand] || schedule.brand
 
   // 시간 형식 변환: "14:00" → "14시", "14:30" → "14시30분"
   const [hours, minutes] = schedule.time.split(':')
   const timeStr = minutes === '00' ? `${hours}시` : `${hours}시${minutes}분`
 
   // 장소 매핑 (사용자 설정 단축어 우선)
-  const locationText = locationShortcuts?.[schedule.location] || schedule.location
+  // 단축어가 빈 문자열("")인 경우에도 적용되도록 키 존재 여부를 명시적으로 확인
+  const locationText = locationShortcuts && schedule.location in locationShortcuts
+    ? locationShortcuts[schedule.location]
+    : schedule.location
 
   // 컷수 계산
   const totalCuts = schedule.cuts ? schedule.cuts * PHOTO_CONSTANTS.CUTS_MULTIPLIER : 0
