@@ -7,7 +7,7 @@ import { useCardScrollEffect } from '../hooks/useCardScrollEffect'
 import { ScheduleCard } from './ScheduleCard'
 import type { Schedule } from '../types/schedule'
 import { Button } from '@/components/ui/button'
-import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, ChevronUp, ChevronDown } from 'lucide-react'
+import { Calendar, CalendarOff, LayoutList, LayoutGrid, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, RefreshCw } from 'lucide-react'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -35,6 +35,8 @@ interface ScheduleTableProps {
   onSelectedCountChange?: (count: number) => void
   deleteDialogOpen?: boolean
   onDeleteDialogChange?: (open: boolean) => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 // 스크롤 효과를 적용한 카드 wrapper 컴포넌트
@@ -74,7 +76,7 @@ function CardWithScrollEffect({
   )
 }
 
-export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange }: ScheduleTableProps) {
+export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange, onRefresh, isRefreshing }: ScheduleTableProps) {
   const { isLoading, error } = useSchedules()
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
@@ -303,6 +305,21 @@ export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: e
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
+              </Button>
+
+              {/* Divider */}
+              <div className="w-px h-4 bg-border" />
+
+              {/* Refresh Button - 필터링 강제 갱신 */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className="h-8 w-8 p-0 rounded-none"
+                title="새로고침"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
 
               {/* Divider */}

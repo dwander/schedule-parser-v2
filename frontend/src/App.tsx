@@ -52,6 +52,8 @@ function AppContent() {
   const [globalFilter, setGlobalFilter] = useState('')
   const [selectedCount, setSelectedCount] = useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [refreshTimestamp, setRefreshTimestamp] = useState(() => new Date())
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const { testPanelVisible, fontSize, dateRangeFilter, sortBy, weekStartsOn, setColumnLabel } = useSettingsStore()
   const { data: schedules = [], isLoading: schedulesLoading } = useSchedules()
   const { data: tags = [] } = useTags()
@@ -237,6 +239,17 @@ function AppContent() {
     setShowLanding(false)
   }
 
+  // 필터링 강제 갱신 핸들러
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    setRefreshTimestamp(new Date())
+
+    // 300ms 후 로딩 상태 해제 (사용자 피드백)
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 300)
+  }
+
   // 필터링된 스케줄 계산 (날짜 범위 + 전역 검색 + 정렬)
   const filteredSchedules = useMemo(() => {
     let filtered = schedules
@@ -252,7 +265,7 @@ function AppContent() {
 
         // 'upcoming' 프리셋일 때는 시간도 고려
         if (dateRangeFilter.preset === 'upcoming') {
-          const now = new Date()
+          const now = refreshTimestamp
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
           filtered = filtered.filter((schedule) => {
@@ -367,7 +380,7 @@ function AppContent() {
     })
 
     return sorted
-  }, [schedules, dateRangeFilter, globalFilter, sortBy, weekStartsOn])
+  }, [schedules, dateRangeFilter, globalFilter, sortBy, weekStartsOn, refreshTimestamp])
 
   // 필터링된 데이터로 통계 계산
   const stats = useMemo(() => {
@@ -402,6 +415,8 @@ function AppContent() {
             onSelectedCountChange={setSelectedCount}
             deleteDialogOpen={deleteDialogOpen}
             onDeleteDialogChange={setDeleteDialogOpen}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
           />
         </section>
       </AppLayout>
