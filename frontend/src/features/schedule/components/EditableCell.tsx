@@ -9,6 +9,7 @@ interface EditableCellProps {
   validate?: (value: string) => boolean // 입력 검증 함수
   format?: (value: string | number) => string // 표시 포맷 함수
   placeholder?: string // 빈 값일 때 표시할 텍스트
+  renderDisplay?: (value: string | number, isEditing: boolean) => React.ReactNode // 커스텀 렌더링 함수 (편집 상태 포함)
 }
 
 export function EditableCell({
@@ -19,7 +20,8 @@ export function EditableCell({
   doubleClick = false,
   validate,
   format,
-  placeholder = ''
+  placeholder = '',
+  renderDisplay
 }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
@@ -80,9 +82,8 @@ export function EditableCell({
     )
   }
 
-  // 표시할 값 (포맷 함수가 있으면 적용)
-  const displayValue = format ? format(value) : value
-  const isEmpty = !displayValue || String(displayValue).trim() === ''
+  // 표시할 값 결정
+  const isEmpty = !value || String(value).trim() === ''
 
   return (
     <div
@@ -90,9 +91,13 @@ export function EditableCell({
       onDoubleClick={doubleClick ? () => setIsEditing(true) : undefined}
       className={`w-full min-h-[24px] cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors flex items-center ${className}`}
     >
-      <span className={isEmpty ? 'text-muted-foreground/50' : ''}>
-        {isEmpty ? placeholder : displayValue}
-      </span>
+      {isEmpty ? (
+        <span className="text-muted-foreground/50">{placeholder}</span>
+      ) : renderDisplay ? (
+        renderDisplay(value, isEditing)
+      ) : (
+        <span>{format ? format(value) : value}</span>
+      )}
     </div>
   )
 }

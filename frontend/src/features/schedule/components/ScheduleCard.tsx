@@ -18,7 +18,7 @@ import { Phone, User, Camera, FileDigit, DollarSign, UserCog, FileText, ListTodo
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
 import { NaverIcon } from '@/components/icons/NaverIcon'
 import { AppleIcon } from '@/components/icons/AppleIcon'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { getApiUrl } from '@/lib/constants/api'
@@ -51,6 +51,11 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
   const [googleDisabledPromptOpen, setGoogleDisabledPromptOpen] = useState(false)
   const [appleCalendarLoading, setAppleCalendarLoading] = useState(false)
   const [appleCredentialsPromptOpen, setAppleCredentialsPromptOpen] = useState(false)
+  const [calendarGroupOpen, setCalendarGroupOpen] = useState(false)
+  const [otherGroupOpen, setOtherGroupOpen] = useState(false)
+
+  const calendarGroupRef = useRef<HTMLDivElement>(null)
+  const otherGroupRef = useRef<HTMLDivElement>(null)
 
   const handleGoogleCalendarClick = () => {
     // 구글 캘린더 연동 여부 확인
@@ -266,6 +271,23 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
     }
   }
 
+  // 외부 클릭 시 FAB 그룹 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarGroupRef.current && !calendarGroupRef.current.contains(event.target as Node)) {
+        setCalendarGroupOpen(false)
+      }
+      if (otherGroupRef.current && !otherGroupRef.current.contains(event.target as Node)) {
+        setOtherGroupOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   // 카드 더블클릭 핸들러 (체크박스 visibility 토글)
   const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -310,7 +332,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       ref={cardRef}
       className={`
         rounded-xl border border-t-2 shadow-md
-        transition-all duration-300 md:hover:shadow-xl md:hover:scale-[1.02] w-full max-w-full
+        transition-all duration-200 md:hover:shadow-xl md:hover:scale-[1.01] w-full max-w-full
         ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
         ${
           isDuplicate
@@ -324,7 +346,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       onDoubleClick={handleCardDoubleClick}
     >
       {/* Header */}
-      <div className="flex items-start gap-3 p-5 pb-4 bg-muted/30">
+      <div className="flex items-start gap-2 p-4 pb-3 bg-muted/30">
         {/* Left: Checkbox */}
         {columnVisibility.select && (
           <input
@@ -337,17 +359,43 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
         {/* Center: Location + Date/Time (카드뷰에서는 항상 표시) */}
         <div className="flex-1 min-w-0 flex flex-col items-start">
-          <EditableCell
-            value={schedule.location}
-            onSave={(value) => {
-              updateSchedule.mutate({
-                id: schedule.id,
-                location: value
-              })
-            }}
-            placeholder={columnLabels.location}
-            className="font-semibold text-lg !w-auto mb-1"
-          />
+          <div className="flex items-baseline gap-1.5 mb-1 flex-wrap">
+            <EditableCell
+              value={schedule.location}
+              onSave={(value) => {
+                updateSchedule.mutate({
+                  id: schedule.id,
+                  location: value
+                })
+              }}
+              placeholder={columnLabels.location}
+              className="font-semibold text-lg !w-auto"
+              renderDisplay={(value, isEditing) => {
+                const str = String(value)
+                const lastSpaceIndex = str.lastIndexOf(' ')
+
+                if (lastSpaceIndex === -1) {
+                  // 공백이 없는 경우 전체를 볼드로 표시
+                  return <span className="font-semibold text-lg">{str}</span>
+                }
+
+                // 마지막 공백을 기준으로 분리
+                const venue = str.substring(0, lastSpaceIndex)
+                const hall = str.substring(lastSpaceIndex + 1)
+
+                return (
+                  <>
+                    <span className="font-semibold text-lg">{venue}</span>
+                    {!isEditing && (
+                      <span className="text-base font-normal text-muted-foreground/90 ml-1.5">
+                        {hall}
+                      </span>
+                    )}
+                  </>
+                )
+              }}
+            />
+          </div>
           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <DatePickerCell
               value={schedule.date}
@@ -405,14 +453,14 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
       <div className="border-t border-border/30" />
 
       {/* Content */}
-      <div className="p-5 pt-4 space-y-3">
+      <div className="p-4 space-y-2">
         {/* Top: Fields with FAB Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {/* Left: Fields */}
-          <div className="flex-1 space-y-3.5 min-w-0">
+          <div className="flex-1 space-y-2 min-w-0">
             {/* Couple */}
             {columnVisibility.couple && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <User className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.couple}
@@ -430,7 +478,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Contact (카드뷰에서는 데이터가 있을 때만 표시) */}
             {schedule.contact && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <Phone className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.contact}
@@ -450,7 +498,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Photographer */}
             {columnVisibility.photographer && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <Camera className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.photographer || ''}
@@ -468,7 +516,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Cuts */}
             {columnVisibility.cuts && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <FileDigit className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.cuts}
@@ -491,7 +539,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Price */}
             {columnVisibility.price && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <DollarSign className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.price}
@@ -514,7 +562,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
             {/* Manager */}
             {columnVisibility.manager && schedule.manager && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <UserCog className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0" />
                 <EditableCell
                   value={schedule.manager}
@@ -581,63 +629,66 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                 }
               }
 
-              // 여러 개 활성화된 경우: 캘린더 아이콘, 호버 시 펼침
+              // 여러 개 활성화된 경우: 캘린더 아이콘, 클릭 시 펼침
               return (
-                <div className="relative group">
+                <div ref={calendarGroupRef} className="relative">
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-10 w-10 rounded-full transition-all shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                    onClick={() => setCalendarGroupOpen(!calendarGroupOpen)}
                     title="캘린더 동기화"
                   >
                     <Calendar className="h-[1.1rem] w-[1.1rem]" />
                   </Button>
-                  {/* 호버 시 펼쳐지는 서비스 버튼들 - Absolute positioned */}
-                  <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
-                    {enabledCalendars.google && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
-                        style={{ transitionDelay: '0ms' }}
-                        onClick={handleGoogleCalendarClick}
-                        title="구글 캘린더"
-                      >
-                        <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
-                      </Button>
-                    )}
-                    {enabledCalendars.naver && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
-                        style={{ transitionDelay: enabledCalendars.google ? '50ms' : '0ms' }}
-                        onClick={handleNaverCalendarClick}
-                        title="네이버 캘린더"
-                      >
-                        <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
-                      </Button>
-                    )}
-                    {enabledCalendars.apple && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
-                        style={{ transitionDelay: [enabledCalendars.google, enabledCalendars.naver].filter(Boolean).length * 50 + 'ms' }}
-                        onClick={handleAppleCalendar}
-                        disabled={appleCalendarLoading}
-                        title="Apple 캘린더"
-                      >
-                        <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
-                      </Button>
-                    )}
-                  </div>
+                  {/* 클릭 시 펼쳐지는 서비스 버튼들 - Absolute positioned */}
+                  {calendarGroupOpen && (
+                    <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
+                      {enabledCalendars.google && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
+                          style={{ animationDelay: '0ms' }}
+                          onClick={handleGoogleCalendarClick}
+                          title="구글 캘린더"
+                        >
+                          <GoogleIcon className="h-[1.05rem] w-[1.05rem]" />
+                        </Button>
+                      )}
+                      {enabledCalendars.naver && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
+                          style={{ animationDelay: enabledCalendars.google ? '50ms' : '0ms' }}
+                          onClick={handleNaverCalendarClick}
+                          title="네이버 캘린더"
+                        >
+                          <NaverIcon className="h-[1.05rem] w-[1.05rem] text-naver" />
+                        </Button>
+                      )}
+                      {enabledCalendars.apple && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
+                          style={{ animationDelay: [enabledCalendars.google, enabledCalendars.naver].filter(Boolean).length * 50 + 'ms' }}
+                          onClick={handleAppleCalendar}
+                          disabled={appleCalendarLoading}
+                          title="Apple 캘린더"
+                        >
+                          <AppleIcon className="h-[1.525rem] w-[1.525rem]" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })()}
 
             {/* 2. 기타기능 그룹 */}
-            <div className="relative group">
+            <div ref={otherGroupRef} className="relative">
               <div className="relative">
                 {/* 데이터 있을 때 배지 표시 */}
                 {hasPhotoNoteData && (
@@ -647,59 +698,62 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 rounded-full transition-all relative shadow-sm hover:shadow-md bg-background/50 backdrop-blur-sm"
+                  onClick={() => setOtherGroupOpen(!otherGroupOpen)}
                   title="기타기능"
                 >
                   <MoreHorizontal className="h-[1.1rem] w-[1.1rem]" />
                 </Button>
               </div>
-              {/* 호버 시 펼쳐지는 기능 버튼들 - Absolute positioned */}
-              <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
-                <div className="relative opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200" style={{ transitionDelay: '0ms' }}>
-                  {/* 데이터 있을 때 배지 표시 */}
-                  {hasPhotoNoteData && (
-                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background z-10" />
-                  )}
+              {/* 클릭 시 펼쳐지는 기능 버튼들 - Absolute positioned */}
+              {otherGroupOpen && (
+                <div className="absolute top-full mt-2 flex flex-col gap-2 z-50">
+                  <div className="relative animate-in fade-in slide-in-from-top-2 duration-200" style={{ animationDelay: '0ms' }}>
+                    {/* 데이터 있을 때 배지 표시 */}
+                    {hasPhotoNoteData && (
+                      <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary border-2 border-background z-10" />
+                    )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full relative shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
+                      onClick={() => setPhotoNoteOpen(true)}
+                      title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
+                    >
+                      <FileText className="h-[1.1rem] w-[1.1rem]" />
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 rounded-full relative shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm"
-                    onClick={() => setPhotoNoteOpen(true)}
-                    title={hasPhotoNoteData ? "촬영노트 (작성됨)" : "촬영노트"}
+                    className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
+                    style={{ animationDelay: '50ms' }}
+                    onClick={() => setPhotoSequenceOpen(true)}
+                    title="원판순서"
                   >
-                    <FileText className="h-[1.1rem] w-[1.1rem]" />
+                    <ListTodo className="h-[1.1rem] w-[1.1rem]" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
+                    style={{ animationDelay: '100ms' }}
+                    onClick={handleFolderCopy}
+                    title="폴더명 복사"
+                  >
+                    <FolderCheck className="h-[1.1rem] w-[1.1rem]" />
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
-                  style={{ transitionDelay: '50ms' }}
-                  onClick={() => setPhotoSequenceOpen(true)}
-                  title="원판순서"
-                >
-                  <ListTodo className="h-[1.1rem] w-[1.1rem]" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 rounded-full shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200"
-                  style={{ transitionDelay: '100ms' }}
-                  onClick={handleFolderCopy}
-                  title="폴더명 복사"
-                >
-                  <FolderCheck className="h-[1.1rem] w-[1.1rem]" />
-                </Button>
-              </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Important Memo - Full width */}
         {hasImportantMemo && (
-          <div className="pt-3">
+          <div className="pt-2">
             <button
               onClick={() => setImportantMemoOpen(true)}
-              className="w-full p-3 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors text-left flex items-start gap-2.5"
+              className="w-full p-2 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors text-left flex items-start gap-2"
             >
               <Check className="h-[1.1rem] w-[1.1rem] text-muted-foreground/70 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-foreground/80 whitespace-pre-wrap break-words line-clamp-3 flex-1">
@@ -711,7 +765,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
 
         {/* Memo - Full width */}
         {columnVisibility.memo && (
-          <div className="pt-3 border-t border-border/30">
+          <div className="pt-2 border-t border-border/30">
             <MemoCell
               value={schedule.memo || ''}
               onSave={(value) => {
