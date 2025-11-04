@@ -90,11 +90,61 @@ async def startup_event():
             # Run database migrations
             run_migrations()
 
+            # Add default tags for all users
+            print("🏷️  Adding default tags...")
+            add_default_tags()
+
             print("✅ Database initialization complete")
         else:
             print("❌ Database connection failed")
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
+
+
+def add_default_tags():
+    """Add default tags for all users (idempotent)"""
+    try:
+        DEFAULT_TAGS = ['부케컷없음', '폐백촬영', '선촬영', '포토부스']
+
+        db = SessionLocal()
+        try:
+            # Get all unique user IDs from schedules
+            user_ids = db.query(Schedule.user_id).distinct().all()
+            user_ids = [uid[0] for uid in user_ids]
+
+            if not user_ids:
+                logger.info("ℹ️  No users found, skipping default tags")
+                return
+
+            total_added = 0
+            for user_id in user_ids:
+                for tag_value in DEFAULT_TAGS:
+                    existing = db.query(Tag).filter(
+                        Tag.user_id == user_id,
+                        Tag.tag_type == 'tags',
+                        Tag.tag_value == tag_value
+                    ).first()
+
+                    if not existing:
+                        new_tag = Tag(
+                            user_id=user_id,
+                            tag_type='tags',
+                            tag_value=tag_value
+                        )
+                        db.add(new_tag)
+                        total_added += 1
+
+            db.commit()
+            if total_added > 0:
+                logger.info(f"✅ Added {total_added} default tags")
+            else:
+                logger.info("ℹ️  Default tags already exist")
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"❌ Failed to add default tags: {e}")
 
 # --- CORS Configuration ---
 # This allows the frontend to communicate with the backend.

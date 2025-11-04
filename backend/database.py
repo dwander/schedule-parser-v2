@@ -594,6 +594,16 @@ def run_migrations():
                 'name': 'data_settings column in users',
                 'check_query': 'SELECT data_settings FROM users LIMIT 1',
                 'alter_query': 'ALTER TABLE users ADD COLUMN data_settings JSON'
+            },
+            {
+                'name': 'tags column in schedules',
+                'check_query': 'SELECT tags FROM schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE schedules ADD COLUMN tags JSON'
+            },
+            {
+                'name': 'tags column in trash_schedules',
+                'check_query': 'SELECT tags FROM trash_schedules LIMIT 1',
+                'alter_query': 'ALTER TABLE trash_schedules ADD COLUMN tags JSON'
             }
         ]
 
