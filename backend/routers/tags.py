@@ -43,8 +43,8 @@ async def create_tag(user_id: str, tag_data: dict, db: Session = Depends(get_dat
         if not tag_type or not tag_value:
             raise HTTPException(status_code=400, detail="tag_type and tag_value are required")
 
-        if tag_type not in ['brand', 'album']:
-            raise HTTPException(status_code=400, detail="tag_type must be 'brand' or 'album'")
+        if tag_type not in ['brand', 'album', 'tags']:
+            raise HTTPException(status_code=400, detail="tag_type must be 'brand', 'album', or 'tags'")
 
         # 공백 정규화
         tag_value = re.sub(r'\s+', ' ', tag_value)
@@ -93,15 +93,31 @@ async def delete_tag(user_id: str, tag_id: int, db: Session = Depends(get_databa
         if not tag:
             raise HTTPException(status_code=404, detail="Tag not found")
 
-        # 관련 스케줄 업데이트 (해당 태그를 사용하는 스케줄의 필드를 빈 문자열로)
-        field_name = tag.tag_type  # 'brand' or 'album'
-        affected_schedules = db.query(Schedule).filter(
-            Schedule.user_id == user_id,
-            getattr(Schedule, field_name) == tag.tag_value
-        ).all()
+        affected_count = 0
 
-        for schedule in affected_schedules:
-            setattr(schedule, field_name, '')
+        if tag.tag_type in ['brand', 'album']:
+            # brand, album 타입: 해당 필드를 빈 문자열로
+            field_name = tag.tag_type
+            affected_schedules = db.query(Schedule).filter(
+                Schedule.user_id == user_id,
+                getattr(Schedule, field_name) == tag.tag_value
+            ).all()
+
+            for schedule in affected_schedules:
+                setattr(schedule, field_name, '')
+                affected_count += 1
+
+        elif tag.tag_type == 'tags':
+            # tags 타입: JSON 배열에서 해당 값 제거
+            all_schedules = db.query(Schedule).filter(
+                Schedule.user_id == user_id
+            ).all()
+
+            for schedule in all_schedules:
+                if schedule.tags and isinstance(schedule.tags, list):
+                    if tag.tag_value in schedule.tags:
+                        schedule.tags = [t for t in schedule.tags if t != tag.tag_value]
+                        affected_count += 1
 
         # 태그 삭제
         db.delete(tag)
@@ -110,7 +126,7 @@ async def delete_tag(user_id: str, tag_id: int, db: Session = Depends(get_databa
         return {
             "success": True,
             "deleted_tag": tag.to_dict(),
-            "affected_schedules": len(affected_schedules)
+            "affected_schedules": affected_count
         }
 
     except HTTPException:
