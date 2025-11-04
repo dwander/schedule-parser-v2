@@ -22,6 +22,7 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { PhotoNoteViewMode } from './PhotoNoteViewMode'
 
 interface PhotoNoteDialogProps {
   open: boolean
@@ -398,14 +399,15 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
       }
       showFooter={false}
     >
-      <div
-        className="space-y-4"
-        onDoubleClick={() => {
-          if (!isEditMode) {
-            setIsEditMode(true)
-          }
-        }}
-      >
+      {!isEditMode ? (
+        <div
+          onDoubleClick={() => setIsEditMode(true)}
+          className="cursor-pointer"
+        >
+          <PhotoNoteViewMode noteData={noteData} />
+        </div>
+      ) : (
+        <div className="space-y-4">
           {/* 중요 메모 */}
           <SectionCard icon={AlertCircle} title="중요 메모" show={isEditMode ? true : !!getValue('importantMemo')} isEditMode={isEditMode}>
             <Textarea
@@ -517,8 +519,8 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               </div>
             </SectionCard>
 
-            {/* 서브 작가 */}
-            <SectionCard icon={Camera} title="서브 작가" show={isEditMode ? true : hasAnySubPhotographerData} isEditMode={isEditMode}>
+            {/* 서브 */}
+            <SectionCard icon={Camera} title="서브" show={isEditMode ? true : hasAnySubPhotographerData} isEditMode={isEditMode}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">영상(DVD)</Label>
@@ -538,7 +540,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                     onChange={(e) => handleArrowReplacement(e, 'subPhotographer.subIphoneSnap')}
                     onBlur={saveField}
                     readOnly={!isEditMode}
-                    placeholder="서브 작가"
+                    placeholder="서브"
                     className={!isEditMode ? 'border-none bg-transparent px-0 h-auto py-1 shadow-none focus-visible:ring-0 text-sm' : 'text-sm'}
                   />
                 </div>
@@ -560,7 +562,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
                       saveField()
                     }}
                   >
-                    전문가
+                    전문사회자
                   </Button>
                   <Button
                     type="button"
@@ -687,7 +689,8 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
               </Button>
             </div>
           )}
-      </div>
+        </div>
+      )}
     </ContentModal>
   )
 }
