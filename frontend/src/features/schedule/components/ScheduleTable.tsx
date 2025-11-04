@@ -56,7 +56,7 @@ function CardWithScrollEffect({
   isConflict: boolean
   onToggleSelect: () => void
   onToggleCheckboxVisibility: () => void
-  onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
+  onDeleteTag: (tagValue: string, field: 'brand' | 'album' | 'tags') => void
   enableScrollEffect: boolean
 }) {
   const { ref, style } = useCardScrollEffect(enableScrollEffect)

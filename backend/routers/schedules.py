@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 # Helper Functions
-def auto_create_tags_from_schedule(db_session, user_id: str, brand: str, album: str):
+def auto_create_tags_from_schedule(db_session, user_id: str, brand: str, album: str, tags: List[str] = None):
     """스케줄 저장/업데이트 시 자동으로 태그 생성"""
     created_tags = []
 
@@ -45,6 +45,23 @@ def auto_create_tags_from_schedule(db_session, user_id: str, brand: str, album: 
             db_session.add(new_tag)
             created_tags.append(('album', album_value))
 
+    # 커스텀 태그 생성
+    if tags and isinstance(tags, list):
+        for tag_value in tags:
+            if tag_value and tag_value.strip():
+                tag_value_clean = re.sub(r'\s+', ' ', tag_value.strip())
+
+                existing = db_session.query(Tag).filter(
+                    Tag.user_id == user_id,
+                    Tag.tag_type == 'tags',
+                    Tag.tag_value == tag_value_clean
+                ).first()
+
+                if not existing:
+                    new_tag = Tag(user_id=user_id, tag_type='tags', tag_value=tag_value_clean)
+                    db_session.add(new_tag)
+                    created_tags.append(('tags', tag_value_clean))
+
     return created_tags
 
 
@@ -76,6 +93,7 @@ def get_schedules(
                 'price': schedule.price or 0,
                 'manager': schedule.manager or "",
                 'memo': schedule.memo or "",
+                'tags': schedule.tags or [],
                 'photoNote': schedule.photo_note,
                 'photoSequence': schedule.photo_sequence,
                 'currentTemplate': schedule.current_template,
@@ -119,8 +137,8 @@ def create_schedule(
         db.commit()
         db.refresh(new_schedule)
 
-        # Auto-create tags for brand and album
-        auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album)
+        # Auto-create tags for brand, album, and tags
+        auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album, new_schedule.tags)
         db.commit()
 
         return {
@@ -191,6 +209,8 @@ def update_schedule(
             existing.manager = schedule['manager']
         if 'memo' in schedule:
             existing.memo = schedule['memo']
+        if 'tags' in schedule:
+            existing.tags = schedule['tags']
         if 'photoNote' in schedule:
             existing.photo_note = schedule['photoNote']
         if 'photoSequence' in schedule:
@@ -202,9 +222,9 @@ def update_schedule(
         if 'isDuplicate' in schedule:
             existing.needs_review = schedule['isDuplicate']
 
-        # Auto-create tags if brand or album was updated
-        if 'brand' in schedule or 'album' in schedule:
-            auto_create_tags_from_schedule(db, user_id, existing.brand, existing.album)
+        # Auto-create tags if brand, album, or tags was updated
+        if 'brand' in schedule or 'album' in schedule or 'tags' in schedule:
+            auto_create_tags_from_schedule(db, user_id, existing.brand, existing.album, existing.tags)
 
         db.commit()
         db.refresh(existing)
@@ -223,6 +243,7 @@ def update_schedule(
             'price': existing.price,
             'manager': existing.manager,
             'memo': existing.memo,
+            'tags': existing.tags or [],
             'photoNote': existing.photo_note,
             'photoSequence': existing.photo_sequence,
             'currentTemplate': existing.current_template,
@@ -263,12 +284,13 @@ async def update_schedule_field(
         if not updated_schedule:
             raise HTTPException(status_code=404, detail="Schedule not found")
 
-        # Auto-create tag when brand or album field is updated
-        if field in ['brand', 'album']:
+        # Auto-create tag when brand, album, or tags field is updated
+        if field in ['brand', 'album', 'tags']:
             brand = updated_schedule.brand if field == 'brand' else ''
             album = updated_schedule.album if field == 'album' else ''
-            if brand or album:
-                auto_create_tags_from_schedule(db, user_id, brand, album)
+            tags = updated_schedule.tags if field == 'tags' else None
+            if brand or album or tags:
+                auto_create_tags_from_schedule(db, user_id, brand, album, tags)
                 db.commit()
 
         return {
@@ -393,8 +415,8 @@ def batch_create_schedules(
 
             print(f"📝 Created schedule - couple: '{new_schedule.couple}'")
 
-            # Auto-create tags for brand and album
-            auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album)
+            # Auto-create tags for brand, album, and tags
+            auto_create_tags_from_schedule(db, user_id, new_schedule.brand, new_schedule.album, new_schedule.tags)
 
             # Add to result list
             created_schedules.append({

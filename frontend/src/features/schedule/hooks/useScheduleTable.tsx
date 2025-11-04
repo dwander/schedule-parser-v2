@@ -37,10 +37,11 @@ export function useScheduleTable(
   const { data: allSchedules = [] } = useSchedules()
   const { data: brandTags = [] } = useTags('brand')
   const { data: albumTags = [] } = useTags('album')
+  const { data: customTags = [] } = useTags('tags')
   const { brandOptions, albumOptions } = useTagOptions()
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
-  const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useConfirmState<{ tagId: number; tagValue: string; field: 'brand' | 'album' | 'tags' } | null>(null)
   const updateUiSettings = useUpdateUiSettings()
   const { user } = useAuthStore()
 
@@ -102,8 +103,8 @@ export function useScheduleTable(
   const flexColumnId = columnVisibility.memo ? 'memo' : 'spacer'
 
   // 태그 삭제 핸들러
-  const handleDeleteTag = useCallback((tagValue: string, field: 'brand' | 'album') => {
-    const tags = field === 'brand' ? brandTags : albumTags
+  const handleDeleteTag = useCallback((tagValue: string, field: 'brand' | 'album' | 'tags') => {
+    const tags = field === 'brand' ? brandTags : field === 'album' ? albumTags : customTags
     const tag = tags.find(t => t.tag_value === tagValue)
 
     if (!tag) {
@@ -111,7 +112,7 @@ export function useScheduleTable(
       return
     }
     setDeleteConfirm({ tagId: tag.id, tagValue, field })
-  }, [brandTags, albumTags, setDeleteConfirm])
+  }, [brandTags, albumTags, customTags, setDeleteConfirm])
 
   const confirmDeleteTag = async () => {
     if (!deleteConfirm) return
@@ -510,7 +511,9 @@ export function useScheduleTable(
   })
 
   const affectedCount = deleteConfirm
-    ? allSchedules.filter(s => s[deleteConfirm.field] === deleteConfirm.tagValue).length
+    ? deleteConfirm.field === 'tags'
+      ? allSchedules.filter(s => s.tags?.includes(deleteConfirm.tagValue)).length
+      : allSchedules.filter(s => s[deleteConfirm.field] === deleteConfirm.tagValue).length
     : 0
 
   return {

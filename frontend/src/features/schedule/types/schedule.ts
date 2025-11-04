@@ -66,6 +66,7 @@ export interface Schedule {
   album?: string
   photographer?: string
   memo?: string
+  tags?: string[] // 태그 배열
   photoNote?: PhotoNote
   photoSequence?: PhotoSequenceItem[]
   currentTemplate?: string // POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM

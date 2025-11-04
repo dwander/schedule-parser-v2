@@ -94,7 +94,7 @@ class Tag(Base):
     user_id = Column(String(255), nullable=False, index=True)
 
     # Tag fields
-    tag_type = Column(String(20), nullable=False)  # 'brand' or 'album'
+    tag_type = Column(String(20), nullable=False)  # 'brand', 'album', or 'tags'
     tag_value = Column(String(100), nullable=False)
 
     # Timestamps
@@ -194,6 +194,7 @@ class Schedule(Base):
     memo = Column(Text, nullable=False, default="")
     manager = Column(String(200), nullable=False, default="")
     price = Column(Integer, nullable=False, default=0)  # 촬영단가
+    tags = Column(JSON, nullable=True)  # 태그 배열 (JSON)
 
     # Review fields
     needs_review = Column(Boolean, nullable=False, default=False)
@@ -321,6 +322,7 @@ class TrashSchedule(Base):
     memo = Column(Text, nullable=False, default="")
     manager = Column(String(200), nullable=False, default="")
     price = Column(Integer, nullable=False, default=0)
+    tags = Column(JSON, nullable=True)  # 태그 배열 (JSON)
 
     # Review fields
     needs_review = Column(Boolean, nullable=False, default=False)
@@ -370,6 +372,7 @@ class TrashSchedule(Base):
             'memo': self.memo,
             'manager': self.manager,
             'price': self.price,
+            'tags': self.tags,
             'needs_review': self.needs_review,
             'review_reason': self.review_reason,
             'photoNote': self.photo_note,
@@ -400,6 +403,7 @@ class TrashSchedule(Base):
             memo=schedule.memo,
             manager=schedule.manager,
             price=schedule.price,
+            tags=schedule.tags,
             needs_review=schedule.needs_review,
             review_reason=schedule.review_reason,
             photo_note=schedule.photo_note,
@@ -729,7 +733,7 @@ class ScheduleService:
             # 허용된 필드만 업데이트
             allowed_fields = [
                 'date', 'location', 'time', 'couple', 'contact', 'brand',
-                'album', 'photographer', 'memo', 'manager', 'price',
+                'album', 'photographer', 'memo', 'manager', 'price', 'tags',
                 'needs_review', 'review_reason', 'photo_note', 'photo_sequence', 'current_template', 'shoot_time_duration', 'cuts', 'folder_name'
             ]
 
@@ -867,6 +871,7 @@ class ScheduleService:
                 memo=trash_item.memo,
                 manager=trash_item.manager,
                 price=trash_item.price,
+                tags=trash_item.tags,
                 needs_review=trash_item.needs_review,
                 review_reason=trash_item.review_reason,
                 photo_note=trash_item.photo_note,
@@ -918,6 +923,7 @@ class ScheduleService:
                     memo=trash_item.memo,
                     manager=trash_item.manager,
                     price=trash_item.price,
+                    tags=trash_item.tags,
                     needs_review=trash_item.needs_review,
                     review_reason=trash_item.review_reason,
                     photo_note=trash_item.photo_note,
@@ -974,6 +980,7 @@ class ScheduleService:
                     memo=trash_item.memo,
                     manager=trash_item.manager,
                     price=trash_item.price,
+                    tags=trash_item.tags,
                     needs_review=trash_item.needs_review,
                     review_reason=trash_item.review_reason,
                     photo_note=trash_item.photo_note,

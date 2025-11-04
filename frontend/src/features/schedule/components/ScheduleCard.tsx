@@ -4,6 +4,7 @@ import { MemoCell } from './MemoCell'
 import { DatePickerCell } from './DatePickerCell'
 import { TimePickerCell } from './TimePickerCell'
 import { TagSelectCell } from './TagSelectCell'
+import { MultiTagSelectCell } from './MultiTagSelectCell'
 import { PhotoNoteDialog } from './PhotoNoteDialog'
 import { PhotoSequenceDialog } from './PhotoSequenceDialog'
 import { ImportantMemoDialog } from './ImportantMemoDialog'
@@ -33,14 +34,14 @@ interface ScheduleCardProps {
   isConflict?: boolean
   onToggleSelect: () => void
   onToggleCheckboxVisibility: () => void
-  onDeleteTag: (tagValue: string, field: 'brand' | 'album') => void
+  onDeleteTag: (tagValue: string, field: 'brand' | 'album' | 'tags') => void
   cardRef?: React.RefObject<HTMLDivElement | null>
   cardStyle?: React.CSSProperties
 }
 
 export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
-  const { brandOptions, albumOptions } = useTagOptions()
+  const { brandOptions, albumOptions, tagOptions } = useTagOptions()
   const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration, brandShortcuts, locationShortcuts } = useSettingsStore()
   const { user } = useAuthStore()
   const [photoNoteOpen, setPhotoNoteOpen] = useState(false)
@@ -746,6 +747,22 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
               )}
             </div>
           </div>
+        </div>
+
+        {/* Tags - Full width */}
+        <div className="pt-2">
+          <MultiTagSelectCell
+            value={schedule.tags || []}
+            options={tagOptions}
+            onSave={(tags) => {
+              updateSchedule.mutate({
+                id: schedule.id,
+                tags
+              })
+            }}
+            onDelete={(tag) => onDeleteTag(tag, 'tags')}
+            placeholder="태그 추가"
+          />
         </div>
 
         {/* Important Memo - Full width */}

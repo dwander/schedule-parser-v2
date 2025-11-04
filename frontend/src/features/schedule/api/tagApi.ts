@@ -4,18 +4,18 @@ import { getUserId } from '@/lib/utils/userUtils'
 export interface Tag {
   id: number
   user_id: string
-  tag_type: 'brand' | 'album'
+  tag_type: 'brand' | 'album' | 'tags'
   tag_value: string
   created_at: string
   updated_at: string
 }
 
 export interface CreateTagRequest {
-  tag_type: 'brand' | 'album'
+  tag_type: 'brand' | 'album' | 'tags'
   tag_value: string
 }
 
-export async function fetchTags(tagType?: 'brand' | 'album'): Promise<Tag[]> {
+export async function fetchTags(tagType?: 'brand' | 'album' | 'tags'): Promise<Tag[]> {
   const userId = getUserId()
   const { data } = await apiClient.get(`/api/tags/${userId}`, {
     params: tagType ? { tag_type: tagType } : undefined
