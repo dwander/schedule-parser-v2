@@ -5,8 +5,8 @@ import { AlertDialog } from '@/components/common/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react'
-import { useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
+import { Upload, FileText, Loader2, CheckCircle2, AlertCircle, RotateCcw, AlertTriangle } from 'lucide-react'
+import { useBatchAddSchedules, useUpdateSchedule } from '@/features/schedule/hooks/useSchedules'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { toast } from 'sonner'
@@ -37,7 +37,9 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const [skipCalendarConfirm, setSkipCalendarConfirm] = useState(false)
   const [calendarWarningOpen, setCalendarWarningOpen] = useState(false)
   const [calendarWarningMessage, setCalendarWarningMessage] = useState('')
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false)
   const batchAddSchedules = useBatchAddSchedules()
+  const updateSchedule = useUpdateSchedule()
   const parseTimerRef = useRef<NodeJS.Timeout | null>(null)
   const { user } = useAuthStore()
   const { enabledCalendars, appleCredentials, calendarEventDuration } = useSettingsStore()
@@ -47,6 +49,7 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
   const {
     isParsing,
     parsedData,
+    duplicates,
     error,
     parsingStep,
     parseFromText,
@@ -257,7 +260,62 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
     return { successCount, failCount, authError }
   }, [enabledCalendars, user, appleCredentials, calendarEventDuration])
 
+  // 중복 스케줄 업데이트 핸들러
+  const handleUpdateDuplicates = useCallback(() => {
+    if (!duplicates || duplicates.length === 0) return
+
+    setDuplicateConfirmOpen(false)
+
+    // 각 중복 스케줄을 업데이트
+    let successCount = 0
+    let failCount = 0
+
+    duplicates.forEach(({ parsed, existing }) => {
+      const updatedSchedule = {
+        id: existing.id,
+        date: parsed.date,
+        time: parsed.time,
+        location: parsed.location,
+        couple: parsed.couple,
+        contact: parsed.contact,
+        memo: parsed.memo,
+      }
+
+      updateSchedule.mutate(updatedSchedule, {
+        onSuccess: () => {
+          successCount++
+          if (successCount === duplicates.length) {
+            toast.success(`${successCount}개의 스케줄이 업데이트되었습니다`)
+            onOpenChange(false)
+            setText('')
+            reset()
+          }
+        },
+        onError: () => {
+          failCount++
+          if (successCount + failCount === duplicates.length) {
+            if (successCount > 0) {
+              toast.success(`${successCount}개의 스케줄이 업데이트되었습니다`)
+            }
+            if (failCount > 0) {
+              toast.error(`${failCount}개의 스케줄 업데이트에 실패했습니다`)
+            }
+            onOpenChange(false)
+            setText('')
+            reset()
+          }
+        }
+      })
+    })
+  }, [duplicates, updateSchedule, onOpenChange, reset])
+
   const handleSave = () => {
+    // 중복 스케줄만 있는 경우 - 업데이트 확인 다이얼로그 표시
+    if (duplicates && duplicates.length > 0 && (!parsedData || parsedData.length === 0)) {
+      setDuplicateConfirmOpen(true)
+      return
+    }
+
     if (activeTab === 'manual') {
       // 직접 입력 모드
       if (!manualForm.date || !manualForm.time || !manualForm.location) {
@@ -441,12 +499,14 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             disabled={
               activeTab === 'manual'
                 ? !manualForm.date || !manualForm.time || !manualForm.location || isParsing
-                : !parsedData || parsedData.length === 0 || isParsing
+                : ((!parsedData || parsedData.length === 0) && (!duplicates || duplicates.length === 0)) || isParsing
             }
             className="flex-1"
           >
             {activeTab === 'manual'
               ? '추가하기'
+              : duplicates && duplicates.length > 0 && (!parsedData || parsedData.length === 0)
+              ? `${duplicates.length}개 업데이트하기`
               : parsedData
               ? `${parsedData.length}개 추가하기`
               : '추가하기'}
@@ -579,6 +639,20 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
             </div>
           </div>
         )}
+
+        {duplicates && duplicates.length > 0 && (
+          <div className="flex items-start gap-2 p-3 bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-md">
+            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                {duplicates.length}개의 중복 스케줄이 발견되었습니다
+              </p>
+              <p className="text-xs mt-1 opacity-80">
+                동일한 날짜, 시간, 장소의 스케줄이 이미 존재합니다. {parsedData && parsedData.length > 0 ? '새 스케줄만 추가되거나' : ''} 업데이트를 선택할 수 있습니다.
+              </p>
+            </div>
+          </div>
+        )}
       </Tabs>
 
       {/* 캘린더 동기화 확인 다이얼로그 */}
@@ -600,6 +674,21 @@ export function ParserModal({ open, onOpenChange, existingSchedules }: ParserMod
         onOpenChange={setCalendarWarningOpen}
         title="설정 필요"
         description={calendarWarningMessage}
+      />
+
+      {/* 중복 스케줄 업데이트 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={duplicateConfirmOpen}
+        onOpenChange={setDuplicateConfirmOpen}
+        title="중복 스케줄 업데이트"
+        description={
+          duplicates && duplicates.length > 0
+            ? `${duplicates.length}개의 중복 스케줄이 발견되었습니다.\n\n기존 스케줄을 새로운 내용으로 업데이트하시겠습니까?`
+            : ''
+        }
+        confirmText="업데이트"
+        cancelText="취소"
+        onConfirm={handleUpdateDuplicates}
       />
     </ContentModal>
   )

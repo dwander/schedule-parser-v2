@@ -4,14 +4,20 @@ import type { Schedule } from '@/features/schedule/types/schedule'
 import type { ParsedScheduleData } from '../types/parser'
 import { parseText, parseFile } from '../api/parserApi'
 import { hasRequiredFields } from '../utils/validation'
-import { filterDuplicateSchedules } from '../utils/duplicateCheck'
+import { filterDuplicateSchedules, findDuplicateSchedule } from '../utils/duplicateCheck'
 
 export type ParserEngine = 'classic' | 'llm' | 'hybrid'
 export type ParsingStep = 'classic' | 'gpt' | null
 
+export interface DuplicateScheduleInfo {
+  parsed: ParsedScheduleData
+  existing: Schedule
+}
+
 interface UseParserEngineResult {
   isParsing: boolean
   parsedData: ParsedScheduleData[] | null
+  duplicates: DuplicateScheduleInfo[] | null
   error: string | null
   parsingStep: ParsingStep
   parseFromText: (text: string, engine: ParserEngine) => Promise<void>
@@ -27,6 +33,7 @@ interface UseParserEngineResult {
 export function useParserEngine(existingSchedules: Schedule[]): UseParserEngineResult {
   const [isParsing, setIsParsing] = useState(false)
   const [parsedData, setParsedData] = useState<ParsedScheduleData[] | null>(null)
+  const [duplicates, setDuplicates] = useState<DuplicateScheduleInfo[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [parsingStep, setParsingStep] = useState<ParsingStep>(null)
 
@@ -39,14 +46,24 @@ export function useParserEngine(existingSchedules: Schedule[]): UseParserEngineR
     if (result.success && result.data) {
       const { unique, duplicateCount } = filterDuplicateSchedules(result.data, existingSchedules)
 
+      // 중복 스케줄 정보 수집
+      const duplicateInfos: DuplicateScheduleInfo[] = []
+      result.data.forEach(parsed => {
+        const existingSchedule = findDuplicateSchedule(parsed, existingSchedules)
+        if (existingSchedule) {
+          duplicateInfos.push({ parsed, existing: existingSchedule })
+        }
+      })
+
       setParsedData(unique)
+      setDuplicates(duplicateInfos.length > 0 ? duplicateInfos : null)
 
       if (duplicateCount > 0) {
-        toast.info(`${duplicateCount}개의 중복 스케줄이 제외되었습니다`)
+        toast.info(`${duplicateCount}개의 중복 스케줄이 발견되었습니다`)
       }
 
-      if (unique.length === 0) {
-        setError('추가할 새로운 스케줄이 없습니다 (모두 중복)')
+      if (unique.length === 0 && duplicateInfos.length === 0) {
+        setError('추가할 스케줄이 없습니다')
       }
     } else {
       setError(result.error || '파싱에 실패했습니다')
@@ -143,6 +160,7 @@ export function useParserEngine(existingSchedules: Schedule[]): UseParserEngineR
    */
   const reset = useCallback(() => {
     setParsedData(null)
+    setDuplicates(null)
     setError(null)
     setParsingStep(null)
   }, [])
@@ -150,6 +168,7 @@ export function useParserEngine(existingSchedules: Schedule[]): UseParserEngineR
   return {
     isParsing,
     parsedData,
+    duplicates,
     error,
     parsingStep,
     parseFromText,
