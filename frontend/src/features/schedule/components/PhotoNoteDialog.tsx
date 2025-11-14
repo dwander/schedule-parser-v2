@@ -89,6 +89,7 @@ const defaultPhotoNote: PhotoNote = {
       memo: ''
     },
     events: {
+      blessingPrayer: false,
       blessing: false,
       congratulatorySpeech: false,
       congratulatorySong: false,
@@ -330,6 +331,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   const getSelectedEvents = () => {
     const events = noteData.ceremony?.events || {}
     const eventNames: Record<string, string> = {
+      blessingPrayer: '축도',
       blessing: '덕담',
       congratulatorySpeech: '축사',
       congratulatorySong: '축가',
@@ -348,6 +350,7 @@ export function PhotoNoteDialog({ open, onOpenChange, schedule }: PhotoNoteDialo
   }
 
   const eventItems = [
+    { key: 'blessingPrayer', label: '축도' },
     { key: 'blessing', label: '덕담' },
     { key: 'congratulatorySpeech', label: '축사' },
     { key: 'congratulatorySong', label: '축가' },

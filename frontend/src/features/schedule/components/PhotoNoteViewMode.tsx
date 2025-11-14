@@ -92,13 +92,14 @@ export function PhotoNoteViewMode({ noteData }: PhotoNoteViewModeProps) {
     .filter(([key, value]) => key !== 'memo' && value === true)
     .map(([key]) => {
       const eventLabels: Record<string, string> = {
-        blessing: '축도',
+        blessingPrayer: '축도',
+        blessing: '덕담',
         congratulatorySpeech: '축사',
         congratulatorySong: '축가',
         congratulatoryDance: '축무',
-        flowerGirl: '플라워걸',
-        ringExchange: '반지교환',
-        videoPlay: '영상',
+        flowerGirl: '화동',
+        ringExchange: '예물교환',
+        videoPlay: '영상재생',
         flashCut: '플래시컷',
         bouquetCut: '부케컷',
         flowerShower: '플라워샤워'

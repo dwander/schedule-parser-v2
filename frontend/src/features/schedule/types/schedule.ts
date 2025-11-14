@@ -30,6 +30,7 @@ export interface PhotoNote {
       memo?: string
     }
     events?: {
+      blessingPrayer?: boolean
       blessing?: boolean
       congratulatorySpeech?: boolean
       congratulatorySong?: boolean
