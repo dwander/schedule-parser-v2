@@ -45,6 +45,10 @@
 
   /* 모달 백드롭 */
   --backdrop: 0 0% 100%;
+
+  /* FAB 그림자 */
+  --fab-shadow-opacity: 0.25;
+  --fab-border-opacity: 0.15;
 }
 
 .dark {
@@ -89,6 +93,10 @@
 
   /* 모달 백드롭 */
   --backdrop: 222.2 20% 12%;
+
+  /* FAB 그림자 */
+  --fab-shadow-opacity: 0.6;
+  --fab-border-opacity: 0.5;
 }
 
 @layer base {
@@ -144,4 +152,17 @@
 
 .animate-gentle-ping {
   animation: gentle-ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes fab-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-fab-pulse {
+  animation: fab-pulse 2s ease-in-out infinite;
 }

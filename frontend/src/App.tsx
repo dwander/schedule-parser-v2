@@ -11,6 +11,8 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { LandingPage } from '@/components/landing/LandingPage'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useSchedules, useBatchAddSchedules } from '@/features/schedule/hooks/useSchedules'
+import { useActiveSchedule } from '@/features/schedule/hooks/useActiveSchedule'
+import { ActiveScheduleFab } from '@/features/schedule/components/ActiveScheduleFab'
 import { useSyncTags, useTags } from '@/features/schedule/hooks/useTags'
 import { useUiSettings } from '@/features/auth/hooks/useUsers'
 import { useSettingsSync } from '@/features/settings/hooks/useUserSettings'
@@ -382,6 +384,9 @@ function AppContent() {
     return sorted
   }, [schedules, dateRangeFilter, globalFilter, sortBy, weekStartsOn, refreshTimestamp])
 
+  // 현재 진행 중인 스케줄 감지 (필터링된 스케줄 기준)
+  const activeSchedule = useActiveSchedule(filteredSchedules)
+
   // 필터링된 데이터로 통계 계산
   const stats = useMemo(() => {
     return {
@@ -442,6 +447,9 @@ function AppContent() {
 
       <Toaster position="top-center" />
       {testPanelVisible && <DialogTestPanel />}
+
+      {/* 진행 중인 스케줄 플로팅 버튼 */}
+      {activeSchedule && <ActiveScheduleFab schedule={activeSchedule} />}
 
       {/* 스크롤 버튼 */}
       <ScrollButtons />
