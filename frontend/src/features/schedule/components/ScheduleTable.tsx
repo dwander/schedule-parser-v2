@@ -32,6 +32,7 @@ import { presetLabels, calculateDateRangeFromPreset } from '@/lib/utils/datePres
 
 interface ScheduleTableProps {
   data: Schedule[]
+  activeScheduleId?: string | null
   onSelectedCountChange?: (count: number) => void
   deleteDialogOpen?: boolean
   onDeleteDialogChange?: (open: boolean) => void
@@ -45,6 +46,7 @@ function CardWithScrollEffect({
   isSelected,
   isDuplicate,
   isConflict,
+  isActive,
   onToggleSelect,
   onToggleCheckboxVisibility,
   onDeleteTag,
@@ -54,6 +56,7 @@ function CardWithScrollEffect({
   isSelected: boolean
   isDuplicate: boolean
   isConflict: boolean
+  isActive: boolean
   onToggleSelect: () => void
   onToggleCheckboxVisibility: () => void
   onDeleteTag: (tagValue: string, field: 'brand' | 'album' | 'tags') => void
@@ -67,6 +70,7 @@ function CardWithScrollEffect({
       isSelected={isSelected}
       isDuplicate={isDuplicate}
       isConflict={isConflict}
+      isActive={isActive}
       onToggleSelect={onToggleSelect}
       onToggleCheckboxVisibility={onToggleCheckboxVisibility}
       onDeleteTag={onDeleteTag}
@@ -76,7 +80,7 @@ function CardWithScrollEffect({
   )
 }
 
-export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange, onRefresh, isRefreshing }: ScheduleTableProps) {
+export function ScheduleTable({ data, activeScheduleId, onSelectedCountChange, deleteDialogOpen: externalDeleteDialogOpen, onDeleteDialogChange, onRefresh, isRefreshing }: ScheduleTableProps) {
   const { isLoading, error } = useSchedules()
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false)
   const [internalDeleteDialogOpen, setInternalDeleteDialogOpen] = useState(false)
@@ -656,6 +660,7 @@ export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: e
                       const rowIndex = virtualRow.index * gridColumns + idx
                       const isDuplicate = duplicateSchedules.has(rowIndex)
                       const isConflict = conflictSchedules.has(rowIndex)
+                      const isActive = activeScheduleId === schedule.id
                       return (
                         <div key={schedule.id} className="min-w-0">
                           <CardWithScrollEffect
@@ -663,6 +668,7 @@ export function ScheduleTable({ data, onSelectedCountChange, deleteDialogOpen: e
                             isSelected={row.getIsSelected()}
                             isDuplicate={isDuplicate}
                             isConflict={isConflict}
+                            isActive={isActive}
                             onToggleSelect={() => row.toggleSelected()}
                             onToggleCheckboxVisibility={() => setColumnVisibility({ ...columnVisibility, select: !columnVisibility.select })}
                             onDeleteTag={handleDeleteTag}

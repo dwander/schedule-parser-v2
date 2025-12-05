@@ -32,6 +32,7 @@ interface ScheduleCardProps {
   isSelected: boolean
   isDuplicate?: boolean
   isConflict?: boolean
+  isActive?: boolean
   onToggleSelect: () => void
   onToggleCheckboxVisibility: () => void
   onDeleteTag: (tagValue: string, field: 'brand' | 'album' | 'tags') => void
@@ -39,7 +40,7 @@ interface ScheduleCardProps {
   cardStyle?: React.CSSProperties
 }
 
-export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
+export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConflict = false, isActive = false, onToggleSelect, onToggleCheckboxVisibility, onDeleteTag, cardRef, cardStyle }: ScheduleCardProps) {
   const updateSchedule = useUpdateSchedule()
   const { brandOptions, albumOptions, tagOptions } = useTagOptions()
   const { cardColumnVisibility: columnVisibility, enabledCalendars, skipNaverCalendarConfirm, setSkipNaverCalendarConfirm, columnLabels, folderNameFormat, appleCredentials, calendarEventDuration, brandShortcuts, locationShortcuts } = useSettingsStore()
@@ -335,6 +336,7 @@ export function ScheduleCard({ schedule, isSelected, isDuplicate = false, isConf
         rounded-xl border border-t-2 shadow-md
         transition-all duration-200 md:hover:shadow-xl md:hover:scale-[1.01] w-full max-w-full
         ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
+        ${isActive && !isSelected ? 'ring-1 ring-primary/40' : ''}
         ${
           isDuplicate
             ? 'bg-warning border-warning-border border-l-4'

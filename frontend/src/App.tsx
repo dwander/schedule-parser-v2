@@ -417,6 +417,7 @@ function AppContent() {
         <section className="px-2 sm:px-4 pb-4 sm:pb-6 pt-4 sm:pt-6">
           <ScheduleTable
             data={filteredSchedules}
+            activeScheduleId={activeSchedule?.id}
             onSelectedCountChange={setSelectedCount}
             deleteDialogOpen={deleteDialogOpen}
             onDeleteDialogChange={setDeleteDialogOpen}
