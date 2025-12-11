@@ -462,60 +462,44 @@ async def get_folder_name(
     brand_shortcuts = data_settings.get('brandShortcuts', {})
     location_shortcuts = data_settings.get('locationShortcuts', {})
 
-    # 정확히 일치하는 스케줄 조회
-    schedules = db.query(Schedule).filter(
+    # 요청 시간을 분 단위로 변환
+    target_minutes = int(time_str.split(':')[0]) * 60 + int(time_str.split(':')[1])
+
+    # 해당 날짜의 모든 스케줄 조회
+    same_day_schedules = db.query(Schedule).filter(
         Schedule.user_id == api_key.user_id,
-        Schedule.date == date_str,
-        Schedule.time == time_str
+        Schedule.date == date_str
     ).all()
 
-    if len(schedules) == 0:
-        # 해당 날짜의 가장 가까운 시간대 스케줄 찾기
-        same_day_schedules = db.query(Schedule).filter(
-            Schedule.user_id == api_key.user_id,
-            Schedule.date == date_str
-        ).all()
-
-        if same_day_schedules:
-            # 요청 시간과 가장 가까운 스케줄 찾기
-            target_minutes = int(time_str.split(':')[0]) * 60 + int(time_str.split(':')[1])
-
-            closest = None
-            min_diff = float('inf')
-
-            for s in same_day_schedules:
-                s_parts = s.time.split(':')
-                s_minutes = int(s_parts[0]) * 60 + int(s_parts[1])
-                diff = abs(s_minutes - target_minutes)
-
-                if diff < min_diff:
-                    min_diff = diff
-                    closest = s
-
-            if closest:
-                folder_name = generate_folder_name(
-                    closest, folder_format, brand_shortcuts, location_shortcuts
-                )
-                return {
-                    "success": True,
-                    "folder_name": folder_name,
-                    "schedule": {
-                        "id": str(closest.id),
-                        "date": closest.date,
-                        "time": closest.time,
-                        "location": closest.location,
-                        "couple": closest.couple
-                    },
-                    "matched_by": "nearest"
-                }
-
+    if not same_day_schedules:
         raise HTTPException(
             status_code=404,
             detail=f"No schedule found for {datetime_str}"
         )
 
-    if len(schedules) == 1:
-        schedule = schedules[0]
+    # ±1시간(60분) 범위 내 스케줄 필터링
+    TIME_RANGE_MINUTES = 60
+    matched_schedules = []
+
+    for s in same_day_schedules:
+        s_parts = s.time.split(':')
+        s_minutes = int(s_parts[0]) * 60 + int(s_parts[1])
+        diff = abs(s_minutes - target_minutes)
+
+        if diff <= TIME_RANGE_MINUTES:
+            matched_schedules.append((s, diff))
+
+    if not matched_schedules:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No schedule found within ±1 hour of {datetime_str}"
+        )
+
+    # 시간 차이가 가장 작은 순으로 정렬
+    matched_schedules.sort(key=lambda x: x[1])
+
+    if len(matched_schedules) == 1:
+        schedule, diff = matched_schedules[0]
         folder_name = generate_folder_name(
             schedule, folder_format, brand_shortcuts, location_shortcuts
         )
@@ -529,12 +513,12 @@ async def get_folder_name(
                 "location": schedule.location,
                 "couple": schedule.couple
             },
-            "matched_by": "exact"
+            "matched_by": "range"
         }
 
-    # 여러 개 매칭 (같은 시간에 여러 스케줄)
+    # 여러 개 매칭 (±1시간 내 여러 스케줄)
     results = []
-    for schedule in schedules:
+    for schedule, diff in matched_schedules:
         folder_name = generate_folder_name(
             schedule, folder_format, brand_shortcuts, location_shortcuts
         )
