@@ -30,8 +30,8 @@ DEFAULT_FOLDER_FORMAT = {
     "noCuts": "[BRAND] [DATE] [TIME] [LOCATION]([COUPLE])"
 }
 
-# 컷수 승수 (프론트엔드와 동일)
-CUTS_MULTIPLIER = 3
+# 컷수 승수 (프론트엔드와 동일 - frontend/src/lib/constants/schedule.ts)
+CUTS_MULTIPLIER = 2
 
 
 # --- Pydantic Models ---
