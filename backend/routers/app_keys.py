@@ -423,7 +423,7 @@ async def regenerate_api_key(
 
 @router.get("/api/desktop/folder-name", tags=["Desktop API"])
 async def get_folder_name(
-    datetime_str: str,
+    datetime: str = Query(..., description="DateTime in 'YYYY.MM.DD HH:MM' format"),
     api_key: AppApiKey = Depends(get_api_key_from_header),
     db: Session = Depends(get_database)
 ):
@@ -436,7 +436,7 @@ async def get_folder_name(
     """
     # datetime 파싱
     try:
-        parts = datetime_str.strip().split(' ')
+        parts = datetime.strip().split(' ')
         if len(parts) != 2:
             raise ValueError("Invalid format")
         date_str, time_str = parts
@@ -474,7 +474,7 @@ async def get_folder_name(
     if not same_day_schedules:
         raise HTTPException(
             status_code=404,
-            detail=f"No schedule found for {datetime_str}"
+            detail=f"No schedule found for {datetime}"
         )
 
     # ±1시간(60분) 범위 내 스케줄 필터링
@@ -492,7 +492,7 @@ async def get_folder_name(
     if not matched_schedules:
         raise HTTPException(
             status_code=404,
-            detail=f"No schedule found within ±1 hour of {datetime_str}"
+            detail=f"No schedule found within ±1 hour of {datetime}"
         )
 
     # 시간 차이가 가장 작은 순으로 정렬
