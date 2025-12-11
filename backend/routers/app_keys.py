@@ -421,9 +421,14 @@ async def regenerate_api_key(
 
 # --- Desktop API Endpoints ---
 
-@router.get("/api/desktop/folder-name", tags=["Desktop API"])
+class FolderNameRequest(BaseModel):
+    datetime: str  # YYYY.MM.DD HH:MM 형식
+    file_count: Optional[int] = None  # 파일 개수 (선택적)
+
+
+@router.post("/api/desktop/folder-name", tags=["Desktop API"])
 async def get_folder_name(
-    datetime: str = Query(..., description="DateTime in 'YYYY.MM.DD HH:MM' format"),
+    request: FolderNameRequest,
     api_key: AppApiKey = Depends(get_api_key_from_header),
     db: Session = Depends(get_database)
 ):
@@ -431,12 +436,13 @@ async def get_folder_name(
     데스크탑 앱용 폴더명 조회 API
 
     - X-API-Key 헤더 필수
-    - datetime 파라미터: "2025.12.15 14:00" 형식
-    - 해당 시간의 스케줄을 찾아 폴더명 반환
+    - datetime: 스케줄 날짜/시간 (YYYY.MM.DD HH:MM)
+    - file_count: 파일 개수 (선택적) - 전달 시 스케줄 컷수를 먼저 업데이트 후 폴더명 생성
+    - ±1시간 범위 내 스케줄을 찾아 폴더명 반환
     """
     # datetime 파싱
     try:
-        parts = datetime.strip().split(' ')
+        parts = request.datetime.strip().split(' ')
         if len(parts) != 2:
             raise ValueError("Invalid format")
         date_str, time_str = parts
@@ -474,124 +480,6 @@ async def get_folder_name(
     if not same_day_schedules:
         raise HTTPException(
             status_code=404,
-            detail=f"No schedule found for {datetime}"
-        )
-
-    # ±1시간(60분) 범위 내 스케줄 필터링
-    TIME_RANGE_MINUTES = 60
-    matched_schedules = []
-
-    for s in same_day_schedules:
-        s_parts = s.time.split(':')
-        s_minutes = int(s_parts[0]) * 60 + int(s_parts[1])
-        diff = abs(s_minutes - target_minutes)
-
-        if diff <= TIME_RANGE_MINUTES:
-            matched_schedules.append((s, diff))
-
-    if not matched_schedules:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No schedule found within ±1 hour of {datetime}"
-        )
-
-    # 시간 차이가 가장 작은 순으로 정렬
-    matched_schedules.sort(key=lambda x: x[1])
-
-    if len(matched_schedules) == 1:
-        schedule, diff = matched_schedules[0]
-        folder_name = generate_folder_name(
-            schedule, folder_format, brand_shortcuts, location_shortcuts
-        )
-        return {
-            "success": True,
-            "folder_name": folder_name,
-            "schedule": {
-                "id": str(schedule.id),
-                "date": schedule.date,
-                "time": schedule.time,
-                "location": schedule.location,
-                "couple": schedule.couple
-            },
-            "matched_by": "range"
-        }
-
-    # 여러 개 매칭 (±1시간 내 여러 스케줄)
-    results = []
-    for schedule, diff in matched_schedules:
-        folder_name = generate_folder_name(
-            schedule, folder_format, brand_shortcuts, location_shortcuts
-        )
-        results.append({
-            "folder_name": folder_name,
-            "schedule": {
-                "id": str(schedule.id),
-                "date": schedule.date,
-                "time": schedule.time,
-                "location": schedule.location,
-                "couple": schedule.couple
-            }
-        })
-
-    return {
-        "success": True,
-        "matched_by": "multiple",
-        "schedules": results
-    }
-
-
-class UpdateCutsRequest(BaseModel):
-    datetime: str  # YYYY.MM.DD HH:MM 형식
-    file_count: int  # 파일 개수
-
-
-@router.patch("/api/desktop/update-cuts", tags=["Desktop API"])
-async def update_schedule_cuts(
-    request: UpdateCutsRequest,
-    api_key: AppApiKey = Depends(get_api_key_from_header),
-    db: Session = Depends(get_database)
-):
-    """
-    데스크탑 앱용 스케줄 컷수 업데이트 API
-
-    - X-API-Key 헤더 필수
-    - datetime: 스케줄 날짜/시간 (YYYY.MM.DD HH:MM)
-    - file_count: 촬영된 파일 개수 (컷수로 저장됨)
-    - ±1시간 범위 내 스케줄을 찾아 컷수 업데이트
-    """
-    # datetime 파싱
-    try:
-        parts = request.datetime.strip().split(' ')
-        if len(parts) != 2:
-            raise ValueError("Invalid format")
-        date_str, time_str = parts
-
-        # 날짜 형식 검증 (YYYY.MM.DD)
-        if not re.match(r'^\d{4}\.\d{2}\.\d{2}$', date_str):
-            raise ValueError("Invalid date format")
-
-        # 시간 형식 검증 (HH:MM)
-        if not re.match(r'^\d{2}:\d{2}$', time_str):
-            raise ValueError("Invalid time format")
-
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid datetime format. Use 'YYYY.MM.DD HH:MM' (e.g., '2025.12.15 14:00')"
-        )
-
-    # 요청 시간을 분 단위로 변환
-    target_minutes = int(time_str.split(':')[0]) * 60 + int(time_str.split(':')[1])
-
-    # 해당 날짜의 모든 스케줄 조회
-    same_day_schedules = db.query(Schedule).filter(
-        Schedule.user_id == api_key.user_id,
-        Schedule.date == date_str
-    ).all()
-
-    if not same_day_schedules:
-        raise HTTPException(
-            status_code=404,
             detail=f"No schedule found for {request.datetime}"
         )
 
@@ -616,43 +504,67 @@ async def update_schedule_cuts(
     # 시간 차이가 가장 작은 순으로 정렬
     matched_schedules.sort(key=lambda x: x[1])
 
-    if len(matched_schedules) > 1:
-        # 여러 개 매칭 시 에러 (어떤 스케줄을 업데이트할지 모호함)
-        return {
-            "success": False,
-            "error": "multiple_schedules",
-            "message": "Multiple schedules found. Cannot determine which to update.",
-            "schedules": [
-                {
-                    "id": str(s.id),
-                    "date": s.date,
-                    "time": s.time,
-                    "location": s.location,
-                    "couple": s.couple,
-                    "cuts": s.cuts
-                }
-                for s, _ in matched_schedules
-            ]
+    if len(matched_schedules) == 1:
+        schedule, diff = matched_schedules[0]
+
+        # file_count가 있으면 먼저 컷수 업데이트
+        cuts_updated = False
+        old_cuts = schedule.cuts
+        if request.file_count is not None:
+            schedule.cuts = request.file_count
+            db.commit()
+            db.refresh(schedule)
+            cuts_updated = True
+            logger.info(f"📸 Updated cuts for schedule {schedule.id}: {old_cuts} → {request.file_count}")
+
+        # 업데이트된 스케줄로 폴더명 생성
+        folder_name = generate_folder_name(
+            schedule, folder_format, brand_shortcuts, location_shortcuts
+        )
+
+        response = {
+            "success": True,
+            "folder_name": folder_name,
+            "schedule": {
+                "id": str(schedule.id),
+                "date": schedule.date,
+                "time": schedule.time,
+                "location": schedule.location,
+                "couple": schedule.couple,
+                "cuts": schedule.cuts
+            },
+            "matched_by": "range"
         }
 
-    # 단일 스케줄 업데이트
-    schedule, diff = matched_schedules[0]
-    old_cuts = schedule.cuts
-    schedule.cuts = request.file_count
-    db.commit()
-    db.refresh(schedule)
+        if cuts_updated:
+            response["cuts_updated"] = {
+                "from": old_cuts,
+                "to": request.file_count
+            }
 
-    logger.info(f"📸 Updated cuts for schedule {schedule.id}: {old_cuts} → {request.file_count}")
+        return response
+
+    # 여러 개 매칭 (±1시간 내 여러 스케줄) - file_count가 있어도 업데이트하지 않음
+    results = []
+    for schedule, diff in matched_schedules:
+        folder_name = generate_folder_name(
+            schedule, folder_format, brand_shortcuts, location_shortcuts
+        )
+        results.append({
+            "folder_name": folder_name,
+            "schedule": {
+                "id": str(schedule.id),
+                "date": schedule.date,
+                "time": schedule.time,
+                "location": schedule.location,
+                "couple": schedule.couple,
+                "cuts": schedule.cuts
+            }
+        })
 
     return {
         "success": True,
-        "message": f"Updated cuts: {old_cuts} → {request.file_count}",
-        "schedule": {
-            "id": str(schedule.id),
-            "date": schedule.date,
-            "time": schedule.time,
-            "location": schedule.location,
-            "couple": schedule.couple,
-            "cuts": schedule.cuts
-        }
+        "matched_by": "multiple",
+        "schedules": results,
+        "message": "Multiple schedules found. file_count not applied." if request.file_count else None
     }
