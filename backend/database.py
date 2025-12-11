@@ -298,6 +298,59 @@ class Schedule(Base):
         return cls(**kwargs)
 
 
+class AppApiKey(Base):
+    """데스크탑 앱 전용 API 키 테이블"""
+    __tablename__ = "app_api_keys"
+
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    # User identification
+    user_id = Column(String(255), nullable=False, index=True)
+
+    # API 키 (bcrypt 해시 저장)
+    key_hash = Column(String(255), nullable=False)
+
+    # 키 접두사 (조회용, 예: "dk_a1b2...")
+    key_prefix = Column(String(20), nullable=False)
+
+    # 식별용 이름 (예: "내 맥북", "작업용 PC")
+    name = Column(String(100), nullable=False)
+
+    # 마지막 사용 시간 (모니터링용)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+
+    # 활성화 여부
+    is_active = Column(Boolean, nullable=False, default=True)
+
+    # Rate limiting: 분당 요청 횟수 카운터
+    request_count = Column(Integer, nullable=False, default=0)
+    request_window_start = Column(DateTime(timezone=True), nullable=True)
+
+    # 생성/만료
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # NULL이면 무기한 (rate limit 초과 시 자동 설정)
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_app_api_key_user', 'user_id'),
+        Index('idx_app_api_key_active', 'user_id', 'is_active'),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert AppApiKey model to dictionary (키 해시 제외)"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'key_prefix': self.key_prefix,
+            'name': self.name,
+            'last_used_at': self.last_used_at.isoformat() if self.last_used_at else None,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+        }
+
+
 class TrashSchedule(Base):
     """Trash table for deleted schedules - separate from active schedules"""
     __tablename__ = "trash_schedules"
