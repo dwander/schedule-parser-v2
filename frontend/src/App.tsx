@@ -257,7 +257,7 @@ function AppContent() {
     let filtered = schedules
 
     // 날짜 범위 필터 - 프리셋 기반 동적 계산
-    if (dateRangeFilter.preset && dateRangeFilter.preset !== 'all') {
+    if (dateRangeFilter.preset && dateRangeFilter.preset !== 'all' && dateRangeFilter.preset !== 'custom') {
       // 프리셋이 있으면 현재 시간 기준으로 동적 계산
       const range = calculateDateRangeFromPreset(dateRangeFilter.preset, weekStartsOn)
 

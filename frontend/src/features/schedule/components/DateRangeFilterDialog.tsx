@@ -135,16 +135,6 @@ export function DateRangeFilterDialog({
           <Button variant="outline" onClick={handleReset}>
             초기화
           </Button>
-          <div className="flex-1"></div>
-          <Button
-            onClick={handleApply}
-            disabled={!tempFrom || !tempTo}
-            className={cn(
-              tempFrom && tempTo && dateRange.preset === 'custom' && 'border-2 border-primary'
-            )}
-          >
-            적용
-          </Button>
         </div>
       }
     >
@@ -240,7 +230,7 @@ export function DateRangeFilterDialog({
                 <SelectItem value="year">년</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="secondary" onClick={handleRelativeSelect}>
+            <Button onClick={handleRelativeSelect}>
               적용
             </Button>
           </div>
@@ -290,40 +280,51 @@ export function DateRangeFilterDialog({
               </Popover>
             </div>
 
-            {/* 종료일 */}
+            {/* 종료일 + 적용 버튼 */}
             <div className="space-y-2">
               <label className="text-sm text-muted-foreground">종료일</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !tempTo && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {tempTo ? (
-                      tempTo.toLocaleDateString('ko-KR', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit'
-                      }).replace(/\. /g, '.').replace(/\.$/, '')
-                    ) : (
-                      <span>날짜 선택</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={tempTo}
-                    onSelect={setTempTo}
-                    disabled={(date) => tempFrom ? date < tempFrom : false}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "flex-1 justify-start text-left font-normal",
+                        !tempTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tempTo ? (
+                        tempTo.toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        }).replace(/\. /g, '.').replace(/\.$/, '')
+                      ) : (
+                        <span>날짜 선택</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={tempTo}
+                      onSelect={setTempTo}
+                      disabled={(date) => tempFrom ? date < tempFrom : false}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button
+                  onClick={handleApply}
+                  disabled={!tempFrom || !tempTo}
+                  className={cn(
+                    tempFrom && tempTo && dateRange.preset === 'custom' && 'border-2 border-primary'
+                  )}
+                >
+                  적용
+                </Button>
+              </div>
             </div>
           </div>
         </div>
