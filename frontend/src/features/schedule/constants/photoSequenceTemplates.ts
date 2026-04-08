@@ -1,5 +1,17 @@
 import type { PhotoSequenceItem } from '../types/schedule'
 
+// 템플릿 0: 대기실 원판
+export const TEMPLATE_WAITING_ROOM: Omit<PhotoSequenceItem, 'id'>[] = [
+  { text: '양가 혼주', completed: false, order: 1 },
+  { text: '신랑측 직계가족', completed: false, order: 2 },
+  { text: '신부측 직계가족', completed: false, order: 3 },
+  { text: '신랑신부 정면', completed: false, order: 4 },
+  { text: '전체 가족 친척', completed: false, order: 5 },
+  { text: '직장동료 지인', completed: false, order: 6 },
+  { text: '부케 던지기', completed: false, order: 7 },
+  { text: '플래시 컷', completed: false, order: 8 },
+]
+
 // 템플릿 1: 포즈컷 먼저 (기본)
 export const TEMPLATE_POSE_FIRST: Omit<PhotoSequenceItem, 'id'>[] = [
   { text: '신랑신부 포즈컷', completed: false, order: 1 },
@@ -42,7 +54,7 @@ export const TEMPLATE_POSE_LAST: Omit<PhotoSequenceItem, 'id'>[] = [
   { text: '신랑신부 포즈컷', completed: false, order: 10 },
 ]
 
-export const DEFAULT_PHOTO_SEQUENCE = TEMPLATE_POSE_FIRST
+export const DEFAULT_PHOTO_SEQUENCE = TEMPLATE_WAITING_ROOM
 
 type TemplateInfo = {
   name: string
@@ -50,6 +62,7 @@ type TemplateInfo = {
 }
 
 export const PHOTO_SEQUENCE_TEMPLATES: Record<string, TemplateInfo> = {
+  WAITING_ROOM: { name: '대기실 원판', items: TEMPLATE_WAITING_ROOM },
   POSE_FIRST: { name: '포즈컷 먼저', items: TEMPLATE_POSE_FIRST },
   FRIENDS_FIRST: { name: '지인 먼저', items: TEMPLATE_FRIENDS_FIRST },
   POSE_LAST: { name: '포즈컷 나중에', items: TEMPLATE_POSE_LAST },

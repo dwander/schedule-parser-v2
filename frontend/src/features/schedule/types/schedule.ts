@@ -70,7 +70,7 @@ export interface Schedule {
   tags?: string[] // 태그 배열
   photoNote?: PhotoNote
   photoSequence?: PhotoSequenceItem[]
-  currentTemplate?: string // POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
+  currentTemplate?: string // WAITING_ROOM, POSE_FIRST, FRIENDS_FIRST, POSE_LAST, CUSTOM
   shootTimeDuration?: number // 촬영 예상 시간 (분)
   isDuplicate: boolean
   createdAt: string

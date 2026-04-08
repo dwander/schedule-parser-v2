@@ -174,7 +174,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       return schedule.currentTemplate
     }
     // 기본값
-    return 'POSE_FIRST'
+    return 'WAITING_ROOM'
   })
   const [isLocked, setIsLocked] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.LOCKED, false)
   const [voiceEnabled, setVoiceEnabled] = useLocalStorage(PHOTO_SEQUENCE_STORAGE_KEYS.VOICE_ENABLED, false)
@@ -259,7 +259,7 @@ export function PhotoSequenceDialog({ open, onOpenChange, schedule }: PhotoSeque
       } else {
         // 기본 템플릿
         setItems(generatePhotoSequence())
-        setSelectedTemplate('POSE_FIRST')
+        setSelectedTemplate('WAITING_ROOM')
       }
     }
   }, [open, schedule.currentTemplate])
