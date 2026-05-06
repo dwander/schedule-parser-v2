@@ -325,11 +325,31 @@ def parse_brand_album(line: str) -> (str, str):
 
     return brand, album
 
+def _is_asterisk_format(raw_text: str) -> bool:
+    """
+    새로운 ※ 표기 형식 메시지 감지.
+
+    감지 기준 (모두 충족):
+        1. YYYY.MM.DD(요일) 패턴 존재 (예: 2026.05.09(토))
+        2. ※ 마커 + 알려진 라벨(발주처/신부연락처/신랑연락처/특이사항) 존재
+    """
+    has_date_with_weekday = bool(
+        re.search(r'\d{4}\.\d{2}\.\d{2}\s*\([일월화수목금토]\)', raw_text)
+    )
+    has_asterisk_field = bool(
+        re.search(r'※\s*(발주처|신부연락처|신랑연락처|특이사항)', raw_text)
+    )
+    return has_date_with_weekday and has_asterisk_field
+
 def detect_chat_format(raw_text: str) -> str:
     """
-    Detect if the chat log is from desktop, mobile, compact, or structured format.
-    Returns 'desktop', 'mobile', 'compact', 'structured', or 'unknown'.
+    Detect if the chat log is from desktop, mobile, compact, structured, or asterisk format.
+    Returns 'desktop', 'mobile', 'compact', 'structured', 'asterisk', or 'unknown'.
     """
+    # 새 ※ 형식이 가장 특징적이므로 최우선 감지
+    if _is_asterisk_format(raw_text):
+        return 'asterisk'
+
     lines = raw_text.splitlines()[:50]  # Check first 50 lines for format detection
 
     desktop_pattern_count = 0
@@ -561,6 +581,143 @@ def parse_compact_format(raw_text: str) -> List[Schedule]:
                 schedules.append(extracted_schedule)
         except Exception as e:
             pass
+
+    return schedules
+
+def _parse_single_asterisk_block(block_text: str) -> Optional[Schedule]:
+    """
+    ※ 형식 단일 스케줄 블록 파싱.
+
+    예시 블록:
+        2026.05.09(토)  11시10분
+        아시아드 마그리트홀 (M)
+        김경현, 최슬기
+        세컨플로우 기본 : 30P 1권    신부대기실~ 예식종료
+
+        ※ 신부연락처 : 010-3032-1305
+        ※ 특이사항 : 9:40 선촬영 / 폐백 x
+        ※ 발주처 : 아시아드
+    """
+    lines = [line.strip() for line in block_text.splitlines() if line.strip()]
+    if not lines:
+        return None
+
+    sch = Schedule()
+
+    # 1행: 날짜 + 시간 (예: "2026.05.09(토)  11시10분")
+    first_line = lines[0]
+    date_match = re.search(r'(\d{4}\.\d{2}\.\d{2})', first_line)
+    if not date_match:
+        return None
+    sch.date = date_match.group(1)
+
+    # 시간: "11시10분" 또는 "11시" (분 생략 가능)
+    time_with_minute = re.search(r'(\d{1,2})시\s*(\d{1,2})분', first_line)
+    if time_with_minute:
+        hour = int(time_with_minute.group(1))
+        minute = int(time_with_minute.group(2))
+        sch.time = f"{hour:02d}:{minute:02d}"
+    else:
+        time_only = re.search(r'(\d{1,2})시', first_line)
+        if time_only:
+            sch.time = f"{int(time_only.group(1)):02d}:00"
+
+    if not sch.time:
+        return None
+
+    # 본문 줄(※ 없음)과 ※ 마커 줄 분리
+    info_lines = []
+    asterisk_lines = []
+    for line in lines[1:]:
+        if line.startswith('※'):
+            asterisk_lines.append(line)
+        else:
+            info_lines.append(line)
+
+    # 본문 줄: 순서대로 [장소, 신랑신부, 브랜드/앨범]
+    if len(info_lines) >= 1:
+        sch.location = clean_location(info_lines[0])
+
+    if len(info_lines) >= 2:
+        # "김경현, 최슬기" → "김경현 최슬기"
+        couple_raw = re.sub(r'\s+', ' ', info_lines[1].replace(',', ' ').strip())
+        if is_valid_couple(couple_raw):
+            sch.couple = separate_couple_names(couple_raw)
+
+    if len(info_lines) >= 3:
+        # "세컨플로우 기본 : 30P" 형태에서 콜론을 공백으로 바꿔
+        # parse_brand_album이 "기본30P" 패턴을 잡을 수 있도록 함
+        brand_line_clean = info_lines[2].replace(':', ' ').replace('：', ' ')
+        brand, album = parse_brand_album(brand_line_clean)
+        sch.brand = brand
+        sch.album = album
+
+    # ※ 마커 라우팅
+    memo_parts = []
+    for line in asterisk_lines:
+        content = line.lstrip('※').strip()
+
+        contact_m = re.match(r'(?:신부|신랑)?연락처\s*[:：]\s*(.+)', content)
+        if contact_m:
+            contact = parse_contact(contact_m.group(1))
+            if contact:
+                sch.contact = contact
+            continue
+
+        manager_m = re.match(r'발주처\s*[:：]\s*(.+)', content)
+        if manager_m:
+            sch.manager = manager_m.group(1).strip()
+            continue
+
+        memo_m = re.match(r'특이사항\s*[:：]\s*(.+)', content)
+        if memo_m:
+            memo_parts.append(memo_m.group(1).strip())
+            continue
+
+        # 기타 알려지지 않은 ※ 라인은 그대로 메모에 보존
+        memo_parts.append(content)
+
+    if memo_parts:
+        sch.memo = '\n'.join(memo_parts)
+
+    # 핵심 4필드 검증 (날짜/시간/장소/신랑신부)
+    if not (sch.date and sch.time and sch.location and sch.couple):
+        return None
+
+    # 단가 자동 계산
+    if sch.brand and sch.album and sch.date:
+        sch.price = calculate_price(sch.brand, sch.album, sch.date)
+
+    # 필수 필드 누락 시 검토 플래그
+    missing_fields = []
+    if not sch.brand: missing_fields.append("브랜드")
+    if not sch.album: missing_fields.append("앨범")
+    if not sch.manager: missing_fields.append("계약자")
+
+    if missing_fields:
+        sch.needs_review = True
+        sch.review_reason = f"필수 필드 누락: {', '.join(missing_fields)}"
+
+    return sch
+
+def parse_asterisk_format(raw_text: str) -> List[Schedule]:
+    """
+    ※ 표기를 사용하는 새로운 거래처 메시지 포맷 파싱.
+
+    한 번에 여러 스케줄이 'ㅡ'(한글 자모) 3개 이상으로 구분되어 들어옴.
+    """
+    schedules = []
+
+    # 'ㅡㅡㅡㅡ...' 구분자로 블록 분리
+    blocks = re.split(r'ㅡ{3,}', raw_text)
+
+    for block in blocks:
+        block = block.strip()
+        if not block:
+            continue
+        sch = _parse_single_asterisk_block(block)
+        if sch:
+            schedules.append(sch)
 
     return schedules
 
@@ -1536,6 +1693,11 @@ def parse_schedules(raw_text: str) -> List[Dict]:
     # Detect format first
     chat_format = detect_chat_format(raw_text)
 
+    # Handle asterisk format (※ 표기 신규 거래처 포맷)
+    if chat_format == 'asterisk':
+        parsed_schedules = parse_asterisk_format(raw_text)
+        return [sch.to_dict() for sch in parsed_schedules]
+
     # Handle structured format (key-value pairs)
     if chat_format == 'structured':
         parsed_schedules = parse_structured_format(raw_text)
@@ -1916,6 +2078,11 @@ def parse_schedules_llm(raw_text: str) -> List[Dict]:
 def parse_schedules_classic_only(raw_text: str) -> List[Dict]:
     """클래식 파서만 사용 (패턴 1-3만, NLP 비활성화)"""
     chat_format = detect_chat_format(raw_text)
+
+    # Handle asterisk format (※ 표기 신규 거래처 포맷)
+    if chat_format == 'asterisk':
+        parsed_schedules = parse_asterisk_format(raw_text)
+        return [sch.to_dict() for sch in parsed_schedules]
 
     # Handle structured format (key-value pairs)
     if chat_format == 'structured':
