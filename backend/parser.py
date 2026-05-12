@@ -704,20 +704,42 @@ def parse_asterisk_format(raw_text: str) -> List[Schedule]:
     """
     ※ 표기를 사용하는 새로운 거래처 메시지 포맷 파싱.
 
-    한 번에 여러 스케줄이 'ㅡ'(한글 자모) 3개 이상으로 구분되어 들어옴.
+    여러 스케줄이 한 메시지에 들어올 때 다음 중 어느 방식으로든 구분 가능:
+        - 'ㅡ'(한글 자모) 3개 이상으로 명시적 구분
+        - 또는 라인 시작의 'YYYY.MM.DD(요일)' 패턴이 새 블록의 시작점
+    카카오톡 데스크탑 발신자 헤더('[이름] [오후 HH:MM] ')는 자동 제거.
     """
     schedules = []
 
-    # 'ㅡㅡㅡㅡ...' 구분자로 블록 분리
-    blocks = re.split(r'ㅡ{3,}', raw_text)
+    # 데스크탑 카카오톡 발신자 헤더 ('[KPAG(업무용)] [오후 2:44] ')
+    speaker_header_re = re.compile(
+        r'\[[^\]]+\]\s*\[(?:오전|오후)\s*\d{1,2}:\d{2}\]\s*'
+    )
 
-    for block in blocks:
-        block = block.strip()
-        if not block:
+    # 새 블록의 시작 위치: 라인 시작의 'YYYY.MM.DD(요일)'
+    date_start_re = re.compile(
+        r'^\d{4}\.\d{2}\.\d{2}\s*\([일월화수목금토]\)',
+        re.MULTILINE
+    )
+
+    # 1차 분리: 'ㅡㅡㅡ' 구분자 (기존 호환)
+    for coarse in re.split(r'ㅡ{3,}', raw_text):
+        # 발신자 헤더 제거 → 날짜 라인이 라인 시작에 노출되도록
+        coarse = speaker_header_re.sub('', coarse)
+
+        # 2차 분리: 날짜 시작 위치 기준
+        starts = [m.start() for m in date_start_re.finditer(coarse)]
+        if not starts:
             continue
-        sch = _parse_single_asterisk_block(block)
-        if sch:
-            schedules.append(sch)
+
+        starts.append(len(coarse))
+        for i in range(len(starts) - 1):
+            block_text = coarse[starts[i]:starts[i + 1]].strip()
+            if not block_text:
+                continue
+            sch = _parse_single_asterisk_block(block_text)
+            if sch:
+                schedules.append(sch)
 
     return schedules
 
