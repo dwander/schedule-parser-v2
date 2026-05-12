@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 
-from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_ai_only, parse_schedules_llm, parse_schedules_hybrid_llm
+from parser import parse_schedules, parse_schedules_classic_only, parse_schedules_llm, parse_schedules_hybrid_llm
 from schemas.parser import ParseTextRequest
 
 router = APIRouter()
@@ -37,10 +37,6 @@ def parse_from_text(request: ParseTextRequest):
             print("📜 Running classic-only parser...")
             data = parse_schedules_classic_only(text)
             print(f"📜 Classic parser result: {len(data)} schedules")
-        elif engine == "ai_only":
-            print("🤖 Running AI-only parser (spaCy)...")
-            data = parse_schedules_ai_only(text)
-            print(f"🤖 AI parser result: {len(data)} schedules")
         elif engine == "llm":
             print("🧠 Running GPT-4 parser...")
             data = parse_schedules_llm(text)
@@ -75,10 +71,6 @@ async def parse_uploaded_file(file: UploadFile = File(...), engine: str = "class
             print("📜 Running classic-only parser on uploaded file...")
             data = parse_schedules_classic_only(raw_content)
             print(f"📜 Classic parser result: {len(data)} schedules")
-        elif engine == "ai_only":
-            print("🤖 Running AI-only parser (spaCy) on uploaded file...")
-            data = parse_schedules_ai_only(raw_content)
-            print(f"🤖 AI parser result: {len(data)} schedules")
         elif engine == "llm":
             print("🧠 Running GPT-4 parser on uploaded file...")
             data = parse_schedules_llm(raw_content)

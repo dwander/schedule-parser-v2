@@ -53,8 +53,7 @@ OPENAI_API_KEY=sk-proj-...your-api-key...
 |------|------|------|------|--------|
 | **Classic** | 정규표현식 | ⚡ 즉시 | 무료 | 패턴에 의존 |
 | **LLM** | GPT-4.1-nano | 🚀 ~3초 | ~$0.00005 | 높음 |
-| Hybrid | Classic+NLP | ⚡ 즉시 | 무료 | 중간 |
-| AI Only | spaCy | ⚡ 즉시 | 무료 | 낮음 |
+| Hybrid | Classic→LLM 폴백 | 🚀 가변 | 조건부 | 높음 |
 
 ## 비용 정보
 

@@ -4,4 +4,4 @@ from pydantic import BaseModel
 
 class ParseTextRequest(BaseModel):
     text: str
-    engine: str = "hybrid"  # classic, hybrid, ai_only
+    engine: str = "hybrid"  # classic, hybrid, llm

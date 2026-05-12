@@ -71,11 +71,11 @@ Backend API는 `http://localhost:8000`에서 실행됩니다.
 ### Backend
 - **FastAPI** - 웹 프레임워크
 - **SQLite** - 데이터베이스
-- **spaCy** - 자연어 처리 (스케줄 파싱)
+- **OpenAI GPT-4** - LLM 기반 스케줄 파싱 (hybrid/llm 엔진)
 
 ## 📝 주요 기능
 
-- ✅ 스케줄 텍스트 자동 파싱 (spaCy NLP)
+- ✅ 스케줄 텍스트 자동 파싱 (정규표현식 + GPT-4 hybrid)
 - ✅ 가상화된 테이블 뷰 (대용량 데이터 지원)
 - 🚧 스케줄 편집 및 관리
 - 🚧 구글 캘린더 동기화
